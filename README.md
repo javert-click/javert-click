@@ -2,10 +2,9 @@
 
 JaVerT.Click is a symbolic execution tool for JavaScript that, for the first time, supports reasoning about JavaScript programs that manipulate any/all of the DOM Core Level 1, DOM UI Events, JavaScript Promises, and the JavaScript async/await APIs.
 
-## Downloading the Artifact
-The artifact is a VirtualBox `.ova` file available [here](https://imperialcollegelondon.box.com/s/mzyevnolk6ts2zx3wdu9ia061votisy4).
-
 ### Starting the Artifact
+#### Option 1 - Virtual Machine
+The artifact is a VirtualBox `.ova` file available [here](https://imperialcollegelondon.box.com/s/mzyevnolk6ts2zx3wdu9ia061votisy4).
 1. Install [Virtual Box](https://www.virtualbox.org/wiki/Downloads) if you haven't got it already.
 2. Open Virtual Box.
 3. Click on File --> Import Appliance.
@@ -15,9 +14,20 @@ The artifact is a VirtualBox `.ova` file available [here](https://imperialcolleg
 
 The VM will start Ubuntu 18.4 LTS. If required, the OS user is `javert-click` and the password is `1234`.
 
-### The Structure of JaVerT.Click
-Open the `Terminal` application and navigate to the `~\JavaScriptVerification` folder. 
-This is the base folder that contains all of the required infrastructure.
+#### Option 2 - Building from Source Code
+1. Clone the repository by doing `git clone https://github.com/javert-click/javert-click.git`
+2. Make sure you have the dependencies installed (explained below)
+3. Open the `Terminal` application and navigate to the `~\javert-click` folder.
+4. Get the project dependencies: `make init`
+5. Compile the project: `make`
+
+**Dependencies**
+- Install opam 1.2.1 or higher (https://opam.ocaml.org)
+- Install ocaml 4.03 or higher using opam (`opam install ocaml`)
+- Install [Z3](https://github.com/Z3Prover/z3) with the OCaml bindings
+
+### The Structure of JaVerT.Click 
+The `~\javert-click` folder is the base folder that contains all of the required infrastructure.
 
 The main folder of interest is the `src` folder, which has the following structure: 
 
