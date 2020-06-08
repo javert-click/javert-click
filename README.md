@@ -4,7 +4,7 @@ JaVerT.Click is a symbolic execution tool for JavaScript that, for the first tim
 
 ### Starting the Artifact
 #### Option 1 - Virtual Machine
-The artifact is a VirtualBox `.ova` file available [here](https://imperialcollegelondon.box.com/s/mzyevnolk6ts2zx3wdu9ia061votisy4).
+The artifact is a VirtualBox `.ova` file available [here](https://imperialcollegelondon.box.com/s/k9dj2r6tn7et7kv26cv5eueuqgpcmopm).
 1. Install [Virtual Box](https://www.virtualbox.org/wiki/Downloads) if you haven't got it already.
 2. Open Virtual Box.
 3. Click on File --> Import Appliance.
