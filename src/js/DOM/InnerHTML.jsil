@@ -1,0 +1,12 @@
+proc setInnerHTML (x__scope, x__this, dom_parser, document, node, html_str) {
+    (* Executing xml parser via external function *)
+    json_str := extern ExecuteHTMLParsing(x__scope, x__this, html_str);
+    (* Converting json str to object *)
+    json_obj := extern ExecuteEvalJSIL(x__scope, x__this, json_str);
+    (* Parsing resulting json obh to a DOM node *)
+    dom_parser_mtd := metadata (dom_parser); 
+    dom_parser_scope := [dom_parser_mtd, "@scope"]; 
+    dom_obj  := "parseJSON2DOMElements"(dom_parser_scope, x__this, document, json_obj, {{ }});
+    ret := dom_obj;
+    return
+};

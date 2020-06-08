@@ -1,0 +1,6 @@
+import Init.jsil;
+
+proc main () {
+	ret := "setupInitialHeap" ();
+	return
+};

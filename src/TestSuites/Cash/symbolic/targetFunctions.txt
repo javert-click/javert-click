@@ -1,0 +1,23 @@
+--- MAIN -----------
+    CashOff: 100.00% 
+     CashOn: 100.00% 
+    CashOne: 100.00% 
+  CashReady:   0.00%
+CashTrigger: 100.00% 
+--- AUX -------------------------
+            CashAddEvent: 100.00%
+CashGetEventNameBubbling: 100.00%
+      CashGetEventsCache: 100.00%
+       CashHasNamespaces: 100.00%
+      CashParseEventName: 100.00%
+         CashRemoveEvent: 100.00%
+--- INSIDE ----------------------
+CashOff ->
+  CashEachParseEventName: 100.00%
+CashOn ->
+  CashEachGetSplitValues: 100.00%
+   CashEachFinalCallback: 100.00%
+       CashFinalCallback: 100.00%
+    CashCurrentTargetGet: 100.00%
+CashTrigger ->    
+        CashEachDispatch: 100.00% 

@@ -1,0 +1,6 @@
+let sync_dispatch  = "syncDispatch"
+let async_dispatch = "asyncDispatch"
+let add_handler    = "addHandler"
+let remove_handler = "removeHandler"
+let await          = "js_await"
+let schedule       = "__ES__internal__schedule"
