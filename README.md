@@ -16,13 +16,13 @@ The VM will start Ubuntu 18.4 LTS. If required, the OS user is `javert-click` an
 
 #### Option 2 - Building from Source Code
 1. Clone the repository by doing `git clone https://github.com/javert-click/javert-click.git`
-2. Make sure you have the dependencies installed (explained below)
+2. Make sure you have the dependencies installed (listed below)
 3. Open the `Terminal` application and navigate to the `~\javert-click` folder.
-4. Get the project dependencies: `make init`
-5. Compile the project: `make`
+4. Get the project dependencies by running `make init`
+5. Compile the project by running `make`
 
 **Dependencies**
-- Install opam 1.2.1 or higher (https://opam.ocaml.org)
+- Install [opam](https://opam.ocaml.org) 1.2.1 or higher 
 - Install ocaml 4.03 or higher using opam (`opam install ocaml`)
 - Install [Z3](https://github.com/Z3Prover/z3) with the OCaml bindings
 
