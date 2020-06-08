@@ -15,7 +15,3 @@ cp src/ml/JS2JSIL/ES5_runtime/*.jsil environment
 cp src/ml/JS2JSIL/DOM_runtime/*.jsil environment
 
 mkdir -p environment/UnitTests_JSIL
-
-# test262 tests
-rm -rf test262/environment
-cp -r environment test262/environment
