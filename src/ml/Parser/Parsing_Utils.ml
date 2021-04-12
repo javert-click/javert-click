@@ -214,6 +214,7 @@ let eprog_to_prog (ext_program : EProg.t) : Prog.t =
   (** Step 1 - Add the declarations from the imported files
     * -----------------------------------------------------------------------------------
     *)
+    
   resolve_imports ext_program;
 
   let proc_of_ext_proc (proc : EProc.t) : Proc.t * (string * int * int * int ) list = 
@@ -243,7 +244,6 @@ let eprog_to_prog (ext_program : EProg.t) : Prog.t =
         predecessors in 
 
      proc, predecessors' in 
-
 
   let procs, predecessors = 
     Hashtbl.fold 

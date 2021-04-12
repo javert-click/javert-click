@@ -30,7 +30,7 @@ let js_symbolic_constructs = {
 	js_symb_string = "symb_string";
 	js_symb_bool   = "symb_bool"; 
 	js_fresh_symb  = "fresh_symb";
-	js_await       = "js_await"; 
+	js_await       = "__ES__wrapper__js_await"; 
 	jsil_await     = "await"; 
 	jsil_internal_await = "jsil__internal_await";
 }
@@ -38,7 +38,7 @@ let js_symbolic_constructs = {
 let js2jsil_imports = [
 	"Array.jsil"; "Boolean.jsil"; "Date.jsil"; "Function.jsil"; "Global.jsil"; 
 	"Init.jsil"; "Internals.jsil"; "Math.jsil"; "Number.jsil"; "Object.jsil"; 
-	"RegExp.jsil"; "String.jsil"; "Errors.jsil"
+	"RegExp.jsil"; "String.jsil"; "Errors.jsil"; "List.jsil"
 ]
 
 let dom_imports_level1 = ["Node.jsil"; "DOM.jsil"; "Attribute.jsil"; "CDATASection.jsil"; "CharacterData.jsil"; 
@@ -49,20 +49,29 @@ let dom_imports_level1 = ["Node.jsil"; "DOM.jsil"; "Attribute.jsil"; "CDATASecti
 													"DOMTestCase.jsil"; "initDOMHeapCoreLevel1.jsil"; "HTMLFiles.jsil"]
 
 let dom_imports_events = ["Event.jsil"; "EventListener.jsil"; "EventTarget.jsil"; "ShadowRoot.jsil"; "Window.jsil"; "GamepadEvent.jsil"; "FocusEvent.jsil";
-"MouseEvent.jsil"; "CustomEvent.jsil"; "UIEvent.jsil"; "WheelEvent.jsil";"KeyboardEvent.jsil"; 
+"MouseEvent.jsil"; "CustomEvent.jsil"; "UIEvent.jsil"; "WheelEvent.jsil";"KeyboardEvent.jsil"; "MessageEvent.jsil"; 
 "EventsSemantics.jsil"; "FormElement.jsil"; "InputElement.jsil"; "CompositionEvent.jsil"; "HTMLSlotElement.jsil";
-"HTMLElement.jsil"; "HTMLDocument.jsil"; "XMLDocument.jsil"; "ClassList.jsil"; "cash.jsil"; "Mocha.jsil"; "initDOMHeap.jsil"; "StringUtils.jsil"; 
-"CSSStyleDeclaration.jsil"; "DOMRect.jsil"; "InnerHTML.jsil"; "Promise.jsil"; "Testharness.jsil"; "HTMLUIEventsFiles.jsil"; "Performance.jsil"]
+"HTMLElement.jsil"; "HTMLDocument.jsil"; "XMLDocument.jsil"; "ClassList.jsil"; "StringUtils.jsil"; 
+"CSSStyleDeclaration.jsil"; "DOMRect.jsil"; "Performance.jsil"]
+
+let dom_imports_events_full = dom_imports_events @ ["cash.jsil"; "Mocha.jsil"; "initDOMHeap.jsil"; 
+"InnerHTML.jsil"; "Promise.jsil"; "Testharness.jsil"; "HTMLUIEventsFiles.jsil"; "Performance.jsil"]
 
 let imports_promises = [ "Promise.jsil"; "JsUnitCore.jsil"; "Mocha.jsil"]
 
 let dom_imports_symbolic = ["SymbolicDOM.jsil"]
 
-let dom_imports = dom_imports_level1 @ dom_imports_events 
+let dom_imports = dom_imports_level1 @ dom_imports_events_full 
+
+let imports_events = dom_imports_level1 @ dom_imports_events 
+
+let message_passing_imports = ["MessageChannel.jsil"; "MessagePort.jsil"; "Serialization.jsil"; "MPSemantics.jsil"; "MessagePassing.jsil"; "ConfSetup.jsil";
+															 "DedicatedWorkerGlobalScope.jsil"; "SharedWorker.jsil"; "SharedWorkerGlobalScope.jsil"; "Worker.jsil"; "WorkerGlobalScope.jsil"; 
+															 "JS2JSILList.jsil"; "ObjectUtils.jsil"; "Promise.jsil"; "Testharness.jsil"]
 
 let js2jsil_imports_cosette = [
 	"Array.jsil"; "Boolean.jsil"; "Date.jsil"; "Function.jsil"; "Global.jsil"; 
-	"InitFantine.jsil"; "Internals.jsil"; "Math.jsil"; "Number.jsil"; "Object.jsil"; 
+	"Init.jsil"; "Internals.jsil"; "Math.jsil"; "Number.jsil"; "Object.jsil"; 
 	"RegExp.jsil"; "String.jsil"; "Errors.jsil"
 ]
 
@@ -79,6 +88,7 @@ let js2jsil_imports_bi = [
 
 
 let setupHeapName = "setupInitialHeap"
+let execute_jsil_proc = "executeJSILProc"
 
 let _callPropName              = "@call"
 let _constructPropName         = "@construct"

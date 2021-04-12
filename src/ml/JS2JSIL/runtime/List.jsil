@@ -1,0 +1,11 @@
+proc JSILList_create(xscope, xthis){
+    lv := {{ }};
+    ret := lv;
+    return
+};
+
+proc JSILList_add(xsc, xthis, lv, v){
+    lv := lv l+ {{ v }};
+    ret := lv;
+    return
+};

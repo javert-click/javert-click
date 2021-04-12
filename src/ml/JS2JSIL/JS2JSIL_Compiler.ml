@@ -1570,19 +1570,31 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
       let cmd3 = (metadata, None, LLogic (LCmd.AssumeType (x, Type.BooleanType))) in
       [ cmd1; cmd2; cmd3 ], PVar x_v, []
 
-    | JSParserSyntax.Call (e_f, xes)
-	    when (e_f.JSParserSyntax.exp_stx = (JSParserSyntax.Var js_symbolic_constructs.js_fresh_symb)) ->
-	      let x =
-	        (match (List.map (fun xe -> xe.JSParserSyntax.exp_stx) xes) with
-	        | [ JSParserSyntax.String x ] -> "#" ^ x
-	        | _ ->
-            let e_str = JSPrettyPrint.string_of_exp true e in
-            raise (Failure (Printf.sprintf "Invalid symbolic: %s" e_str))) in
-	      let x_v = (fresh_var ()) ^ "_v" in
-	      let cmd1 = (metadata, None, LLogic (LCmd.FreshLVar (x_v, x))) in
-	      let cmd2 = (metadata, None, LLogic (LCmd.Assume(Not (Eq (LVar x, Lit Empty))))) in
-	      let cmd3 = (metadata, None, LLogic (LCmd.Assume(Not (Eq (UnOp (TypeOf, LVar x), Lit (Type ListType)))))) in
-	        [ cmd1; cmd2; cmd3 ], PVar x_v, []
+  | JSParserSyntax.Call (e_f, xes)
+  when (e_f.JSParserSyntax.exp_stx = (JSParserSyntax.Var execute_jsil_proc)) ->
+    let cmds_args, x_args_gv, errs_args = translate_arg_list xes tr_ctx.tr_err_lab in
+    (match x_args_gv with
+      | [arg] -> 
+        let x_v, cmd_gv_x, errs_x_v = make_get_value_call arg tr_ctx.tr_err_lab in
+        let new_var = fresh_var () in
+        let call_main_cmd = (None, LApply (new_var, EList ([PVar x_v]), Some tr_ctx.tr_err_lab)) in
+        let cmds = annotate_first_cmd (cmds_args @ (annotate_cmds [call_main_cmd])) in
+        cmds, (PVar new_var), errs_args
+      | _ -> raise (Failure "Invalid executeJSILProc"))
+
+  | JSParserSyntax.Call (e_f, xes)
+    when (e_f.JSParserSyntax.exp_stx = (JSParserSyntax.Var js_symbolic_constructs.js_fresh_symb)) ->
+      let x =
+        (match (List.map (fun xe -> xe.JSParserSyntax.exp_stx) xes) with
+        | [ JSParserSyntax.String x ] -> "#" ^ x
+        | _ ->
+          let e_str = JSPrettyPrint.string_of_exp true e in
+          raise (Failure (Printf.sprintf "Invalid symbolic: %s" e_str))) in
+      let x_v = (fresh_var ()) ^ "_v" in
+      let cmd1 = (metadata, None, LLogic (LCmd.FreshLVar (x_v, x))) in
+      let cmd2 = (metadata, None, LLogic (LCmd.Assume(Not (Eq (LVar x, Lit Empty))))) in
+      let cmd3 = (metadata, None, LLogic (LCmd.Assume(Not (Eq (UnOp (TypeOf, LVar x), Lit (Type ListType)))))) in
+        [ cmd1; cmd2; cmd3 ], PVar x_v, []
 
   | JSParserSyntax.Call (e_f, xes) ->
     (**
@@ -1617,7 +1629,6 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
 
     (* x_f_val := i__getValue (x_f) with err1;  *)
     let x_f_val, cmd_gv_f, errs_xf_val = make_get_value_call x_ef tr_ctx.tr_err_lab in
-
     let cmds_args, x_args_gv, errs_args = translate_arg_list xes tr_ctx.tr_err_lab in
 
     (* goto [ typeOf(x_f_val) != Object] err next1; err -> typeerror *)
@@ -1682,7 +1693,7 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
     (* x_body := [x_f_val, "@call"]; *)
     let x_body = fresh_body_var () in
     let cmd_body = LBasic (Lookup (x_body, PVar xfvm, Lit (String _callPropName))) in
-
+    
     (* EVAL *)
     let then_eval = fresh_then_label () in
     let else_eval = fresh_else_label () in
@@ -2840,7 +2851,6 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
   | JSParserSyntax.Function (_, Some f_name, params, _, _) ->
     let f_id = try JS2JSIL_Preprocessing.get_codename e
       with _ -> raise (Failure "named function literals should be annotated with their respective code names") in
-
     (* x_f_outer_er := new ();  *)
     let x_f_outer_er_meta = fresh_var () in
     let x_f_outer_er = fresh_er_var () in
@@ -4720,7 +4730,11 @@ let generate_main offset_converter e spec main_name : EProc.t =
       else [ cmd_err_phi_node; lab_err_cmd ] in
 
   let main_cmds =
-    [ setup_heap_ass; init_scope_chain_ass; init_scope_chain_ass_again; this_ass] @
+    let init_scope_this_cmds = [ init_scope_chain_ass; init_scope_chain_ass_again; this_ass] in
+    let initial_cmds = 
+      if (!CCommon.noinitialheap) then init_scope_this_cmds
+      else [ setup_heap_ass ] @ init_scope_this_cmds in
+    initial_cmds @
     global_var_asses @
     [ cmd_ass_te; cmd_ass_se ] @
     cmds_hoist_fdecls @
@@ -4803,7 +4817,7 @@ let generate_proc_eval new_fid ?use_cc e vis_fid : EProc.t =
     spec = None
   }
 
-let generate_proc ?use_cc offset_converter e fid params vis_fid spec hasJSILAnnot : EProc.t =
+let generate_proc ?use_cc offset_converter e fid params vis_fid spec has_jsil_annot : EProc.t =
   let annotate_cmd cmd lab = (Annot.init (), lab, cmd) in
   let annotate_cmds cmds =
     List.map
@@ -4869,26 +4883,18 @@ let generate_proc ?use_cc offset_converter e fid params vis_fid spec hasJSILAnno
   let x_argList_pre = fresh_var () in
   let x_argList_act = fresh_var () in
   let user_args =
-    if(hasJSILAnnot && !CCommon.events) then (
+    if(has_jsil_annot) then (
     (Annot.init (), None, LBasic (Assignment (x_argList_act, PVar x_argList_pre))))
     else
     ((Annot.init (), None, LBasic (Assignment (x_argList_act, UnOp (Cdr, (UnOp (Cdr, PVar x_argList_pre))))))) in
   let cmds_arg_obj =
-    if(hasJSILAnnot && !CCommon.events) then (
-        [
+       [ 
           (Annot.init (), None, LArguments (x_argList_pre));
           user_args;
           (Annot.init (), None, LCall  (var_args, Lit (String createArgsName), [ PVar x_argList_act ], None, None));
           (Annot.init (), None, LBasic (Mutation (PVar var_er, Lit (String "arguments"), PVar var_args)))
         ]
-      ) else (
-        [
-          (Annot.init (), None, LArguments (x_argList_pre));
-          user_args;
-          (Annot.init (), None, LCall  (var_args, Lit (String createArgsName), [ PVar x_argList_act ], None, None));
-          (Annot.init (), None, LBasic (Mutation (PVar var_er, Lit (String "arguments"), PVar var_args)))
-        ]
-      )
+      
      in
 
   (* x_sc_0 = x_scope @ {{ x_er }} *)
@@ -4938,11 +4944,11 @@ let generate_proc ?use_cc offset_converter e fid params vis_fid spec hasJSILAnno
     (* [ cmd_del_errs ] @ *)
     [ cmd_xscope_final; cmd_ret_final; cmd_error_phi; cmd_xscope_final] @
     [ cmd_err_final ] in
-  let fid_cmds = if (hasJSILAnnot && !CCommon.events) then ([cmd_scope_undefined; cmd_this_undefined] @ fid_cmds) else (fid_cmds) in
+  let fid_cmds = if (has_jsil_annot) then ([cmd_scope_undefined; cmd_this_undefined] @ fid_cmds) else (fid_cmds) in
   {
     name = fid;
     body = (Array.of_list fid_cmds);
-    params = if (hasJSILAnnot && !CCommon.events) then (params) else (var_scope :: var_this :: params);
+    params = if (has_jsil_annot) then (params) else (var_scope :: var_this :: params);
     spec = spec
   }
 
@@ -5034,6 +5040,8 @@ let compute_imports (for_verification : bool) : string list =
   else if !dom               then js2jsil_imports @ dom_imports
   else if !dom_level1        then js2jsil_imports @ dom_imports_level1
   else if !promises          then js2jsil_imports @ imports_promises
+  else if !mp                then js2jsil_imports @ dom_imports_level1 @ dom_imports_events @ message_passing_imports
+  else if !events            then js2jsil_imports @ imports_events
   else if !(SCommon.cosette) then js2jsil_imports_cosette
   else                            js2jsil_imports
 
@@ -5057,8 +5065,8 @@ let js2jsil e offset_converter for_verification filename =
                     with _ ->
                       (let msg = Printf.sprintf "Function %s not found in visibility table" f_id in
                       raise (Failure msg)) in
-                let hasJSILAnnot = List.length (List.filter (fun ann -> ann.annot_type == JSIL_only) annotations) > 0 in
-                generate_proc offset_converter f_body f_id f_params vis_fid spec hasJSILAnnot)) in
+                let has_jsil_annot = List.length (List.filter (fun ann -> ann.annot_type == JSIL_only) annotations) > 0 in
+                generate_proc offset_converter f_body f_id f_params vis_fid spec has_jsil_annot)) in
           Hashtbl.add procedures f_id proc)
         () f_body)
     fun_tbl;

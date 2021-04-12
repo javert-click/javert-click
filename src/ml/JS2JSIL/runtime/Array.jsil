@@ -1038,6 +1038,20 @@ proc AP_lastIndexOf() {
 	elab: throw
 };
 
+(* *** INCLUDES *** *)
+proc AP_includes() {
+			arguments := args;
+			vthis  := l-nth (arguments, 1);
+			elem   := l-nth (arguments, 2);
+			ind := "AP_indexOf" (empty, vthis, elem) with elab;
+			goto [ind = -1] nf fe;
+		nf: ret := false;
+		    return;
+		fe: ret := true;
+		    return;
+		elab: throw
+};
+
 (* *** EVERY *** *)
 proc AP_every() {
 			arguments := args;

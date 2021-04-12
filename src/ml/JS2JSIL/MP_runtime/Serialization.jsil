@@ -1,0 +1,93 @@
+(* Serializes msg and transfer array *)
+(* Result is as follows: 
+    Num n:    {{ "Type": "Number", "NumberData": n }} 
+    String s: {{ "Type": "String", "StringData": s }} 
+    Object o: {{ "Type": "Object", "Properties": {{ {{ "Key": prop1, "Value": val1 }},..., {{ "Key": propn, "Value": valn }} }} }}
+*)
+proc StructuredSerializeWithTransfer(xsc, vthis, msg, transfer){
+                  goto [(msg = undefined) or (msg = null)] basic notbasic;
+	basic:        type := {{ "Type", "primitive"}};
+                  val := {{ "Value", msg}};
+                  goto succ;
+    
+    notbasic:     tv := typeOf msg;    
+                  goto [(tv = Num)] num notnum;
+    num:          type := {{ "Type", "Number" }};
+                  val := {{ "NumberData", msg }};
+                  goto succ;
+    
+    notnum:       goto [(tv = Bool)] bool nonbool;
+    bool:         type := {{ "Type", "Boolean" }};
+                  val := {{ "BooleanData", msg }};
+                  goto succ;
+    
+    nonbool:      goto [(tv = Str)] str nonstr;
+    str:          type := {{ "Type", "String" }};
+                  val := {{ "StringData", msg }};
+                  goto succ;
+
+    nonstr:       goto [(tv = Obj)] obj succ;
+    obj:          type := {{ "Type", "Object" }};
+                  props := "i__getFields" (msg);
+                  propvals := {{ }};
+                  i := 0;
+                  n := l-len (props);
+    loop:         goto [(i < n)] addprop endobj;
+    addprop:      prop := l-nth (props, i);
+                  val := "i__getValue"({{ "o", msg, prop }});
+                  vs := "StructuredSerializeWithTransfer" (xsc, vthis, val, transfer);
+                  keyl := {{ "Key", prop }};
+                  vall := {{ "Value", vs }};
+                  keyval := {{ keyl, vall }};
+                  propvals := propvals l+ {{ keyval }};
+                  i := i+1;   
+                  goto loop;     
+                  
+    endobj:       propl := {{ "Properties", propvals}};
+                  ret := {{ type, propl }};
+                  return;
+    
+    succ:         ret := {{ type, val }};
+                  return
+};
+
+(* Deserializes msg based on serialization algorithm; applies reverse transformation *)
+proc StructuredDeserializeWithTransfer (xsc, vthis, serialized){
+                tser := typeOf serialized;
+                goto [(tser = List) and ((l-len (serialized)) > 1)] oklist elab;
+    oklist:     typelist := l-nth (serialized, 0);
+                vallist := l-nth (serialized, 1);
+                ttype := typeOf typelist;
+                valltype := typeOf vallist;
+                goto [(ttype = List) and (valltype = List) and ((l-len (typelist)) > 1) and ((l-len (vallist)) > 1)] oktv elab;
+    oktv:       type := l-nth (typelist, 1);
+                val := l-nth (vallist, 1);
+                goto [(type = "Object")] obj nonobj;
+    obj:        deserialized := "Object_construct" ();
+                valtype := typeOf val;
+                goto [(valtype = List)] valok elab;
+    valok:      i := 0;
+                n := l-len (val);
+    loop:       goto [(i < n)] addprop end;
+    addprop:    propval := l-nth (val, i);
+                tpropval := typeOf propval;
+                goto [(tpropval = List) and ((l-len (propval)) > 1)] pvok elab;
+    pvok:       propl := l-nth (propval, 0);
+                tpropl := typeOf propl;
+                goto [(tpropl = List) and ((l-len (propl)) > 1)] plok elab;
+    plok:       prop := l-nth (propl, 1);
+                vall := l-nth (propval, 1);
+                tvall := typeOf vall;
+                goto [(tvall = List) and ((l-len (vall)) > 1)] vallok elab;
+   vallok:      v := l-nth (vall, 1);
+                valres := "StructuredDeserializeWithTransfer"(xsc, vthis, v);
+                x := "i__putValue" ({{ "o", deserialized, prop }}, valres);
+                i := i+1;
+                goto loop;
+    end:        ret := deserialized;
+                return;
+    nonobj:     ret := val;
+                return;
+    elab:       ret := "TypeError" ();
+                throw
+};

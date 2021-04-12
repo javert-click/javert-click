@@ -27,13 +27,17 @@ let arguments () =
       (* unfolds *)
       "-unfolds", Arg.Unit(fun () -> unfolding := true), "insert unfolds";
       (* import dom files*)
-      "-dom", Arg.Unit(fun () -> CCommon.dom := true), "importing all dom files";
+      "-dom", Arg.Unit(fun () -> dom := true), "importing all dom files";
       (* import dom core level 1 files*)
-      "-dom_level1", Arg.Unit(fun () -> CCommon.dom_level1 := true), "importing dom core level 1 files";
+      "-dom_level1", Arg.Unit(fun () -> dom_level1 := true), "importing dom core level 1 files";
+      (* import message passing files *)
+      "-mp", Arg.Unit(fun () -> mp := true), "importing postMessage/Workers files";
       (* events *)
-      "-events", Arg.Unit(fun () -> CCommon.events := true), "importing dom core level 1 files";
+      "-events", Arg.Unit(fun () -> events := true), "importing dom core level 1 files";
       (* promises *)
       "-promises", Arg.Unit(fun () -> events := true; promises := true), "include promises model";
+      (* no call to initial heap in main procedure *)
+      "-noinitialheap", Arg.Unit(fun () -> noinitialheap := true), "not including call to setupheap";
     ]
     (fun s -> Format.eprintf "WARNING: Ignored argument %s.@." s)
     usage_msg

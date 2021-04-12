@@ -26,8 +26,6 @@ module type M = sig
     (** Equal to Conf cont + the id of the required spec *)
     | ConfSusp   of string  * state_t * call_stack_t * int * int * int 
 
-  type transition_label_t = (cconf_t, store_t, call_stack_t, vt) TransitionLabel.t
-
   type conf_t = 
     | BConfErr    of err_t list 
     | BConfCont   of state_t
@@ -38,16 +36,20 @@ module type M = sig
   
   type econf_t = cconf_t * UP.prog
 
-  val make_eval_expr : state_t -> (Expr.t -> vt) 
+  type event_label_t = (cconf_t, conf_info_t, vt, (vt) MPInterceptor.t) EventInterceptor.t
 
-  val get_state : cconf_t -> state_t 
+  type mp_label_t = (vt) MPInterceptor.t
+
+  type intercept_t = ((vt -> (vt list) option) -> (vt -> Literal.t option) -> (Literal.t -> vt) -> string -> string -> vt list -> event_label_t option) option
+
+  (* val get_state : cconf_t -> state_t *)
 
   (** lab_name, event_name, fun_name, args *)
-  val make_step : (string * int, unit) Hashtbl.t -> econf_t -> (state_t -> Cmd.t -> (transition_label_t option)) -> (econf_t * transition_label_t option) list 
+  val make_step : (string * int, unit) Hashtbl.t -> econf_t -> intercept_t -> (econf_t * event_label_t option) list 
 
   val run_proc : econf_t -> vt -> vt list -> (vt * state_t) option
 
-  val is_final  : econf_t -> bool 
+  val final  : econf_t -> bool 
 
   val evaluate_prog : UP.prog -> result_t list
 
@@ -57,9 +59,13 @@ module type M = sig
 
   val evaluate_proc : (result_t -> 'a) -> UP.prog -> string -> string list -> state_t -> 'a list
 
-  val evaluate_lcmds : UP.prog -> LCmd.t list -> state_t -> state_t list 
+  val evaluate_lcmds : UP.prog -> LCmd.t list -> (state_t * mp_label_t list) -> (state_t * mp_label_t list) list 
 
-  val create_initial_conf : UP.prog -> cconf_t
+  val create_initial_conf : UP.prog -> (string * vt list) option -> cconf_t
+
+  val eval_expr : cconf_t -> Expr.t -> vt
+
+  val fresh_lvar : string -> string -> cconf_t -> Type.t -> cconf_t
 
   val continue_with_conf : econf_t -> econf_t -> econf_t
 
@@ -67,11 +73,7 @@ module type M = sig
 
   val continue_with_h : econf_t -> string -> fid_t -> vt list -> econf_t list
 
-  val get_next : econf_t -> string option -> econf_t
-
   val str_cconf : cconf_t -> string
-  
-  val get_pid_from_val : vt -> state_t -> string
 
   val valid_result : result_t list -> bool
 
@@ -89,6 +91,10 @@ module type M = sig
 
   val string_of_cconf : cconf_t -> string 
 
-  val synthetic_lab : cconf_t -> transition_label_t option 
+  val synthetic_lab : cconf_t -> event_label_t option 
+
+  val set_var : Var.t -> vt -> cconf_t -> cconf_t
+
+  val new_conf : string -> string -> vt list -> econf_t
   
 end

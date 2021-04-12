@@ -27,3 +27,6 @@ let load_js_file path =
     else "" in
   let sf = load_file path in
     sh ^ sf
+
+let parse_url (url: string) : string = 
+  (Filename.remove_extension url) ^ ".jsil"

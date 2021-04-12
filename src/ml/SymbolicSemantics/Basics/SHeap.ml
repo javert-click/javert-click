@@ -124,7 +124,10 @@ let set_fv_pair (heap : t) (loc : string) (field : Expr.t) (value : Expr.t) : un
       if (fvrem = SFVL.empty) then Hashtbl.remove rem loc else Hashtbl.replace rem loc fvrem 
 
 let init_object (heap : t) (loc : string) (mtdt : Expr.t) : unit = 
-  if (Hashtbl.mem heap.cfvl loc || Hashtbl.mem heap.sfvl loc) then raise (Failure "Illegal init_object") else (
+  if (Hashtbl.mem heap.cfvl loc || Hashtbl.mem heap.sfvl loc) then (
+    Printf.printf "Location: %s, mem: %b" loc (Hashtbl.mem heap.sfvl loc);
+    raise (Failure "Illegal init_object")
+  ) else (
     set heap loc SFVL.empty (Some (ESet [])) (Some mtdt)
   )
 

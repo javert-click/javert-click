@@ -50,6 +50,9 @@ let arguments () =
     
       (* promises *)
       "-promises", Arg.Unit(fun () -> SCommon.events := true; CCommon.promises := true), "include promises model";
+    
+      (* include message passing model *)
+      "-mp", Arg.Unit(fun () -> mp := true), "include message passing model";
     ]
     (fun s -> Format.eprintf "WARNING: Ignored argument %s.@." s)
     usage_msg
@@ -62,8 +65,10 @@ let process_file (path : string) : unit =
   (*  -----------------------------------------------------------*)
   L.log L.Normal (lazy "\n***Stage 1: Parsing program. ***\n");
   let e_prog     = Parsing_Utils.parse_eprog_from_file path in
+  let fname = Filename.basename !file in
   let basename = Filename.basename (Filename.chop_extension !file) in
   let e_prog = {e_prog with filename = basename} in
+  let proc_names = e_prog.proc_names in 
 	
   (** Step 2: Syntactic Checks + Program transformation          *)
   (*  -----------------------------------------------------------*)
@@ -82,8 +87,8 @@ let process_file (path : string) : unit =
     | Error _ -> raise (Failure "Creation of unification plans failed.")
     | Ok prog' -> 
       let rets = 
-        if (!events) 
-          then EventSSemantics.M.evaluate_prog prog' 
+        if (!events) then EventSSemantics.M.evaluate_prog prog' 
+          else if (!mp) then MPSSemantics.M.evaluate_prog prog'
           else SInterpreter.M.evaluate_proc (fun x -> x) prog' (JS2JSIL_Constants.main_fid ^ basename) [] (SState.M.init None) 
       in 
         L.log L.Normal (lazy(Printf.sprintf "Final states: \n%s\n" (SInterpreter.M.string_of_result rets)));

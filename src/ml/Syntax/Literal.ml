@@ -104,4 +104,9 @@ let rec base_elements (lit : t) : t list =
     match lit with
     | LList les -> List.concat (List.map base_elements les @ ac)
     | _ -> lit :: (List.concat ac) in
-  fold f_ac None None lit
+	fold f_ac None None lit
+	
+let unwrap_string (lit: t option) : string option =
+	match lit with
+	| Some (String x) -> Some x
+	| _ -> None

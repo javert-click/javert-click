@@ -49,9 +49,11 @@ type result_t =
 
 type econf_t = cconf_t * UP.prog
 
-type transition_label_t = (cconf_t, store_t, call_stack_t, vt) TransitionLabel.t
+type event_label_t = (cconf_t, conf_info_t, vt, (vt) MPInterceptor.t) EventInterceptor.t
 
-type interceptor = (Cmd.t, transition_label_t) Hashtbl.t
+type mp_label_t = (vt) MPInterceptor.t
+
+type intercept_t = ((vt -> (vt list) option) -> (vt -> Literal.t option) -> (Literal.t -> vt) -> string -> string -> vt list -> event_label_t option) option
 
 exception State_error of (Error.t list) * State.t
 
@@ -118,6 +120,13 @@ let get_state (conf: cconf_t) : state_t =
   | ConfCont (state, _, _, _, _, _) -> state
   | ConfFinish (_, _, state, _) -> state
   | ConfSusp (_, state, _, _, _, _) -> state
+
+let set_state (conf: cconf_t) (state: state_t) : cconf_t =
+  match conf with
+  | ConfErr  (proc, i, _, errs) -> ConfErr (proc, i, state, errs)
+  | ConfCont (_, cs, prev, j, b_counter, ev_cont) -> ConfCont (state, cs, prev, j, b_counter, ev_cont)
+  | ConfFinish (fl, v, _, await_cont) -> ConfFinish (fl, v, state, await_cont)
+  | ConfSusp (pid, _, cs, prev, i, b_counter) -> ConfSusp (pid, state, cs, prev, i, b_counter)
 
 let eval_subst_list
     (state     : State.t)
@@ -211,9 +220,11 @@ let assert_formula (f: Formula.t) (state: State.t) : State.t list =
   let rec evaluate_lcmd
       (prog   : UP.prog)
       (lcmd   : LCmd.t)
-      (state  : State.t) : State.t list =
+      (state_labels  : State.t * mp_label_t list) : (State.t * mp_label_t list) list =
 
-    let eval_expr = make_eval_expr state in
+      let state, labels = state_labels in
+    
+      let eval_expr = make_eval_expr state in
 
     print_lconfiguration lcmd state;
 
@@ -222,7 +233,7 @@ let assert_formula (f: Formula.t) (state: State.t) : State.t list =
         (match Val.from_expr (LVar x) with
           | Some v_x ->
             (match State.assume_t state v_x t with
-            | Some state' -> [ state' ]
+            | Some state' -> [ state', [MPInterceptor.AssumeType (x, t)] ] 
             | _ -> raise (Failure (Printf.sprintf "ERROR: AssumeType: Cannot assume type %s for variable %s." (Type.str t) x)))
           | _ -> raise (Failure (Printf.sprintf "ERROR: AssumeType: Variable %s cannot be turned into a value." x)))
 
@@ -231,20 +242,20 @@ let assert_formula (f: Formula.t) (state: State.t) : State.t list =
         let f' = Formula.substitution store_subst true f in
         let f' = State.simplify_formula state f' in
         (match State.assume_a state [ f' ] with
-          | Some state' -> [ state' ]
+          | Some state' -> [ state', [MPInterceptor.Assume (f)] ]
           | _ -> (* Printf.printf "WARNING: ASSUMING FALSE\n"; *) [])
 
-    | SpecVar xs -> [ State.add_spec_vars state (Var.Set.of_list xs) ]
+    | SpecVar xs -> [ State.add_spec_vars state (Var.Set.of_list xs), [MPInterceptor.SpecVar xs] ]
 
     | FreshLVar (x, s) ->
         (* I need to evaluate the expression - it needs to be a real string *)
         let new_lvar  = fresh_lvar () ^ s in
         let state'    = State.add_spec_vars state (Var.Set.of_list [ new_lvar ]) in
-        let v         = eval_expr (LVar new_lvar) in
+        let v         = make_eval_expr state (LVar new_lvar) in
         let state''   = update_store state' x v in
-        [ state'' ]
+        [state'', []]
 
-    | Assert f -> assert_formula f state
+    | Assert f -> List.map (fun s -> s, []) (assert_formula f state)
 
     | Macro (name, args) ->
         let macro = Macro.get prog.prog.macros name in
@@ -254,43 +265,50 @@ let assert_formula (f: Formula.t) (state: State.t) : State.t list =
           raise (Failure (Printf.sprintf "NO MACRO found when executing: %s" (LCmd.str lcmd)))
         | Some macro ->
           let lcmds = Macro.expand_macro macro args in
-            evaluate_lcmds prog lcmds state)
+            evaluate_lcmds prog lcmds state_labels)
 
     (* We have to understand what is the intended semantics of the logic if *)
     | If (e, lcmds_t, lcmds_e) ->
         let ve = eval_expr (Expr.UnOp (Not, e)) in
         if (State.sat_check state ve)
-          then evaluate_lcmds prog lcmds_e state
-          else evaluate_lcmds prog lcmds_t state
+          then evaluate_lcmds prog lcmds_e state_labels
+          else evaluate_lcmds prog lcmds_t state_labels
 
     | Branch e ->
         let ve = eval_expr e in
         let nve = eval_expr (UnOp (Not, e)) in
         (match Val.to_expr ve with
-        | Lit (Bool true) | Lit (Bool false) -> [ state ]
+        | Lit (Bool true) | Lit (Bool false) -> [ state, [] ]
         | _ ->
           let state' = State.copy state in
-          let state  = State.assume state ve in
-          let state' = State.assume state' nve in
+          let f_true = Formula.Eq (Val.to_expr ve, Expr.Lit (Bool true)) in
+          let f_false = Formula.Eq (Val.to_expr ve, Expr.Lit (Bool false)) in
+          let state  = List.map (fun s -> s, [MPInterceptor.Assume (f_true)]) (State.assume state ve) in
+          let state' = List.map (fun s -> s, [MPInterceptor.Assume (f_false)]) (State.assume state' nve) in
           let states = state @ state' in
             branch := Val.branch_friendly ve && List.length states > 1;
             (*if !branch then print_to_all (Printf.sprintf "BranchTrue: %d : %s" (Unix.getpid()) (Val.str ve));*)
             states)
 
-    | SL sl_cmd -> State.evaluate_slcmd prog sl_cmd state
+    | SL sl_cmd -> List.map (fun s -> s, []) (State.evaluate_slcmd prog sl_cmd state)
 
   and evaluate_lcmds
     (prog    : UP.prog)
     (lcmds   : LCmd.t list)
-    (state   : State.t) : State.t list =
+    (state_labels   : State.t * mp_label_t list) : (State.t * mp_label_t list) list =
 
     match lcmds with
-    | [] -> [ state ]
+    | [] -> [ state_labels ]
     | lcmd :: rest_lcmds ->
-      let rets = evaluate_lcmd prog lcmd state in
-      List.concat (List.map (fun state -> evaluate_lcmds prog rest_lcmds state) rets)
+      let rets = evaluate_lcmd prog lcmd state_labels in
+      List.concat (List.map (fun state_labels -> evaluate_lcmds prog rest_lcmds state_labels) rets)
 
-
+let evaluate_lcmd_top
+  (prog   : UP.prog)
+  (lcmd   : LCmd.t)
+  (state  : State.t) : (State.t * event_label_t) list =
+    let state_labels = evaluate_lcmd prog lcmd (state, []) in
+    List.map (fun (s, l) -> s, EventInterceptor.MLabel (MPInterceptor.GroupLabel (l))) state_labels
 
 (**
   Evaluation of basic commands
@@ -306,7 +324,6 @@ let evaluate_bcmd
     (bcmd   : BCmd.t)
     (state  : State.t) : State.t list =
 
-  let store     = State.get_store state in
 	let eval_expr = make_eval_expr state in
   let protected_get_cell = protected_get_cell prog in
 
@@ -374,10 +391,8 @@ let evaluate_bcmd
           raise (State_error (errs, state))
     )
 
-	| _ -> raise (Internal_error "Basic command not supported!")
-
-
-let get_pid_from_val (pid: vt) (state: State.t) : string =
+let get_pid_from_val (state: State.t) =
+  fun (pid: vt) : string ->
   (match Val.to_literal pid with
   | Some (String pid) -> pid
   | Some other_thing  ->
@@ -386,7 +401,8 @@ let get_pid_from_val (pid: vt) (state: State.t) : string =
   | None -> raise (Internal_error "Procedure Call Error - unlifting procedure ID failed"))
 
 let evaluate_procedure_call (state : State.t) (old_store : Store.t option) (cs: CallStack.t) (prog : UP.prog) x pid v_args i j prev subst b_counter =
-    let pid = get_pid_from_val pid state in
+    let pid = get_pid_from_val state pid in
+
     let proc   = Prog.get_proc prog.prog pid in
     let spec   = Hashtbl.find_opt prog.specs pid in
     let params =
@@ -454,6 +470,7 @@ let evaluate_procedure_call (state : State.t) (old_store : Store.t option) (cs: 
   @param cs Current call stack
   @param prev Previous index
   @param i Current index
+  @param intercept interceptor (events or message passing) for procedure calls
   @return List of configurations resulting from the evaluation
 *)
 let evaluate_cmd
@@ -462,7 +479,8 @@ let evaluate_cmd
 	(cs             : CallStack.t)
 	(prev           : int)
 	(i              : int)
-  (b_counter      : int) : cconf_t list =
+  (b_counter      : int)
+  (intercept      : intercept_t) : (cconf_t * event_label_t option) list =
 
   (* State simplification *)
   (if (!javert) then let _ = State.simplify state in ());
@@ -507,20 +525,20 @@ let evaluate_cmd
         (* print_to_all (Printf.sprintf "BBranching: %d" (b_counter + 1)); *)
         b_counter + 1
       ) else b_counter in
-      List.map (fun state -> ConfCont (state, cs, i, i+1, b_counter, None)) resulting_states
+      List.map (fun state -> ConfCont (state, cs, i, i+1, b_counter, None), None) resulting_states
 
   | Logic lcmd ->
-      let resulting_states : State.t list = evaluate_lcmd prog lcmd state in
+      let resulting_states : (State.t * mp_label_t list) list = evaluate_lcmd prog lcmd (state, []) in
       (match lcmd with
           | SL (Invariant _) when (not first_time) -> []
           | _ ->
             let b_counter = if (List.length resulting_states > 1) then (
               b_counter + 1
             ) else b_counter in
-            List.map (fun state -> ConfCont (state, cs, i, i+1, b_counter, None)) resulting_states)
+            List.map (fun (state, labels) -> ConfCont (state, cs, i, i+1, b_counter, None), Some (EventInterceptor.MLabel (MPInterceptor.GroupLabel (labels)))) resulting_states)
 
 
-  | Goto j -> [ ConfCont (state, cs, i, j, b_counter, None) ]
+  | Goto j -> [ ConfCont (state, cs, i, j, b_counter, None), None ]
 
   (* When executing the guarded goto, we copy only when needed and parallelise *)
   | GuardedGoto (e, j, k) ->
@@ -552,7 +570,7 @@ let evaluate_cmd
           (* print_to_all (Printf.sprintf "GBranching: %d: %s" (b_counter + 1) (Val.str vt)); *)
           b_counter + 1
       ) else b_counter in
-      let result = List.mapi (fun j (state, next) -> ConfCont (state, (if j = 0 then cs else CallStack.copy cs), i, next, b_counter, None)) sp in
+      let result = List.mapi (fun j (state, next) -> ConfCont (state, (if j = 0 then cs else CallStack.copy cs), i, next, b_counter, None), None) sp in
       if ((List.length result) = 2) then (L.log L.Verboser (lazy (Printf.sprintf "BRANCHING ON CONDITIONAL GOTO.")));
         branch := (List.length result > 1) && (Val.branch_friendly vt);
         result
@@ -563,7 +581,7 @@ let evaluate_cmd
         let e = List.nth x_arr j in
         let v = eval_expr e in
           update_store state x v) state lxarr in
-        [ ConfCont (state', cs, i, i+1, b_counter, None) ]
+        [ ConfCont (state', cs, i, i+1, b_counter, None), None ]
 
     (* this should be a dedicated syntactic construct *)
   | Call (x, Lit (String f), [ e1; e2; e3 ], _, _)
@@ -574,19 +592,32 @@ let evaluate_cmd
         let ridiculous = eval_expr e3 in
         let cs' = CallStack.truncate cs in
         (* Printf.printf "calling the native JSIL await...\n"; *)
-        evaluate_return v_ret (Some (store, cs', i, i+1, b_counter, pred, [scope; ridiculous]))
+        List.map (fun r -> r, None) (evaluate_return v_ret (Some (store, cs', i, i+1, b_counter, pred, [scope; ridiculous])))
 
   | Call (x, e, args, j, subst) ->
       let pid = eval_expr e in
       let v_args = List.map eval_expr args in
-      let result = evaluate_procedure_call state (Some (State.get_store state)) cs prog x pid v_args i j prev subst b_counter in
-        result
+      (* Checking wether or not call is intercepted *)
+      (match intercept with
+      | None -> let result = evaluate_procedure_call state (Some (State.get_store state)) cs prog x pid v_args i j prev subst b_counter in
+                List.map (fun r -> r, None) result
+      | Some intercept -> 
+        (match (intercept (Val.to_list) (Val.to_literal) (Val.from_literal) x (get_pid_from_val state pid) v_args) with
+          | None -> 
+            let result = evaluate_procedure_call state (Some (State.get_store state)) cs prog x pid v_args i j prev subst b_counter in
+            List.map (fun r -> r, None) result
+          | Some label -> 
+            (* updating return variable and returning label *)
+            let state' = update_store state x (Val.from_literal Literal.Empty) in
+            [ ConfCont (state', cs, i, i+1, b_counter, None), Some label ]
+        )
+      )
 
   | ECall (x, pid, args, j) ->
       let pid = (match pid with | PVar pid -> pid) in
       let v_args = List.map eval_expr args in
         List.map
-          (fun (state, cs, i, j) -> ConfCont (state, cs, i, j, b_counter, None))
+          (fun (state, cs, i, j) -> ConfCont (state, cs, i, j, b_counter, None), None)
           (External.execute prog.prog state cs i x pid v_args j)
 
   | Apply (x, pid_args, j) ->
@@ -596,19 +627,19 @@ let evaluate_cmd
       | Some v_pid_args_list ->
           let pid = List.hd v_pid_args_list in
           let v_args = List.tl v_pid_args_list in
-            evaluate_procedure_call state (Some (State.get_store state)) cs prog x pid v_args i j prev None b_counter
+            List.map (fun r -> r, None) (evaluate_procedure_call state (Some (State.get_store state)) cs prog x pid v_args i j prev None b_counter)
       | None -> raise (Failure (Printf.sprintf "Apply not called with a list: %s" (Val.str v_pid_args))))
 
   | Arguments x ->
       let args = CallStack.get_cur_args cs in
       let args = Val.from_list args in
       let state' = update_store state x args in
-        [ ConfCont (state', cs, i, i+1, b_counter, None) ]
+        [ ConfCont (state', cs, i, i+1, b_counter, None), None ]
 
   | Print e ->
       let msg = eval_expr e in
       print_to_all (Val.str msg);
-      [ ConfCont (state, cs, i, i+1, b_counter, None) ]
+      [ ConfCont (state, cs, i, i+1, b_counter, None), None ]
 
   | ReturnNormal ->
       let v_ret = Store.get store Flag.return_variable in
@@ -616,17 +647,17 @@ let evaluate_cmd
         (match v_ret with
           | None  -> raise (Failure "nm_ret_var not in store (normal return)")
           | Some v_ret -> v_ret) in
-      evaluate_return v_ret None
+      List.map (fun r -> r, None) (evaluate_return v_ret None)
 
   | ReturnError ->
       let v_ret = Store.get store Flag.return_variable in
       (match v_ret, cs with
       | None, _  -> raise (Failure "Return variable not in store (error return) ")
-      | Some v_ret, (_, _, None, _, _, _, _) :: _ -> [ ConfFinish (Error, v_ret, state, None) ]
+      | Some v_ret, (_, _, None, _, _, _, _) :: _ -> [ ConfFinish (Error, v_ret, state, None), None ]
       | Some v_ret, (pid, _, Some old_store, x, prev', _, Some j) :: cs' ->
           let state'  = State.set_store state old_store in
           let state'' = update_store state' x v_ret in
-          [ ConfCont (state'', cs', prev', j, b_counter, None) ]
+          [ ConfCont (state'', cs', prev', j, b_counter, None), None ]
       | _ -> raise (Failure "Malformed callstack"))
 
 
@@ -636,16 +667,17 @@ let protected_evaluate_cmd
   (cs        : CallStack.t)
   (prev      : int)
   (i         : int)
-  (b_counter : int) : cconf_t list =
+  (b_counter : int)
+  (intercept : intercept_t) : (cconf_t * event_label_t option) list =
 
   try
-    evaluate_cmd prog state cs prev i b_counter
+    evaluate_cmd prog state cs prev i b_counter intercept
   with
     | State_error (errs, state)
     | State.Internal_State_Error (errs, state) ->
     (* Return: current procedure name, current command index, the state, and the associated errors *)
     let proc = CallStack.get_cur_proc_id cs in
-    [ ConfErr (proc, i, state, errs) ]
+    [ ConfErr (proc, i, state, errs), None ]
 
 
 
@@ -664,7 +696,7 @@ let rec evaluate_cmd_iter
   (hold_results   : 'a list)
   (on_hold        : (cconf_t * string) list)
   (lines_executed : (string * int, unit) Hashtbl.t)
-	(confs          : cconf_t list)
+	(confs          : (cconf_t * event_label_t option) list)
   (results        : result_t list) : 'a list * (string * int, unit) Hashtbl.t =
 
   let f = evaluate_cmd_iter ret_fun retry prog hold_results on_hold lines_executed in
@@ -678,34 +710,34 @@ let rec evaluate_cmd_iter
     ) else (
       L.log L.Verboser (lazy (Printf.sprintf "Relaunching suspended confs: %d left" (List.length on_hold)));
       let hold_confs = List.filter (fun (_, pid) -> Hashtbl.mem prog.specs pid) on_hold in
-      let hold_confs = List.map (fun (conf, _) -> conf) hold_confs in
+      let hold_confs = List.map (fun (conf, _) -> conf, None) hold_confs in
       evaluate_cmd_iter ret_fun false prog results [] lines_executed hold_confs [ ]
     )
 
-  | (ConfCont (state, cs, prev, i, b_counter, None)) :: rest_confs
+  | (ConfCont (state, cs, prev, i, b_counter, None), _) :: rest_confs
         when (b_counter <= !CCommon.max_branching) ->
       let proc_name, annot_cmd = get_cmd prog cs i in
       (*Printf.printf "Executing fun: %s" proc_name;*)
       if (!jsil_line_numbers) && (not (List.mem proc_name forbidden_prints)) then Hashtbl.replace lines_executed (proc_name, i) ();
-      let next_confs = protected_evaluate_cmd prog state cs prev i b_counter in
+      let next_confs = protected_evaluate_cmd prog state cs prev i b_counter None in
       f (next_confs @ rest_confs) results
 
-  | (ConfCont (state, cs, prev, i, b_counter, None)) :: rest_confs ->
+  | (ConfCont (state, cs, prev, i, b_counter, None), _) :: rest_confs ->
       Printf.printf "WARNING: MAX BRANCHING STOP: %d.\n" b_counter;
       L.log L.Verboser (lazy (Printf.sprintf "Stopping Symbolic Execution due to MAX BRANCHING with %d. STOPPING CONF:\n" b_counter));
       (* print_configuration annot_cmd state cs i b_counter; *)
       f rest_confs results
 
-  | (ConfErr (proc, i, state, errs)) :: rest_confs ->
+  | (ConfErr (proc, i, state, errs), _) :: rest_confs ->
       let errs = Error.sanitise errs in
       let result = RFail (proc, i, state, errs) in
       f rest_confs (result :: results)
 
-  | (ConfFinish (fl, v, state, None)) :: rest_confs ->
+  | (ConfFinish (fl, v, state, None), _) :: rest_confs ->
       let result = RSucc (fl, v, state) in
       f rest_confs (result :: results)
 
-  | (ConfSusp (fid, state, cs, prev, i, b_counter)) :: rest_confs
+  | (ConfSusp (fid, state, cs, prev, i, b_counter), _) :: rest_confs
         when retry ->
     let conf = ConfCont (state, cs, prev, i, b_counter, None) in
     L.log L.Verboser (lazy (Printf.sprintf "Suspending a computation that was trying to call %s" fid));
@@ -749,21 +781,41 @@ let evaluate_proc
 
   let cs   : CallStack.t = [ (name, args, None, "out", -1, -1, (Some (-1))) ] in
   let conf : cconf_t     = ConfCont (state, cs, (-1), 0, 0, None) in
-  let (res, _) = evaluate_cmd_iter ret_fun true prog [] [] (Hashtbl.create CCommon.medium_tbl_size) [ conf ] [ ] in
+  let (res, _) = evaluate_cmd_iter ret_fun true prog [] [] (Hashtbl.create CCommon.medium_tbl_size) [ conf, None ] [ ] in
   res
 
+let create_initial_cs (prog: UP.prog) (fid_args: (string * vt list) option) : call_stack_t =
+  let main_fid = Prog.get_main prog.prog in
+  let fid, args = (match fid_args with
+  | None -> main_fid, []
+  | Some (fid, args) -> fid, args) (* @ [Val.from_literal (String main_fid)]) *) in
+  [ (fid, args, None, "out", -1, -1, (Some (-1))) ] 
 
-let create_initial_conf (prog: UP.prog) : cconf_t =
+let create_initial_conf (prog: UP.prog) (fid_args: (string * vt list) option) : cconf_t =
   L.log L.Normal (lazy (Printf.sprintf "\nMain: %s.\n" (Prog.get_main prog.prog)));
-  let initial_cs   = [ (Prog.get_main prog.prog, [], None, "out", -1, -1, (Some (-1))) ] in
-  ConfCont ((State.init (Some prog.preds)), initial_cs, -1, 0, 0, None)
+  let initial_cs   = create_initial_cs prog fid_args in
+  let initial_state = State.init (Some prog.preds) in
+  let bindings =
+    (match fid_args with
+    | Some (fid, args) -> 
+      let proc   = Prog.get_proc prog.prog fid in
+      let params =
+        (match proc with
+          | Some proc -> Proc.get_params proc
+          | _ -> let msg = Printf.sprintf "Procedure %s not found" fid in
+                  raise (Failure msg)) in
+      (List.combine params args)
+    | None -> []) in
+  let initial_store = Store.init bindings in
+  let state = State.set_store initial_state initial_store in
+  ConfCont (state, initial_cs, -1, 0, 0, None)
 
-  let print_jsil_line_numbers (line_numbers : (string * int, unit) Hashtbl.t) (prog : UP.prog) : unit =
-    (**print_to_all (Printf.sprintf "Line numbers: %d" (Hashtbl.length line_numbers));*)
-    let file_numbers_name = prog.prog.filename ^ "_raw_coverage.txt" in
-      let out = open_out_gen [Open_wronly; Open_append; Open_creat; Open_text] 0o666 file_numbers_name in
-        Hashtbl.iter (fun (proc_name, i) _ -> output_string out ("\""^proc_name^"\"" ^ " " ^ (string_of_int i) ^ "\n")) line_numbers;
-        close_out out
+let print_jsil_line_numbers (line_numbers : (string * int, unit) Hashtbl.t) (prog : UP.prog) : unit =
+  (**print_to_all (Printf.sprintf "Line numbers: %d" (Hashtbl.length line_numbers));*)
+  let file_numbers_name = prog.prog.filename ^ "_raw_coverage.txt" in
+    let out = open_out_gen [Open_wronly; Open_append; Open_creat; Open_text] 0o666 file_numbers_name in
+      Hashtbl.iter (fun (proc_name, i) _ -> output_string out ("\""^proc_name^"\"" ^ " " ^ (string_of_int i) ^ "\n")) line_numbers;
+      close_out out
 
 (**
   Evaluation of programs
@@ -774,8 +826,8 @@ let create_initial_conf (prog: UP.prog) : cconf_t =
 let evaluate_prog (prog : UP.prog) : result_t list =
 	Random.self_init();
   let ret_fun = fun x -> x in
-  let initial_conf = (create_initial_conf prog) in
-  let (res, line_numbers) = evaluate_cmd_iter ret_fun true prog [] [] (Hashtbl.create CCommon.medium_tbl_size) [ initial_conf ] [] in
+  let initial_conf = (create_initial_conf prog None) in
+  let (res, line_numbers) = evaluate_cmd_iter ret_fun true prog [] [] (Hashtbl.create CCommon.medium_tbl_size) [ initial_conf, None ] [] in
   if(!jsil_line_numbers) then (
     print_jsil_line_numbers line_numbers prog
   );
@@ -830,11 +882,14 @@ let assume (conf: cconf_t) (formulas: Formula.t list) : cconf_t option =
 
 
 (** Event Interface *)
-let is_final (econf : econf_t) : bool =
+let final (econf : econf_t) : bool =
   match econf with
     | ConfCont (state, cs, _, _, _, _), _ -> false
     | ConfSusp _, _-> false
     | _, _ -> true
+
+let eval_expr (cconf: cconf_t) (expr: Expr.t) : vt = 
+    make_eval_expr (get_state cconf) expr 
 
 let continue_with_conf_info (econf: econf_t) (conf_info: conf_info_t) : econf_t =
     (*  This is the case where we need to merge two configurations. We take the non-control flow part of conf' and the rest comes from the current conf. **)
@@ -874,14 +929,12 @@ let check_handler_continue (econf: econf_t) : unit =
  | c, _ -> ()
 
 
-let make_step (lines_executed : (string * int, unit) Hashtbl.t) (econf : econf_t) (interceptor : state_t -> Cmd.t -> (transition_label_t option)) : (econf_t * transition_label_t option) list =
+let make_step (lines_executed : (string * int, unit) Hashtbl.t) (econf : econf_t) (intercept : intercept_t) 
+  : (econf_t * event_label_t option) list =
   branch := false;
-  match econf with
-    | ConfCont (state, cs, prev, i, b_counter, _), up_prog when (b_counter <= !CCommon.max_branching) ->
-        let (_, (_, cmd)) = get_cmd up_prog cs i in
-        let label = interceptor state cmd in
-        (match label with
-        | None ->
+  let (conf, up_prog) = econf in
+  match conf with
+    | ConfCont (state, cs, prev, i, b_counter, _) when (b_counter <= !CCommon.max_branching) ->
           (* Adding line numbers *)
           if (!jsil_line_numbers) then (
             let proc_name, annot_cmd = get_cmd up_prog cs i in
@@ -889,35 +942,21 @@ let make_step (lines_executed : (string * int, unit) Hashtbl.t) (econf : econf_t
               Hashtbl.replace lines_executed (proc_name, i) ()
           );
           (* Evaluating command *)
-          let rets = protected_evaluate_cmd up_prog state cs prev i b_counter in
-          let rets = List.map (fun x -> (x, up_prog), None) rets in
+          let rets = protected_evaluate_cmd up_prog state cs prev i b_counter intercept in
+          let rets = List.map (fun (x, label) -> (x, up_prog), label) rets in
           (match !branch && !parallel with
           | false -> rets
           | true ->
             assert (List.length rets > 1);
             while (try CCommon.threads () >= !CCommon.mthread with _ -> true) do Unix.sleepf 0.01 done;
-            let threads = CCommon.atomic_incr (+1) in
             (* print_to_all (Printf.sprintf "Active threads: %d" threads); *)
             let pid = Unix.fork () in
             (match pid with
               | 0 -> [ List.hd rets ]
               | n -> List.tl rets))
 
-        | Some label ->
-          [(econf, Some label)])
-    | ConfCont _, _ -> print_to_all "Maximum branching reached"; []
-    | c -> [c, None]
-
-let get_next (econf: econf_t) (xvar: string option) : econf_t =
-  match econf, xvar with
-  | (ConfCont (state, cs, prev, i, b_counter, _), prog), Some xvar ->
-      let state' = update_store state xvar (Val.from_literal Empty) in
-      ConfCont (state', cs, i, i+1, b_counter, None), prog
-
-  | (ConfCont (state, cs, prev, i, b_counter, _), prog), None ->
-      ConfCont (state, cs, i, i+1, b_counter, None), prog
-
-  | (c, prog), _ -> (c, prog)
+    | ConfCont _ -> print_to_all "Maximum branching reached"; []
+    | c -> [(c, up_prog), None]
 
 let print_cconf (econf: econf_t) : string =
   let (cconf, prog) = econf in
@@ -932,7 +971,7 @@ let copy_conf (cconf: cconf_t) : cconf_t =
   | ConfCont (state, cs, prev, i, b_counter, _) -> ConfCont (State.copy state, CallStack.copy cs, prev, i, b_counter, None)
   | c -> c
 
-let synthetic_lab (cconf : cconf_t) : transition_label_t option =
+let synthetic_lab (cconf : cconf_t) : event_label_t option =
   match cconf with
     | ConfCont (st, cs, i, j, b_counter, Some (store, cs', i', j', b_counter', pred, vs)) ->
        (* Printf.printf "Synthetic lab - conf cont!\n"; *)
@@ -944,7 +983,7 @@ let synthetic_lab (cconf : cconf_t) : transition_label_t option =
       let cconf = ConfFinish (fl, v, st, None) in
       Some (Await (cconf, (store, cs, i, j, b_counter), (pred, vs)))
 
-    | _ ->  None
+    | _ -> None
 
 
 let run_proc (econf: econf_t) (fid : vt) (args : vt list) : (vt * state_t) option =
@@ -953,6 +992,7 @@ let run_proc (econf: econf_t) (fid : vt) (args : vt list) : (vt * state_t) optio
   let st =
     match cconf with
       | ConfCont (st, _, _, _, _, _)
+      | ConfErr (_, _, st, _)
       | ConfFinish (_, _, st, _) -> Some (State.copy st)
       | _ -> None in
   let fid =
@@ -986,4 +1026,34 @@ let run_proc (econf: econf_t) (fid : vt) (args : vt list) : (vt * state_t) optio
     | [ Some (st, v) ] -> Some (v, st)
     | _ -> None
 
-    end
+let set_var (xvar: Var.t) (v: vt) (conf: cconf_t) : cconf_t =
+  let state = get_state conf in
+  let state' = update_store state xvar v in
+  set_state conf state'
+
+let new_conf (url: string) (setup_fid: string) (args: vt list) : econf_t =
+  let jsil_path = IO_Utils.parse_url url in
+  let ext_prog = Parsing_Utils.parse_eprog_from_file jsil_path in
+  let basename = Filename.basename (Filename.chop_extension jsil_path) in
+  let ext_prog = {ext_prog with filename = basename} in
+  let prog = Parsing_Utils.eprog_to_prog ext_prog in
+  let main_fid = Prog.get_main prog in
+  let prog = UP.init_prog prog in
+  match prog with 
+  | Ok prog -> 
+    let initial_conf = create_initial_conf prog (Some (setup_fid, args @ [Val.from_literal (String main_fid)])) in
+    initial_conf, prog
+  | _ -> raise (Failure "Program could not be initialised")
+
+
+  let fresh_lvar (x: string) (s:string) (conf: cconf_t) (vart: Type.t) : cconf_t =
+    let state     = get_state conf in
+    let state'    = State.add_spec_vars state (Var.Set.of_list [ s ]) in
+    let f = Formula.Eq (UnOp (TypeOf, (LVar s)), Lit (Type vart)) in
+    match State.assume_a state' [ f ] with
+    | Some state'' -> let v = make_eval_expr state'' (LVar s) in
+                      let state'' = update_store state'' x v in
+                      set_state conf state'' 
+    | None -> raise (Failure "Cannot create fresh lvar")
+
+end

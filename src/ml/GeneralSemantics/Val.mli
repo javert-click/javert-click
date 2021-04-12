@@ -39,4 +39,5 @@ module type M =
 
     (** Should the execution branch? *)
     val branch_friendly : t -> bool
+    
   end 

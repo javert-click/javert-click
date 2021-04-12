@@ -368,9 +368,8 @@ let get_all_assigned_declared_identifiers exp =
                             BatOption.map_default (fun (id, e) -> id :: (f false e)) [] eo2 @
                             (fo false eo3)
     | ForIn (e1, e2, e3) -> (f true e1) @ (f false e2) @ (f false e3)
-    | FunctionExp (_, n, vs, e, _, _) -> (Option.map_default (List.singleton) [] n) @ vs @ (f false e)
+    | FunctionExp (_, n, vs, e, _, _)
     | Function (_, n, vs, e, _) -> (Option.map_default (List.singleton) [] n) @ vs @ (f false e)
-
     (* Boring Cases *)
     | Num _ | String _ | Null | Bool _ | RegExp _ | This
     | Skip  | Break _  | Continue _ | Debugger -> []

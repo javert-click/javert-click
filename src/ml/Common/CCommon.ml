@@ -32,9 +32,11 @@ let dom                  = ref false
 let dom_level1           = ref false
 let events               = ref false
 let promises             = ref false
+let mp                   = ref false
+let noinitialheap        = ref false
 
 (* Maximum branching *)
-let max_branching = ref 20
+let max_branching = ref 50
 
 (*********************
  * Biabduction stuff *
@@ -50,7 +52,7 @@ let output_verification = ref false
 let debug        = ref false
 let sanity       = ref true
 
-let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoading"; "loadDocument"; "i__getValue" ]
+let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoading"] (*"loadDocument"; "i__getValue" ]*)
 
 let html_parser_path = "HTMLParser.js"
 let html_json_path   = "htmlfile.json"

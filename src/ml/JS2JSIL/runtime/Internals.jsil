@@ -675,10 +675,11 @@ proc i__toPropertyDescriptor (v) {
 (* GETVALUE *)
 (* ******** *)
 
-proc i__getValue (v) {
+proc i__getValue_no_fallback(v) {
 
-			goto [(typeOf v = List)] rcand dflt;
-
+			(*goto [(typeOf v = List) and ((l-len v) > 0)] rcand dflt;*)
+			goto [(typeOf v = List)] islist dflt;
+	islist: goto [((l-len v) > 0)] rcand dflt;
    	rcand:  rtype := l-nth (v, 0);
            	goto [(rtype = "v") or (rtype = "o")] init dflt;
 
@@ -720,9 +721,143 @@ proc i__getValue (v) {
 	dflt:	ret := v;
 	rlab: return;
 
-	thrw:  ret := "ReferenceError" ();
-   	elab: throw
+	thrw: ret := "ReferenceError";
+ 	elab: throw
 };
+
+proc i__jsillist_to_array(list) {
+	arr := "Array_construct"();
+	idx := 0;
+	len := l-len (list);
+	loop_start:
+	goto [idx >= len] finished next;
+	next:
+	elem := l-nth (list, idx);
+	_unused := "AP_push"(undefined, arr, elem);
+	idx := idx + 1;
+	goto loop_start;
+	finished: ret := arr;
+	return
+};
+
+
+proc javert__invoke_no_such_value (x__scope, x__this, x) {
+              x__er_m := new(null);
+              x__er := new(x__er_m);
+              [x__er_m, "@er"] := true;
+              [x__er, "arguments"] := undefined;
+              [x__er, "x"] := x;
+              x_0 := args;
+              x_1 := (cdr (cdr x_0));
+              x__args := "create_arguments_object"(x_1);
+              [x__er, "arguments"] := x__args;
+              x__sc_fst := (x__scope l+ {{ x__er }});
+              x__te := "TypeError"();
+              x__se := "SyntaxError"();
+              x_2 := l-nth(x__sc_fst, 0.);
+              x_3 := {{ "v", x_2, "javert__no_such_value" }};
+              x_3_v := "i__getValue"(x_3) with pre_elab;
+              x_4 := l-nth(x__sc_fst, 1.);
+              x_5 := {{ "v", x_4, "x" }};
+              x_5_v := "i__getValue"(x_5) with pre_elab;
+              goto [(not ((typeOf x_3_v) = Obj))] pre_elab next_0;
+    next_0:   x_7 := metadata (x_3_v);
+              x_6 := "i__isCallable"(x_3_v);
+              goto [x_6] next_1 pre_elab;
+    next_1:   x_8 := hasField(x_7,"@boundThis");
+              goto [x_8] else_0 lab_0;
+    else_0:   x_9 := [x_7, "@boundThis"];
+              x_10 := [x_7, "@boundArguments"];
+              x_11 := [x_7, "@targetFunction"];
+              x_12 := metadata (x_11);
+              x_body_0 := [x_12, "@call"];
+              x_fscope_0 := [x_12, "@scope"];
+              x_13 := (({{ x_body_0, x_fscope_0, x_9 }} l+ x_10) l+ {{ x_5_v }});
+              x_14 := apply(x_13) with pre_elab;
+              goto lab_1;
+    lab_0:    x_body_1 := [x_7, "@call"];
+              goto [(x_body_1 = "ExecuteEval")] then_0 else_1;
+    then_0:   x_15 := extern ExecuteEval(x__sc_fst, x__this, x_5_v) with pre_elab;
+              goto lab_1;
+    else_1:   x_fscope_1 := [x_7, "@scope"];
+              goto [((typeOf x_3) = List)] then_1 else_2;
+    then_1:   goto [(l-nth(x_3, 0.) = "o")] then_2 else_2;
+    then_2:   x_this_0 := l-nth(x_3, 1.);
+              goto fi_0;
+    else_2:   x_this_1 := undefined;
+    fi_0:     PHI(x_this_2: x_this_0, x_this_1);
+              goto [((typeOf x_this_2) = Obj)] next_2 next_3;
+    next_2:   [x_this_2, "__newTarget"] := {{ "d", undefined, true, true, true }};
+    next_3:   x_16 := x_body_1(x_fscope_1, x_this_2, x_5_v) with pre_elab;
+    lab_1:    PHI(x_17: x_14, x_15, x_16);
+              goto [(x_17 = empty)] next_4 next_5;
+    next_4:   x_18 := undefined;
+    next_5:   PHI(x_19: x_17, x_18);
+              x_19_v := "i__getValue_no_fallback"(x_19) with pre_elab;
+              goto pre_rlab;
+              x_20 := empty;
+    pre_rlab: PHI(ret: x_19_v, x_20);
+              x__scope_f := x__sc_fst;
+              return;
+    pre_elab: PHI(ret: x_3_v, x_5_v, x__te, x__te, x_14, x_15, x_16, x_19_v);
+              x__scope_f := x__sc_fst;
+              throw
+};
+
+proc i__getValue(v) {
+
+			(*goto [(typeOf v = List) and ((l-len v) > 0)] rcand dflt;*)
+			goto [(typeOf v = List)] islist dflt;
+	islist: goto [((l-len v) > 0)] rcand dflt;
+   	rcand:  rtype := l-nth (v, 0);
+           	goto [(rtype = "v") or (rtype = "o")] init dflt;
+
+	init:	rbase := l-nth (v, 1);
+			rfield := l-nth (v, 2);
+			goto [rbase = undefined] thrw prim;
+
+	prim:	prim := "i__isPrimitive" (rbase);
+      	    goto [prim] is_pr ref;
+
+	is_pr: ret := "i__toObject" (rbase) with elab;
+			   ret := "getProperty" (ret, rfield) with elab;
+			   goto [ret = undefined] rlab def;
+	def:	 d := l-nth (ret, 0);	(* Get the descriptor type *)
+			   ret := l-nth (ret, 1);	(* Get the value/getter *)
+			   goto [d = "d"] rlab acc;	(* Is it a data descriptor? *)
+
+	acc:	goto [ret = undefined] rlab get;	(* Is the getter defined? *)
+	get:	m := metadata(ret);
+			xsc := [m, "@scope"];	(* Get the scope of the getter *)
+			fun := [m, "@call"];	(* Get the name of the getter *)
+			ret := fun (xsc, rbase) with elab;	(* Call the getter, errors could happen *)
+			goto [ret = empty] undef rlab;
+	undef:	ret := undefined;
+
+	ref:	goto [(typeOf v = List) and (l-nth (v, 0) = "o")] oref vref;
+
+	oref:	ret := "get" (rbase, rfield) with elab;
+			goto rlab;
+
+	vref:	goto [rbase = $lg] lg er;
+
+	lg:		ret := "get" (rbase, rfield) with elab;
+			goto rlab;
+
+	er:		ret := [rbase, rfield];
+			goto rlab;
+
+	dflt:	ret := v;
+	rlab: return;
+
+	thrw:  x_scope := {{ $lg }};
+		   as_array := "i__jsillist_to_array"(v) with elab;
+		   ret := "javert__no_such_value"(x_scope, undefined, as_array) with elab;
+		   return;
+   	elab: ret := ReferenceError;
+	   	  throw
+};
+
 
 
 (* ******** *)
