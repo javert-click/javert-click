@@ -8,7 +8,7 @@ init: init_build
 	.git-hooks/install.sh .
 
 init_build:
-	opam pin -y add JS_Parser "https://github.com/resource-reasoning/JS_Parser.git#fad17e13dde5c1feadf897e4d4f1f5be43de47da"
+	opam pin -y add JS_Parser "https://github.com/resource-reasoning/JS_Parser.git#d196ea50f551c6a721e50658790edf6038298fab"
 	#opam pin -y add JS_Parser ../JS_Parser
 	opam pin -yn add .
 	opam install -y javert-click --deps-only

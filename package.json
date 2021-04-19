@@ -1,0 +1,24 @@
+{
+  "name": "javert-click",
+  "version": "1.0.0",
+  "description": "JaVerT.Click is a symbolic execution tool for JavaScript that, for the first time, supports reasoning about JavaScript programs that manipulate any/all of the DOM Core Level 1, DOM UI Events, JavaScript Promises, and the JavaScript async/await APIs.",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/javert-click/javert-click.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/javert-click/javert-click/issues"
+  },
+  "homepage": "https://github.com/javert-click/javert-click#readme",
+  "devDependencies": {
+    "webpack": "^5.33.2",
+    "webpack-cli": "^4.6.0"
+  }
+}

@@ -2,6 +2,7 @@ open CCommon
 open Lexing
 open JS2JSIL_Constants
 open Heap2Program
+open MPCSemantics
 
 let file      = ref ""
 let js        = ref false
@@ -56,6 +57,9 @@ let heap_file = ref ""
 
         (* promises *)
         "-promises", Arg.Unit(fun () -> events := true; promises := true), "include promises model";
+
+        (* include message passing model *)
+        "-mp", Arg.Unit(fun () -> mp := true), "include message passing model";
       ]
       (fun s -> Format.eprintf "WARNING: Ignored argument %s.@." s)
       usage_msg
@@ -144,8 +148,10 @@ let main () =
     let prog = Parsing_Utils.eprog_to_prog ext_prog in
     let f = if (!events) 
       then EventCSemantics.M.evaluate_prog
+      else if (!mp) then MPCSemantics.M.evaluate_prog
       else CInterpreter.M.evaluate_prog in 
       run f prog
+
   );
   if (!stats) then print_statistics ();
   Logging.wrap_up ()
