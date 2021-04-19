@@ -1,8 +1,10 @@
-//const EventTarget       = require('../../DOM/Events/EventTarget');
+const EventTarget       = require('../../DOM/Events/EventTarget');
 const MPSemantics       = require('../Common/MPSemantics');
 const MessagePort       = require('../PostMessage/MessagePort');
 const SharedWorker      = require('./SharedWorker');
 const WorkerGlobalScope = require('./WorkerGlobalScope');
+
+var MPSem = new MPSemantics.MPSemantics();
 
 /*
 * @id Worker
@@ -10,7 +12,6 @@ const WorkerGlobalScope = require('./WorkerGlobalScope');
 function Worker(scriptURL, options){
     EventTarget.EventTarget.call(this);
     // 1. The user agent may throw a "SecurityError" DOMException if the request violates a policy decision.
-    
     // 2. Let outside settings be the current settings object.
     var outsideSettings = null;
     // 3. Parse the scriptURL argument relative to outside settings.
@@ -25,12 +26,15 @@ function Worker(scriptURL, options){
     var workerURL = scriptURL;
     // 6. Let worker be a new Worker object. 
     var worker = this;
+    console.log('going to create port');
     // 7. Create a new MessagePort object whose owner is outside settings. Let this be the outside port
     var outsidePort = new MessagePort.MessagePort();
     // 8. Associate the outside port with worker
     worker.__port = outsidePort;
+    console.log('going to call runWorker');
     // 9. Run this step in parallel: Run a worker given worker, worker URL, outside settings, outside port, and options.
     runWorker(worker, workerURL, outsideSettings, outsidePort, options);
+    console.log('Worker ran successfully');
     // 10. Return worker.
     return worker;
 }
@@ -64,7 +68,7 @@ Worker.prototype.postMessage = function(message, options){
 }
 
 Worker.prototype.terminate = function(){
-    MPSemantics.terminate(this.__id);
+    MPSem.terminate(this.__id);
 }
 
 function runWorker(worker, workerURL, outsideSettings, outsidePort, options){
@@ -81,7 +85,7 @@ function runWorker(worker, workerURL, outsideSettings, outsidePort, options){
     // For the global object, if is shared is true, create a new SharedWorkerGlobalScope object. Otherwise, create a new DedicatedWorkerGlobalScope object.
     //var workerGlobalObj = isShared ? new SharedWorkerGlobalScope.SharedWorkerGlobalScope(workerURL) : new DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope(workerURL);
     //worker.__id = MPSemantics.create(workerURL, "__setupConf", [workerURL, outsidePort.__id, isShared]);
-    worker.__id = MPSemantics.create(workerURL, "__setupConf", outsidePort.__id, isShared);
+    worker.__id = MPSem.create(workerURL, "__setupConf", outsidePort.__id, isShared);
 }
 
 exports.Worker = Worker;

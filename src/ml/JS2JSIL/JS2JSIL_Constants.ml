@@ -65,9 +65,7 @@ let dom_imports = dom_imports_level1 @ dom_imports_events_full
 
 let imports_events = dom_imports_level1 @ dom_imports_events 
 
-let message_passing_imports = ["MessageChannel.jsil"; "MessagePort.jsil"; "Serialization.jsil"; "MPSemantics.jsil"; "MessagePassing.jsil"; "ConfSetup.jsil";
-															 "DedicatedWorkerGlobalScope.jsil"; "SharedWorker.jsil"; "SharedWorkerGlobalScope.jsil"; "Worker.jsil"; "WorkerGlobalScope.jsil"; 
-															 "JS2JSILList.jsil"; "ObjectUtils.jsil"; "Promise.jsil"; "Testharness.jsil"]
+let message_passing_imports = ["ConfSetup.jsil"]
 
 let js2jsil_imports_cosette = [
 	"Array.jsil"; "Boolean.jsil"; "Date.jsil"; "Function.jsil"; "Global.jsil"; 

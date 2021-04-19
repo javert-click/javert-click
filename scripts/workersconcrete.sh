@@ -19,21 +19,23 @@ npx webpack --config ../webpack.config.js --env entry=$testfile
 #done
 
 # We assume the workers are previously compiled to JSIL
-#echo "compiling workers"
-#for filename in $workersexamples/*.js; do
-#    ./js2jsil.native -file $filename -mp -noinitialheap
-#done
+echo "compiling workers"
+for filename in $workersexamples/*.js; do
+    cp $filename .
+    declare workername=$(basename $filename)
+    ./js2jsil.native -file $workername -noinitialheap -mp
+done
 
-#echo "compiling setupConf file"
-#./js2jsil.native -file $setupconffilejs -noinitialheap
-#cp $setupconffilejsil .
+echo "compiling setupConf file"
+./js2jsil.native -file $setupconffilejs -noinitialheap
+cp $setupconffilejsil .
 
 #Copying files from dom implementation to environment
 #for filename in {$assertdir,$commondir,$eventsdir,$postmessagedir,$workersdir,$workersexamples,$mpcommon,$utilsdir,$promisesdir}/*.jsil; do
 #	cp $filename .
 #done
 echo "Compiling resulting file to JSIL"
-./js2jsil.native -file "main.js"
+./js2jsil.native -file "main.js" -mp
 #cp -R "$dir/$base.jsil" .
 echo -e "running main.jsil"
 ./jsil.native -file 'main.jsil' -pbn -mp

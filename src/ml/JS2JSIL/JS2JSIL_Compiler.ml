@@ -5040,7 +5040,7 @@ let compute_imports (for_verification : bool) : string list =
   else if !dom               then js2jsil_imports @ dom_imports
   else if !dom_level1        then js2jsil_imports @ dom_imports_level1
   else if !promises          then js2jsil_imports @ imports_promises
-  else if !mp                then js2jsil_imports @ dom_imports_level1 @ dom_imports_events @ message_passing_imports
+  else if !mp                then js2jsil_imports @ message_passing_imports
   else if !events            then js2jsil_imports @ imports_events
   else if !(SCommon.cosette) then js2jsil_imports_cosette
   else                            js2jsil_imports

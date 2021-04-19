@@ -6,31 +6,18 @@
 /*
 * @id DOMException
 */
-function DOMException(code){
+export function DOMException(code){
   this.code = code;        
 };
 
-const INDEX_SIZE_ERR               = 1;
-const DOMSTRING_SIZE_ERR           = 2; 
-const HIERARCHY_REQUEST_ERR        = 3; 
-const WRONG_DOCUMENT_ERR           = 4;
-const INVALID_CHARACTER_ERR        = 5;
-const NO_DATA_ALLOWED_ERR          = 6; 
-const NO_MODIFICATION_ALLOWED_ERR  = 7;
-const NOT_FOUND_ERR                = 8;
-const NOT_SUPPORTED_ERR            = 9; 
-const INUSE_ATTRIBUTE_ERR          = 10;  
-const INVALID_STATE_ERR            = 11; 
-
-exports.DOMException = DOMException;
-exports.INDEX_SIZE_ERR = INDEX_SIZE_ERR;
-exports.DOMSTRING_SIZE_ERR = DOMSTRING_SIZE_ERR;
-exports.HIERARCHY_REQUEST_ERR = HIERARCHY_REQUEST_ERR;
-exports.WRONG_DOCUMENT_ERR = WRONG_DOCUMENT_ERR;
-exports.INVALID_CHARACTER_ERR = INVALID_CHARACTER_ERR;
-exports.NO_DATA_ALLOWED_ERR = NO_DATA_ALLOWED_ERR;
-exports.NO_MODIFICATION_ALLOWED_ERR = NO_MODIFICATION_ALLOWED_ERR;
-exports.NOT_FOUND_ERR = NOT_FOUND_ERR;
-exports.NOT_SUPPORTED_ERR = NOT_SUPPORTED_ERR;
-exports.INUSE_ATTRIBUTE_ERR = INUSE_ATTRIBUTE_ERR;
-exports.INVALID_STATE_ERR = INVALID_STATE_ERR;
+export const INDEX_SIZE_ERR               = 1;
+export const DOMSTRING_SIZE_ERR           = 2; 
+export const HIERARCHY_REQUEST_ERR        = 3; 
+export const WRONG_DOCUMENT_ERR           = 4;
+export const INVALID_CHARACTER_ERR        = 5;
+export const NO_DATA_ALLOWED_ERR          = 6; 
+export const NO_MODIFICATION_ALLOWED_ERR  = 7;
+export const NOT_FOUND_ERR                = 8;
+export const NOT_SUPPORTED_ERR            = 9; 
+export const INUSE_ATTRIBUTE_ERR          = 10;  
+export const INVALID_STATE_ERR            = 11; 
