@@ -156,6 +156,7 @@ module M
       (xvar                : Var.t)
       (argsv               : Val.t list)
       (sync                : bool) : state_t list =
+    L.log L.Normal (lazy (Printf.sprintf "Dispatching event %s" (Val.str ev_name)));
     let (conf, ehs, hq) = state in
     let (cconf, prog) = conf in
     (* Configurations in which a listener applies *)
@@ -176,6 +177,7 @@ module M
           | [] -> confs_so_far @ [ (new_conf, prog), ehs, hq ]
           (* At least one handler *)
           | (fid_0, args0) :: next_handlers -> 
+            L.log L.Normal (lazy (Printf.sprintf "Found handler %s" (Val.str fid_0)));
             if (sync) then (
               let new_hq = (List.map (fun (fid, args') -> Handler (xvar, fid, ev_name, argsv @ args')) next_handlers) @ [Conf (new_conf, prog)] @ hq in
               let new_confs = Interpreter.continue_with_h (new_conf, prog) xvar fid_0 (argsv @ args0) in 

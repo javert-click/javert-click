@@ -2,76 +2,72 @@
 /* INTERFACE WINDOW */
 /********************/
 
-//const EventTarget = require('./EventTarget');
+const EventTarget = require('./EventTarget');
 
-/**
- * @id initWindow
- */
-var initWindow = function(EventTarget){
+/*
+* @id Window
+*/
+var Window = function(){
+    EventTarget.EventTarget.call(this);
+    this.document = null;
+    this.timeStamp = (new Date()).getTime();
+    this.event = undefined;
+    this.__onerror = null;
+    this.window = this;
+    this.parent = null;
+    this.opener = null;
+
+    this.outerHeight = 820;
+};
+
+Window.prototype = Object.create(EventTarget.EventTarget.prototype);
+
+Object.defineProperty(Window.prototype, 'onerror', {
     /*
-    * @id Window
+    * @id WindowOnErrorSet
     */
-    var Window = function(){
-        EventTarget.EventTarget.call(this);
-        this.document = null;
-        this.timeStamp = (new Date()).getTime();
-        this.event = undefined;
-        this.__onerror = null;
-        this.window = this;
-        this.parent = null;
-        this.opener = null;
-
-        this.outerHeight = 820;
-    };
-
-    Window.prototype = Object.create(EventTarget.EventTarget.prototype);
-
-    Object.defineProperty(Window.prototype, 'onerror', {
-        /*
-        * @id WindowOnErrorSet
-        */
-        set: function(f){
-            this.addEventListener("error", f);
-            this.__onerror = f;
-        },
-
-        /*
-        * @id WindowOnErrorGet
-        */
-        get: function(){
-            return this.__onerror;
-        }
-    });
+    set: function(f){
+        this.addEventListener("error", f);
+        this.__onerror = f;
+    },
 
     /*
-    * @id WindowGetComputedStyle
+    * @id WindowOnErrorGet
     */
-    Window.prototype.getComputedStyle = function(elem){
-	    return elem.style;
-    };
-
-    Object.defineProperty(Window.prototype, 'outer-height', {
-        get: function(){
-            return this.outerHeight;
-        }
-    });
-
-    Window.prototype.setTimeout = function (callback, timeout) {
-      return callback ();
+    get: function(){
+        return this.__onerror;
     }
+});
 
-    Window.prototype.clone = function () {
-        var copy = new DOM.Window.Window();
-        copy.document = this.document;
-        copy.timeStamp = this.timeStamp;
-        copy.__onerror = this.__onerror;
-        copy.paent = this.parent;
-        copy.opener = this.opener;
-        copy.outerHeight = this.outerHeight;
-        return copy;
+/*
+* @id WindowGetComputedStyle
+*/
+Window.prototype.getComputedStyle = function(elem){
+    return elem.style;
+};
+
+Object.defineProperty(Window.prototype, 'outer-height', {
+    get: function(){
+        return this.outerHeight;
     }
+});
 
-    return {'Window': Window};
+Window.prototype.setTimeout = function (callback, timeout) {
+    return callback ();
 }
 
-module.exports = initWindow;
+Window.prototype.clone = function () {
+    var copy = new DOM.Window.Window();
+    copy.document = this.document;
+    copy.timeStamp = this.timeStamp;
+    copy.__onerror = this.__onerror;
+    copy.paent = this.parent;
+    copy.opener = this.opener;
+    copy.outerHeight = this.outerHeight;
+    return copy;
+}
+
+var window = new Window();
+
+exports.Window = Window;
+exports.window = window;

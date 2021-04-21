@@ -4,7 +4,6 @@
 * @id find
 */
 function find(array, f){
-	console.log('executing ArrayUtils.find');
 	for(var i = 0; i < array.length; i++){
 		if(f(array[i])){
 			return array[i];
@@ -74,4 +73,7 @@ function map(array, f){
     }
   }
 
-export {find, filter, map, ArrayIterator};
+exports.find = find;
+exports.filter = filter;
+exports.map = map;
+exports.ArrayIterator = ArrayIterator;

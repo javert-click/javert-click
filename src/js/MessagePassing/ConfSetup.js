@@ -1,7 +1,10 @@
-const DedicatedWorkerGlobalScopeAlternative = require('../MessagePassing/WebWorkers/DedicatedWorkerGlobalScopeAlternative');
-const MessagePort                           = require('../MessagePassing/PostMessage/MessagePort');
-const MPSemantics                           = require('../MessagePassing/Common/MPSemantics');
-//const MessageEvent                          = require('../DOM/Events/MessageEvent');
+const DedicatedWorkerGlobalScope = require('./WebWorkers/DedicatedWorkerGlobalScope');
+const MessagePort                = require('./PostMessage/MessagePort');
+const MPSemantics                = require('./Common/MPSemantics');
+
+JSILSetGlobalObjProp("DedicatedWorkerGlobalScope", DedicatedWorkerGlobalScope);
+JSILSetGlobalObjProp("MessagePort", MessagePort);
+JSILSetGlobalObjProp("MPSemantics", MPSemantics);
 
 /*
 * @JSIL
@@ -9,10 +12,9 @@ const MPSemantics                           = require('../MessagePassing/Common/
 */
 function __setupConf(workerURL, outsidePortId, isShared, main_fid){
     // First thing to be executed in every worker. Script file needs to import this file. This function needs to be executed before the script.
-    var setupInitialHeapName = "setupInitialHeap";
-    var global = executeJSILProc(setupInitialHeapName);
+    executeJSILProc("mainwebpack_ConfSetup");
+    var global = executeJSILProc("JSILGetGlobal");  
     console.log('WORKER: setupInitialHeap executed successfully!');
-    //var MP = initMessagePassing();
     //global.__scopeMP = MP.MessagePort.MessagePort.__scopeMP;
     console.log('WORKER: initMessagePassing executed successfully');
     //var workerGlobalObj = isShared ? new MP.SharedWorkerGlobalScope.SharedWorkerGlobalScope(workerURL) : new MP.DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope(workerURL);
@@ -20,19 +22,18 @@ function __setupConf(workerURL, outsidePortId, isShared, main_fid){
         //MP.SharedWorkerGlobalScope.SharedWorkerGlobalScope(workerURL)
     } else { 
         console.log('WORKER: isShared: false');
-        //MP.
-        DedicatedWorkerGlobalScopeAlternative.DedicatedWorkerGlobalScopeAlternative(global, workerURL);
+        global.DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScopeAlternative(global, workerURL);
     }
     // Create inside port and associate it with global object
     // 16. Let inside port be a new MessagePort object in inside settings's Realm.
     console.log('WORKER: Going to create inside port');
-    var insidePort = new MessagePort.MessagePort();
+    var insidePort = new global.MessagePort.MessagePort();
     console.log('WORKER: created inside port with id '+insidePort.__id);
     // 17. Associate inside port with worker global scope.
     global.__port = insidePort;
-    //var MPSemantics = MP.MPSemantics;
+    var MPSem = new global.MPSemantics.MPSemantics();
     // 18. Entangle outside port and inside port.
-    MPSemantics.pairPorts(outsidePortId, insidePort.__id);
+    MPSem.pairPorts(outsidePortId, insidePort.__id);
     console.log('WORKER: just paired ports '+outsidePortId+' and '+insidePort.__id);
     // 23. If script is a classic script, then run the classic script script. Otherwise, it is a module script; run the module script script.
     executeJSILProc(main_fid);

@@ -1,9 +1,12 @@
 const JS2JSILList = require('../../Utils/JS2JSILList');
+const EventsSemantics = require('../../DOM/Events/EventsSemantics');
 
 /*
 * @id MPSemantics
 */
 function MPSemantics(){
+    this.ESem = new EventsSemantics.EventsSemantics();
+    this.ESem.addHandler("ProcessMessage", "processMessageSteps");
 }
 
 /*

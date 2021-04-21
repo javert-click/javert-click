@@ -2,7 +2,6 @@ const MPSemantics = require('../Common/MPSemantics');
 const EventTarget = require('../../DOM/Events/EventTarget');
 const DOMException = require('../../DOM/Common/DOMException');
 const ArrayUtils = require('../../Utils/ArrayUtils');
-const Serialization = {};
 const MessageEvent = require('../../DOM/Events/MessageEvent');
 
 var MPSem = new MPSemantics.MPSemantics();
@@ -48,13 +47,13 @@ Object.defineProperty(MessagePort.prototype, 'onmessageerror', {
 * @id MessagePortPostMessage
 */
 MessagePort.prototype.postMessage = function(message, options){
-    MPSemantics.beginAtomic();
+    MPSem.beginAtomic();
     // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.
-    var targetPort = MPSemantics.getPaired(this.__id);
+    var targetPort = MPSem.getPaired(this.__id);
     console.log('Sending message from port '+this.__id+' to port '+targetPort);
     // 2. Run the message port post message steps providing targetPort, message and options.
     postMessageSteps(this, targetPort, message, options);
-    MPSemantics.endAtomic();
+    MPSem.endAtomic();
 }   
 
 /*
@@ -72,7 +71,7 @@ MessagePort.prototype.close = function(){
     // 1. Set this MessagePort object's [[Detached]] internal slot value to true.
     this.__Detached = true;
     // 2. If this MessagePort object is entangled, disentangle it.
-    MPSemantics.unpairPort(this.__id);
+    MPSem.unpairPort(this.__id);
 }
 
 // TODO: I believe these 2 functions are not necessary. The has been shipped flag seems to be used only for scheduling the messages.
@@ -121,7 +120,7 @@ function postMessageSteps(origPort, targetPort, message, options){
     // 6. If targetPort is null, or if doomed is true, then return.
     if(targetPort === -1 || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
-    MPSemantics.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort);
+    MPSem.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort);
 }
 
 var scopeMP = {};
@@ -141,6 +140,7 @@ function processMessageSteps(global, serializeWithTransferResult, targetPortId){
     // 2. Let targetRealm be finalTargetPort's relevant Realm.
     // TODO: what to do with these realms?
     if(!finalTargetPort.__Enabled) return;
+
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
     var deserializeRecord = StructuredDeserializeWithTransfer(serializeWithTransferResult);
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
@@ -154,7 +154,7 @@ function processMessageSteps(global, serializeWithTransferResult, targetPortId){
     event.data = messageClone;
     //event.ports = newPorts; // TODO: How to keep ids updated? 
     event.ports = [];
-    console.log('Going to dispatch messa event');
+    console.log('Going to dispatch message event');
     finalTargetPort.dispatchEvent(event);
     //global.dispatchEvent(event);
 }

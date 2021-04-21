@@ -1099,6 +1099,11 @@ proc JSILSetGlobalObjProp(xsc, vthis, prop, val){
 	return
 };
 
+proc JSILGetGlobal(xsc, vthis){
+	ret := $lg;
+	return
+};
+
 (*
 	Procedure: create_arguments_object
 

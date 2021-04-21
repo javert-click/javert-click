@@ -3,8 +3,9 @@
 /**************************/
 
 const EventsSemantics = require('./EventsSemantics');
-const EventListener   = require('../../Utils/ArrayUtils');
+const ArrayUtils      = require('../../Utils/ArrayUtils');
 const DOMException    = require('../Common/DOMException');
+const EventListener   = require('./EventListener');
 
 /*
 * @id EventTarget
@@ -481,7 +482,9 @@ function nodeAndRootIsShadowRoot(node){
 * @id retarget
 */
 function retarget(A, B){
-    if(!(A instanceof initEventTarget.Node.Node) || !(root(A) instanceof initEventTarget.ShadowRoot.ShadowRoot) || (B instanceof initEventTarget.Node.Node && shadowIncludingInclusiveAncestor(root(A), B))){
+    //const Node = require('./Node');
+    //const ShadowRoot      = require('./ShadowRoot');
+    if(!(A instanceof Node.Node) || !(root(A) instanceof ShadowRoot.ShadowRoot) || (B instanceof Node.Node && shadowIncludingInclusiveAncestor(root(A), B))){
         return A;
     }else{
         return retarget(root(A).host, B);

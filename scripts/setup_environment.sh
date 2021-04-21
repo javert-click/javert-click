@@ -13,5 +13,6 @@ cp src/ml/JS2JSIL/biruntime/*.jsil environment
 cp src/ml/JS2JSIL/runtime/harness.js environment
 cp src/ml/JS2JSIL/ES5_runtime/*.jsil environment
 cp src/ml/JS2JSIL/DOM_runtime/*.jsil environment
+cp src/ml/JS2JSIL/MP_runtime/*.jsil environment
 
 mkdir -p environment/UnitTests_JSIL

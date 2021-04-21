@@ -139,7 +139,9 @@ module M
     let dest_ports = SymbMap.find pp port_1 Val.to_literal Val.to_expr in
     let ports_curr_conf = List.map Val.to_expr (SymbMap.filter pc cid Val.from_literal) in
     (* We need to guarantee that the sender belongs to the current configuration *)
-    let f_port_1_curr_conf = Formula.SetMem (Val.to_expr port_1, Expr.ESet ports_curr_conf) in
+    let port_1_expr = Val.to_expr port_1 in
+    let f_port_1_curr_conf = List.fold_left (fun f port -> Formula.And (f, Formula.Eq (port_1_expr, port))) Formula.True ports_curr_conf in
+    (*let f_port_1_curr_conf = Formula.SetMem (Val.to_expr port_1, Expr.ESet ports_curr_conf) in*)
     List.map (
       fun (p, f) -> 
         let f_p_not_p1 = Formula.Not (Formula.Eq (Val.to_expr p, Val.to_expr port_1)) in
@@ -209,12 +211,12 @@ module M
     | p :: ps ->
         List.concat (List.map (
           fun p' ->
-            Printf.printf "\n Going to add (%s, %s) to pp" (Val.str p) (Val.str p');
+            (*Printf.printf "\n Going to add (%s, %s) to pp" (Val.str p) (Val.str p');*)
             let pp_paired_1 = SymbMap.add pp p p' Val.to_literal Val.to_expr in
             List.concat (List.map (
               fun (pp', f) -> 
                 (* 2: Adding (p2, p1) to pp *)
-                Printf.printf "\n Going to add (%s, %s) to pp" (Val.str p') (Val.str p);
+                (*Printf.printf "\n Going to add (%s, %s) to pp" (Val.str p') (Val.str p);*)
                 let pp_paired_2 = SymbMap.add pp' p' p Val.to_literal Val.to_expr in
                 let f_p1_p = Formula.Eq (Val.to_expr p1, Val.to_expr p) in
                 let f_p2_p' = Formula.Eq (Val.to_expr p2, Val.to_expr p') in
@@ -335,7 +337,8 @@ module M
         
         let cids, _ = List.split cq in
         let new_reduced_confs = run_conf cids c mq pc pp in
-        List.map (fun new_reduced_conf -> update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf) new_reduced_confs, None
+        let res = List.map (fun new_reduced_conf -> update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf) new_reduced_confs, None in
+        res
       | _, None, _ -> raise (Failure "Configuration not found")) 
     | None ->
       (* Scheduler decides if a configuration or a message is scheduled *)

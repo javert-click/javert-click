@@ -27,17 +27,19 @@ for filename in $workersexamples/*.js; do
 done
 
 echo "compiling setupConf file"
-./js2jsil.native -file $setupconffilejs -noinitialheap
-cp $setupconffilejsil .
+npx webpack --config ../webpack.config.js --env entry=$setupconffilejs
+./js2jsil.native -file "webpack_ConfSetup.js" #-noinitialheap
+mv "webpack_ConfSetup.jsil" "ConfSetup.jsil"
+#cp $setupconffilejsil .
 
 #Copying files from dom implementation to environment
 #for filename in {$assertdir,$commondir,$eventsdir,$postmessagedir,$workersdir,$workersexamples,$mpcommon,$utilsdir,$promisesdir}/*.jsil; do
 #	cp $filename .
 #done
 echo "Compiling resulting file to JSIL"
-./js2jsil.native -file "main.js" -mp
+./js2jsil.native -file "webpack_"$name -mp
 #cp -R "$dir/$base.jsil" .
-echo -e "running main.jsil"
-./jsil.native -file 'main.jsil' -pbn -mp
+echo -e "running webpack_$base.jsil"
+./jsil.native -file "webpack_$base.jsil" -pbn -mp
 
 

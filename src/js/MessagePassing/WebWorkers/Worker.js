@@ -26,15 +26,12 @@ function Worker(scriptURL, options){
     var workerURL = scriptURL;
     // 6. Let worker be a new Worker object. 
     var worker = this;
-    console.log('going to create port');
     // 7. Create a new MessagePort object whose owner is outside settings. Let this be the outside port
     var outsidePort = new MessagePort.MessagePort();
     // 8. Associate the outside port with worker
     worker.__port = outsidePort;
-    console.log('going to call runWorker');
     // 9. Run this step in parallel: Run a worker given worker, worker URL, outside settings, outside port, and options.
     runWorker(worker, workerURL, outsideSettings, outsidePort, options);
-    console.log('Worker ran successfully');
     // 10. Return worker.
     return worker;
 }

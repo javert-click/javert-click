@@ -20,28 +20,28 @@ var EventsSemantics = function(EventTarget){
 * @id EventsSemanticsSyncDispatch
 */
 EventsSemantics.prototype.syncDispatch = function(event_str, event, target, flags){
-  syncDispatch(event_str, this.xsc, event, target, flags);
+  __ES__wrapper__syncDispatch(event_str, this.xsc, event, target, flags);
 };
 
 /*
 * @id EventsSemanticsAsyncDispatch
 */
 EventsSemantics.prototype.asyncDispatch = function(p, event, target, flags){
-  asyncDispatch(p, event.type, this.xsc, event, target, flags);
+  __ES__wrapper__asyncDispatch(p, event.type, this.xsc, event, target, flags);
 };
 
 /*
 * @id EventsSemanticsAddHandler
 */
 EventsSemantics.prototype.addHandler = function(event_str, fid){
-  addHandler(event_str, fid);
+  __ES__wrapper__addHandler(event_str, fid);
 };
 
 /*
 * @id EventsSemanticsRemoveHandler
 */
 EventsSemantics.prototype.removeHandler = function(event_str, fid){
-  removeHandler(event_str, fid);
+  __ES__wrapper__removeHandler(event_str, fid);
 };
 
 /*

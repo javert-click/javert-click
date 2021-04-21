@@ -1,4 +1,4 @@
-mpdir="js/MessagePassing"
+mpdir="./js/MessagePassing"
 postmessagedir="$mpdir/PostMessage"
 workersdir="$mpdir/WebWorkers"
 mpcommon="$mpdir/Common"
