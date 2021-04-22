@@ -2,19 +2,14 @@
 /* INTERFACE Text  */
 /*******************/
 
-//const CharacterData = require('./CharacterData');
-//const DOMException = require('./DOMException');
-//const Node         = require('./Node');
+const DOMException  = require('./DOMException');
 
-/**
-* @id initText
-*/
-var initText = function(CharacterData, DOMException, Node){
+function initText(Node, CharacterData){
 
 	/**
 	 * @id Text
 	 */
-	var Text = function (data, document){
+	function Text(data, document){
 		CharacterData.CharacterData.call(this, data);
 		this.nodeName = '#text';
 		this.nodeType = Node.TEXT_NODE;
@@ -49,6 +44,6 @@ var initText = function(CharacterData, DOMException, Node){
 	};
 
 	return {'Text': Text};
-};
+}
 
-module.exports = initText
+exports.initText = initText;

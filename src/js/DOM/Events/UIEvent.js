@@ -2,44 +2,36 @@
 /* INTERFACE UI EVENT */
 /**********************/
 
-//const Event     = require('./Event');
-//const Window    = require('./Window');
+const Event     = require('./Event');
+const Window    = require('./Window');
 
 /*
-* @id initUIEvent
+* @id UIEvent
 */
-var initUIEvent = function(Event, Window){
+var UIEvent = function(type, eventInitDict){
+    if(eventInitDict && eventInitDict.view && !(eventInitDict.view instanceof Window.Window)){
+        throw new TypeError();
+    }
+    Event.Event.call(this, type, eventInitDict);
+    this.view = null;
+    this.detail = 0;
+    if(eventInitDict && eventInitDict.view){
+        this.view = eventInitDict.view;
+    }
+    if(eventInitDict && eventInitDict.detail){
+        this.detail = eventInitDict.detail;
+    }
+};
 
+UIEvent.prototype = Object.create(Event.Event.prototype);
+
+Object.defineProperty(Window.Window.prototype, 'UIEvent', {
     /*
-    * @id UIEvent
+    * @id UIEventGet
     */
-    var UIEvent = function(type, eventInitDict){
-        if(eventInitDict && eventInitDict.view && !(eventInitDict.view instanceof Window.Window)){
-            throw new TypeError();
-        }
-        Event.Event.call(this, type, eventInitDict);
-        this.view = null;
-        this.detail = 0;
-        if(eventInitDict && eventInitDict.view){
-            this.view = eventInitDict.view;
-        }
-        if(eventInitDict && eventInitDict.detail){
-            this.detail = eventInitDict.detail;
-        }
-    };
+    get: function(){
+        return UIEvent;
+    }
+});
 
-    UIEvent.prototype = Object.create(Event.Event.prototype);
-
-    Object.defineProperty(Window.Window.prototype, 'UIEvent', {
-        /*
-        * @id UIEventGet
-        */
-        get: function(){
-            return UIEvent;
-        }
-    });
-
-    return {UIEvent: UIEvent};
-}
-
-module.exports     = initUIEvent;
+exports.UIEvent = UIEvent;

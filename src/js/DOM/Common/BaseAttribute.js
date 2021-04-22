@@ -2,18 +2,13 @@
 /* INTERFACE Attribute  */
 /************************/
 
-//const Node = require('./Node'); 
-//const Text = require('./Text');
-//const DOMException = require('./DOMException');
+const DOMException = require('./DOMException');
 
 /*
+* This API works with multiple versions of Node and Text (Core Level 1 and 3)
 * @id initAttribute
 */
-var initAttribute = function(Node, DOMException, Text){
-
-    //var Node         = DOM.Node;
-    //var DOMException = DOM.DOMException;
-    //var Text         = DOM.Text;
+function initAttribute(Node, Text){
 
     /**
      * @id Attribute
@@ -98,6 +93,6 @@ var initAttribute = function(Node, DOMException, Text){
     };
 
     return {'Attribute': Attribute};
-};
+}
 
-module.exports = initAttribute;
+exports.initAttribute = initAttribute;

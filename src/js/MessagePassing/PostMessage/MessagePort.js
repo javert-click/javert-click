@@ -1,10 +1,21 @@
-const MPSemantics = require('../Common/MPSemantics');
-const EventTarget = require('../../DOM/Events/EventTarget');
+const MPSemantics  = require('../Common/MPSemantics');
+const EventTarget  = require('../../DOM/Events/EventTarget');
 const DOMException = require('../../DOM/Common/DOMException');
-const ArrayUtils = require('../../Utils/ArrayUtils');
+const ArrayUtils   = require('../../Utils/ArrayUtils');
 const MessageEvent = require('../../DOM/Events/MessageEvent');
 
 var MPSem = new MPSemantics.MPSemantics();
+
+// THIS IS TO AVOID CIRCULAR DEPENDENCY BETWEEN NODE AND EVENT TARGET!
+const Node              = require('../../DOM/Events/Node');
+const ShadowRoot        = require('../../DOM/Events/ShadowRoot');
+const DocumentFragment  = require('../../DOM/Events/DocumentFragment');
+const MouseEvent        = require('../../DOM/Events/MouseEvent');
+const Element           = require('../../DOM/Events/Element');
+const Text              = require('../../DOM/Events/Text');
+const Window            = require('../../DOM/Events/Window');
+
+EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, Window);
 
 /*
 * @id MessagePort

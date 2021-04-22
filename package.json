@@ -20,5 +20,8 @@
   "devDependencies": {
     "webpack": "^5.33.2",
     "webpack-cli": "^4.6.0"
+  },
+  "dependencies": {
+    "circular-dependency-plugin": "^5.2.2"
   }
 }

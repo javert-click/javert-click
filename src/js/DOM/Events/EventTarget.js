@@ -15,7 +15,20 @@ var EventTarget = function (){
 };
 
 var scopeEvents = {};
-var initEventTarget = {};
+
+/*
+* This function aims to avoid circular dependencies. Adding any of the dependencies below as a 'require' 
+* in this file would cause a circular dependency.
+*/
+function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, Window){
+    scopeEvents.Node             = Node;
+    scopeEvents.ShadowRoot       = ShadowRoot;
+    scopeEvents.DocumentFragment = DocumentFragment;
+    scopeEvents.MouseEvent       = MouseEvent;
+    scopeEvents.Element          = Element;
+    scopeEvents.Text             = Text;
+    scopeEvents.window           = Window.window;
+}
 
 /*
     * @JSIL
@@ -168,7 +181,7 @@ EventTarget.prototype.getTheParent = function (event){
 */
 function activationEvent(event){
     // TODO
-    return (event instanceof initEventTarget.MouseEvent.MouseEvent && event.type === 'click')
+    return (event instanceof scopeEvents.MouseEvent.MouseEvent && event.type === 'click')
 }
 
 EventTarget.prototype.triggeredEvents = 0;
@@ -190,7 +203,7 @@ function updatePropagationPath(target, slotable, relatedTarget, event, touchTarg
             //5.9.1.2 set slotable to null
             slotable = null;
             //5.9.1.3 if parent's root is a shadow root, whose mode is "closed", then set slot-in-closed-tree to true
-            if(parent instanceof initEventTarget.ShadowRoot.ShadowRoot && parent.mode === initEventTarget.ShadowRoot.ShadowRootMode.CLOSED){
+            if(parent instanceof scopeEvents.ShadowRoot.ShadowRoot && parent.mode === scopeEvents.ShadowRoot.ShadowRootMode.CLOSED){
                 slotInClosedTree = true;
             }
         }
@@ -208,7 +221,7 @@ function updatePropagationPath(target, slotable, relatedTarget, event, touchTarg
             touchTargets.push(resRetarget);
         }
         //5.9.6 if parent is a Window object, or parent is a node and target’s root is a shadow-including inclusive ancestor of parent, then:
-        if(parent instanceof initEventTarget.Window.Window || (parent instanceof initEventTarget.Node.Node && shadowIncludingInclusiveAncestor(root(target), parent))){
+        if(parent instanceof scopeEvents.Window.Window || (parent instanceof scopeEvents.Node.Node && shadowIncludingInclusiveAncestor(root(target), parent))){
             //5.9.6.1 If isActivationEvent is true, event’s bubbles attribute is true, activationTarget is null, and parent has activation behavior, then set activationTarget to parent.
             if((isActivationEvent === true) && (event.bubbles === true) && (activationTarget === null) && (parent.activationBehaviour !== undefined)){
                 activationTarget = parent;
@@ -266,7 +279,7 @@ function clear(event, clearTargets){
         //10.3 Set event’s touch target list to the empty list
         event.touchTargetList = [];
     }
-    initEventTarget.window.event = undefined;
+    scopeEvents.window.event = undefined;
 }
 
 /*
@@ -404,7 +417,7 @@ function execCallBack(callback, opName, event, currentTarget){
     // Register DOM event triggering
     EventTarget.prototype.triggeredEvents++;
     if(event.legacyPreActBeh === true) event.eventPhase === event.NONE;
-    var window = initEventTarget.window;
+    var window = scopeEvents.window;
     if(!isInShadowTree(event)) window.event = event;
     try{
         if(event.type === "error"){
@@ -452,10 +465,10 @@ function getTouchTargets(event, target){
 }
 
 /*
-* @id slotable
+* @id is_slotable
 */
 function is_slotable(node){
-    return (node instanceof initEventTarget.Element.Element || node instanceof initEventTarget.Text.Text);
+    return (node instanceof scopeEvents.Element.Element || node instanceof scopeEvents.Text.Text);
 }
 
 /*
@@ -475,16 +488,14 @@ function clearTargets(clearTargetsStruct){
 * @id nodeAndRootIsShadowRoot
 */
 function nodeAndRootIsShadowRoot(node){
-    return (node instanceof initEventTarget.Node.Node) && (root(node) instanceof initEventTarget.ShadowRoot.ShadowRoot);
+    return (node instanceof scopeEvents.Node.Node) && (root(node) instanceof scopeEvents.ShadowRoot.ShadowRoot);
 }
 
 /*
 * @id retarget
 */
 function retarget(A, B){
-    //const Node = require('./Node');
-    //const ShadowRoot      = require('./ShadowRoot');
-    if(!(A instanceof Node.Node) || !(root(A) instanceof ShadowRoot.ShadowRoot) || (B instanceof Node.Node && shadowIncludingInclusiveAncestor(root(A), B))){
+    if(!(A instanceof scopeEvents.Node.Node) || !(root(A) instanceof scopeEvents.ShadowRoot.ShadowRoot) || (B instanceof scopeEvents.Node.Node && shadowIncludingInclusiveAncestor(root(A), B))){
         return A;
     }else{
         return retarget(root(A).host, B);
@@ -509,7 +520,7 @@ function shadowIncludingInclusiveAncestor(A, B){
     //Case 1: B is a descendant of A
     //Case 2: B's root is a shadowRoot and B's root's host is a shadow-including-inclusive descendant of A.
     var descendant = isDescendant(B,A);
-    var rootIsShadowRoot = (root(B) instanceof initEventTarget.ShadowRoot.ShadowRoot) && shadowIncludingInclusiveDescendant(root(B).host, A);
+    var rootIsShadowRoot = (root(B) instanceof scopeEvents.ShadowRoot.ShadowRoot) && shadowIncludingInclusiveDescendant(root(B).host, A);
     return (descendant || rootIsShadowRoot);
 }
 
@@ -517,7 +528,7 @@ function shadowIncludingInclusiveAncestor(A, B){
 * @id shadowIncludingInclusiveDescendant
 */
 function shadowIncludingInclusiveDescendant(A, B){
-    var isShadowIncludingInclusiveDescendant = (isDescendant(A, B) || (root(A) instanceof initEventTarget.ShadowRoot.ShadowRoot && shadowIncludingInclusiveDescendant(root(A).host, B)));
+    var isShadowIncludingInclusiveDescendant = (isDescendant(A, B) || (root(A) instanceof scopeEvents.ShadowRoot.ShadowRoot && shadowIncludingInclusiveDescendant(root(A).host, B)));
     return isShadowIncludingInclusiveDescendant;
 }
 
@@ -538,13 +549,13 @@ function appendToAnEventPath(event, target, shadowAdjustedTarget, relatedTarget,
     //1. let item-in-shadow-tree be false
     var itemInShadowTree = false;
     //2. if target is a node and its root is a shadow root, then set item-in-shadow-tree to true
-    if(target instanceof initEventTarget.Node.Node && target.parentNode instanceof initEventTarget.ShadowRoot.ShadowRoot){
+    if(target instanceof scopeEvents.Node.Node && target.parentNode instanceof scopeEvents.ShadowRoot.ShadowRoot){
         itemInShadowTree = true;
     }
     //3. let root-of-closed-tree be false
     var rootOfClosedTree = false;
     //4. if target is a shadow root whose mode is closed, then set root-of-closed-tree to true
-    if(target instanceof initEventTarget.ShadowRoot.ShadowRoot && target.mode === initEventTarget.ShadowRoot.ShadowRootMode.CLOSED){
+    if(target instanceof scopeEvents.ShadowRoot.ShadowRoot && target.mode === scopeEvents.ShadowRoot.ShadowRootMode.CLOSED){
         rootOfClosedTree = true;
     }
     //5. append a new struct to event's path
@@ -570,7 +581,7 @@ function jsilEvent (type){
 function isInShadowTree(event){ 
     var parent = event.currentTarget;
     while(parent){
-        if(parent instanceof initEventTarget.ShadowRoot.ShadowRoot) return true;
+        if(parent instanceof scopeEvents.ShadowRoot.ShadowRoot) return true;
         parent = parent.getTheParent(event);
     }
     return false;
@@ -587,12 +598,12 @@ scopeEvents.updatePropagationPath   = updatePropagationPath;
 scopeEvents.clearTargets            = clearTargets;
 scopeEvents.clear                   = clear;
 scopeEvents.activationEvent         = activationEvent;
-scopeEvents.initEventTarget         = initEventTarget;
 
 eventsSemantics.xsc = scopeEvents;
 
 
 exports.EventTarget = EventTarget;
+exports.initEventTarget = initEventTarget;
 
 
 

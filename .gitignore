@@ -64,3 +64,4 @@ environment
 *.log
 *.synctex.gz
 main.pdf
+.merlin

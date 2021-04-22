@@ -2,13 +2,9 @@
 /* INTERFACE CharacterData  */
 /***************************/
 
-//const Node = require ('./Node');
-//const DOMException = require ('./DOMException');
+const DOMException = require ('./DOMException');
 
-/*
-* @id initCharacterData
-*/
-var initCharacterData = function(Node, DOMException){
+function initCharacterData(Node){
 	
 	/**
 	 * @id CharacterData
@@ -136,4 +132,4 @@ var initCharacterData = function(Node, DOMException){
 	return {'CharacterData': CharacterData};
 };
 
-module.exports = initCharacterData
+exports.initCharacterData = initCharacterData

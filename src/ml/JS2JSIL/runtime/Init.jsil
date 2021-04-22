@@ -205,102 +205,11 @@ proc setupInitialHeap () {
       [$lg, "__ES__schedule"]		      			  := {{ "d", $l_es_schedule, true, false, true }};
 	  [$lg, "__ES__addHandler"]		      			  := {{ "d", $l_es_addhandler, true, false, true }};
 	  [$lg, "__ES__wrapper__js_await"]    			  := {{ "d", $ljsawait, true, false, true }};
-	  (* DOM API*)
-	  [$lg, "initDOM"]			          			  := {{ "d", $linitdom, true, false, true }};
-      [$lg, "initDOMException"]	          			  := {{ "d", $linitdomexception, true, false, true }};
-	  [$lg, "initEvent"]		          			  := {{ "d", $linitevent, true, false, true }};
-	  [$lg, "initEventListener"]		  			  := {{ "d", $liniteventlistener, true, false, true }};
-	  [$lg, "initEventTarget"]	          			  := {{ "d", $liniteventtarget, true, false, true }};
-	  [$lg, "initPerformance"]	          			  := {{ "d", $linitperformance, true, false, true }};
-	  [$lg, "initNode"]			          			  := {{ "d", $linitnode, true, false, true }};
-	  [$lg, "initCDATASection"]	          			  := {{ "d", $linitcdatasection, true, false, true }};
-	  [$lg, "initCharacterData"]	      			  := {{ "d", $linitcharacterdata, true, false, true }};
-	  [$lg, "initComment"]		          			  := {{ "d", $linitcomment, true, false, true }};
-	  [$lg, "initDocument"]		          			  := {{ "d", $linitdocument, true, false, true }};
-	  [$lg, "initElement"]		          			  := {{ "d", $linitelement, true, false, true }};
-	  [$lg, "initAttribute"]		      			  := {{ "d", $linitattribute, true, false, true }};
-	  [$lg, "initNodeList"]		          			  := {{ "d", $linitnodelist, true, false, true }};
-	  [$lg, "initText"]			                      := {{ "d", $linittext, true, false, true }};
-      [$lg, "initDocumentFragment"]	                  := {{ "d", $linitdocumentfragment, true, false, true }};
-      [$lg, "initDocumentType"]                       := {{ "d", $linitdocumenttype, true, false, true }};
-      [$lg, "initEntityReference"]	                  := {{ "d", $linitentityreference, true, false, true }};
-	  [$lg, "initEntity"]	                          := {{ "d", $linitentity, true, false, true }};
-	  [$lg, "initNotation"]	                          := {{ "d", $linitnotation, true, false, true }};
-      [$lg, "initProcessingInstruction"]              := {{ "d", $linitprocessinginstruction, true, false, true }};
-      [$lg, "initEventsSemantics"]	                  := {{ "d", $liniteventssemantics, true, false, true }};
-      [$lg, "initWindow"]                             := {{ "d", $linitwindow, true, false, true }};
-      [$lg, "initArrayUtils"]                         := {{ "d", $linitarrayutils, true, false, true }};
-      [$lg, "initLiveNodeList"]                       := {{ "d", $linitlivenodelist, true, false, true }};
-      [$lg, "initCustomEvent"]                        := {{ "d", $linitcustomevent, true, false, true }};
-      [$lg, "initMouseEvent"]                         := {{ "d", $linitmouseevent, true, false, true }};
-      [$lg, "initUIEvent"]                            := {{ "d", $linituievent, true, false, true }};
-	  [$lg, "initWheelEvent"]                         := {{ "d", $linitwheelevent, true, false, true }};
-	  [$lg, "initGamepadEvent"]                       := {{ "d", $linitgamepadevent, true, false, true }};
-	  [$lg, "initFocusEvent"]                         := {{ "d", $linitfocusevent, true, false, true }};
-	  [$lg, "initCompositionEvent"]                   := {{ "d", $linitcompositionevent, true, false, true }};
-      [$lg, "initKeyboardEvent"]                      := {{ "d", $linitkeyboardevent, true, false, true }};
-	  [$lg, "initMessageEvent"]                       := {{ "d", $linitmessageevent, true, false, true }};
-	  [$lg, "initShadowRoot"]                         := {{ "d", $linitshadowroot, true, false, true }};
-	  [$lg, "initNamedNodeMap"]                       := {{ "d", $linitnamednodemap, true, false, true }};
-      [$lg, "initHTMLElement"]                        := {{ "d", $linithtmlelement, true, false, true }};
-      [$lg, "initHTMLDocument"]                       := {{ "d", $linithtmldocument, true, false, true }};
-	  [$lg, "initXMLDocument"]                        := {{ "d", $linitxmldocument, true, false, true }};
-      [$lg, "initDOMImplementation"]                  := {{ "d", $linitdomimplementation, true, false, true }};
-	  [$lg, "initFormElement"]                        := {{ "d", $linitformelement, true, false, true }};
-	  [$lg, "initInputElement"]                       := {{ "d", $linitinputelement, true, false, true }};
-	  [$lg, "initClassList"]                          := {{ "d", $linitclasslist, true, false, true }};
-	  [$lg, "initStringUtils"]                        := {{ "d", $linitstringutils, true, false, true }};
-	  [$lg, "initCSSStyleDeclaration"]                := {{ "d", $linitcssstyledeclaration, true, false, true }};
-
-	  [$lg, "initDOMRect"]      		              := {{ "d", $linitdomrect, true, false, true }};
-	  [$lg, "initHTMLFiles"]      		              := {{ "d", $linithtmlfiles, true, false, true }};
-	  [$lg, "initUIEventsFiles"]      	              := {{ "d", $linituieventshtmlfiles, true, false, true }};
-	  [$lg, "initTestHarness"]      	              := {{ "d", $linittestharness, true, false, true }};
-	  [$lg, "initHTMLSlotElement"]                    := {{ "d", $linithtmlslotelement, true, false, true }};
-
-	  [$lg, "initDocumentLoading"]                    := {{ "d", $linitdocumentloading, true, false, true }};
-	  [$lg, "initSymbolicDOM"]                        := {{ "d", $linitsymbolicdom, true, false, true }};
-
-	  [$lg, "initJsUnitCore"]                         := {{ "d", $linitjsunitcore, true, false, true }};
-	  [$lg, "initDOMTestCase"]                        := {{ "d", $linitdomtestcase, true, false, true }};
-
-	  [$lg, "initDOMHeap"]                            := {{ "d", $linitdomheap, true, false, true }};
-	  [$lg, "initDOMHeapCoreLevel1"]                  := {{ "d", $linitdomheapcorelevel1, true, false, true }};
-
-	  [$lg, "setInnerHTML"]                           := {{ "d", $lsetinnerhtml, true, false, true }};
-
-	  (* PROMISES *)
-	  [$lg, "initPromise"]                            := {{ "d", $linitpromise, true, false, true }};
-	  [$lg, "initPMap"]                               := {{ "d", $linitpmap, true, false, true}};
-	  [$lg, "initDelay"]                              := {{ "d", $linitdelay, true, false, true}};
-
-	  (* MOCHA *)
-	  [$lg, "initCash"]                               := {{ "d", $linitcash, true, false, true }};
-	  [$lg, "initMocha"]                              := {{ "d", $linitmocha, true, false, true }};
 
 	  (* MESSAGE PASSING *)
-	  [$lg, "initMessagePassing"]                     := {{ "d", $linitmessagepassing, true, false, true }};
-	  [$lg, "initMPSemantics"]                        := {{ "d", $linitmpsemantics, true, false, true }};
-	  [$lg, "initMessageChannel"]                     := {{ "d", $linitmessagechannel, true, false, true }};
-	  [$lg, "initMessagePort"]                        := {{ "d", $linitmessageport, true, false, true }};
-	  [$lg, "initSerialization"]                      := {{ "d", $linitserialization, true, false, true }};
-	  [$lg, "initDedicatedWorkerGlobalScope"]         := {{ "d", $linitdedicatedworkerglobalscope, true, false, true }};
-	  [$lg, "initSharedWorker"]                       := {{ "d", $linitsharedworker, true, false, true }};
-	  [$lg, "initSharedWorkerGlobalScope"]            := {{ "d", $linitsharedworkerglobalscope, true, false, true }};
-	  [$lg, "initWorker"]                             := {{ "d", $linitworker, true, false, true }};
-	  [$lg, "initWorkerGlobalScope"]                  := {{ "d", $linitworkerglobalscope, true, false, true }};
-
 	  [$lg, "JSILSetGlobalObjProp"]                   := {{ "d", $ljsilsetmpscope, true, false, true }};
 	  [$lg, "StructuredSerializeWithTransfer"]        := {{ "d", $lserializewithtransfer, true, false, true }};
 	  [$lg, "StructuredDeserializeWithTransfer"]      := {{ "d", $ldeserializewithtransfer, true, false, true }};
-
-	  (* JS2JSIL List *)
-	  [$lg, "initJS2JSILList"]                        := {{ "d", $linitjsillist, true, false, true }};
-	  [$lg, "JSILList_create"]                        := {{ "d", $lcreatejsillist, true, false, true }};
-	  [$lg, "JSILList_add"]                           := {{ "d", $ljsillistadd, true, false, true }};
-
-	  (* Obj Utils *)
-	  [$lg, "initObjectUtils"]                        := {{ "d", $linitobjectutils, true, false, true }};
 
 	  [$lg, "__MP__wrapper__newPort"]			      := {{ "d", $lsmpnewport, true, false, true }};
 	  [$lg, "__MP__wrapper__send"]			          := {{ "d", $lsmpsend, true, false, true }};
@@ -311,6 +220,14 @@ proc setupInitialHeap () {
 	  [$lg, "__MP__wrapper__terminate"]			      := {{ "d", $lsmpterminate, true, false, true }};
 	  [$lg, "__MP__wrapper__beginAtomic"]			  := {{ "d", $lsmpbeginatomic, true, false, true }};
 	  [$lg, "__MP__wrapper__endAtomic"]			      := {{ "d", $lsmpendatomic, true, false, true }};
+
+	  (* JS2JSIL List *)
+	  [$lg, "initJS2JSILList"]                        := {{ "d", $linitjsillist, true, false, true }};
+	  [$lg, "JSILList_create"]                        := {{ "d", $lcreatejsillist, true, false, true }};
+	  [$lg, "JSILList_add"]                           := {{ "d", $ljsillistadd, true, false, true }};
+
+	  (* Obj Utils *)
+	  [$lg, "initObjectUtils"]                        := {{ "d", $linitobjectutils, true, false, true }};
 
       ret := "create_object_with_call_construct_concrete" ($lg_eval, "ExecuteEval", empty, 1);
       ret := "create_object_with_call_construct_concrete" ($lg_parseInt, "Object_parseInt", empty, 2);
@@ -659,10 +576,6 @@ proc setupInitialHeap () {
 			ret := "create_object_with_call_construct_concrete" ($lmath_sqrt, "M_sqrt", empty, 1);
 			ret := "create_object_with_call_construct_concrete" ($lmath_tan, "M_tan", empty, 1);
 
-
-
-
-
 			(* Date object *)
 
 			ret := "create_object_with_call_construct_concrete" ($ldate, "Date_call", "Date_construct", 7);
@@ -796,15 +709,9 @@ proc setupInitialHeap () {
 			ret := "create_object_with_call_construct_concrete" ($lrp_test, "RP_test", empty, 1);
 			ret := "create_object_with_call_construct_concrete" ($lrp_toString, "RP_toString", empty, 0);
 
-
-
-
-
 			(* JSON object *)
 
 			ret := "create_default_object_concrete" ($ljson, $lobj_proto, "JSON", true);
-
-
 
 			[$ljson, "parse"]     := {{ "d", $ljson_parse,     true, false, true }};
 			[$ljson, "stringify"] := {{ "d", $ljson_stringify, true, false, true }};
@@ -828,9 +735,6 @@ proc setupInitialHeap () {
 			[$lerr_proto, "toString"]    := {{ "d", $lep_toString, true, false, true }};
 
 			ret := "create_object_with_call_construct_concrete" ($lep_toString, "EP_toString", empty, 0);
-
-
-
 
 			(* Native errors *)
 
@@ -904,7 +808,6 @@ proc setupInitialHeap () {
 			[ret, "length"] := {{ "d", 0, false, false, true }};
 
 	    	ret := "setupEvents"();
-        	ret := "setupInitialDOM"();
 			ret := "setupInitialMP"();
 			ret := $lg;
       		return
@@ -985,94 +888,8 @@ thrw: ret := "EVENTS SEMANTICS ERROR: AddHandler called with non-callable object
       throw
 };
 
-(* DOM API *)
-proc setupInitialDOM(){
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdom, "initDOM", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdomexception, "initDOMException", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitevent, "initEvent", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $liniteventlistener, "initEventListener", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $liniteventtarget, "initEventTarget", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitperformance, "initPerformance", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitnode, "initNode", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitcdatasection, "initCDATASection", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitcharacterdata, "initCharacterData", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitcomment, "initComment", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdocument, "initDocument", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitelement, "initElement", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitattribute, "initAttribute", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitnodelist, "initNodeList", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linittext, "initText", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdocumentfragment, "initDocumentFragment", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdocumenttype, "initDocumentType", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitentityreference, "initEntityReference", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitentity, "initEntity", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitnotation, "initNotation", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitprocessinginstruction, "initProcessingInstruction", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $liniteventssemantics, "initEventsSemantics", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitwindow, "initWindow", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitarrayutils, "initArrayUtils", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitlivenodelist, "initLiveNodeList", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitcustomevent, "initCustomEvent", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitmouseevent, "initMouseEvent", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linituievent, "initUIEvent", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitwheelevent, "initWheelEvent", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitgamepadevent, "initGamepadEvent", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitfocusevent, "initFocusEvent", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitcompositionevent, "initCompositionEvent", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitkeyboardevent, "initKeyboardEvent", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitmessageevent, "initMessageEvent", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitshadowroot, "initShadowRoot", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitnamednodemap, "initNamedNodeMap", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linithtmlelement, "initHTMLElement", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linithtmldocument, "initHTMLDocument", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitxmldocument, "initXMLDocument", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdomimplementation, "initDOMImplementation", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitcash, "initCash", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitformelement, "initFormElement", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitinputelement, "initInputElement", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitclasslist, "initClassList", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitstringutils, "initStringUtils", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitcssstyledeclaration, "initCSSStyleDeclaration", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdomrect, "initDOMRect", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linithtmlfiles, "initHTMLFiles", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linituieventshtmlfiles, "initUIEventsFiles", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $lsetinnerhtml, "setInnerHTML", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linittestharness, "initTestHarness", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linithtmlslotelement, "initHTMLSlotElement", empty, 1);
-
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdocumentloading, "initDocumentLoading", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitsymbolicdom, "initSymbolicDOM", empty, 1);
-
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitjsunitcore, "initJsUnitCore", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdomtestcase, "initDOMTestCase", empty, 1);
-
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdomheap, "initDOMHeap", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdomheapcorelevel1, "initDOMHeapCoreLevel1", empty, 1);
-
-  	(* PROMISES *)
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitpromise, "initPromise", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitpmap, "initPMap", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdelay, "initDelay", empty, 1);
-
-	(* MOCHA *)
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitmocha, "initMocha", empty, 1);
-
-  	ret := empty;
-	return
-};
-
 (* Message Passing *)
 proc setupInitialMP(){
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitmessagepassing, "initMessagePassing", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitmpsemantics, "initMPSemantics", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitmessagechannel, "initMessageChannel", empty, 1);
-    ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitmessageport, "initMessagePort", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitserialization, "initSerialization", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitdedicatedworkerglobalscope, "initDedicatedWorkerGlobalScope", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitsharedworker, "initSharedWorker", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitsharedworkerglobalscope, "initSharedWorkerGlobalScope", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitworker, "initWorker", empty, 1);
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitworkerglobalscope, "initWorkerGlobalScope", empty, 1);
 
 	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $lserializewithtransfer, "StructuredSerializeWithTransfer", empty, 1);
 	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $ldeserializewithtransfer, "StructuredDeserializeWithTransfer", empty, 1);
