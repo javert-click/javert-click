@@ -146,7 +146,6 @@ module M
       fun (p, f) -> 
         let f_p_not_p1 = Formula.Not (Formula.Eq (Val.to_expr p, Val.to_expr port_1)) in
         let f_p_eq_p2 = Formula.Eq (Val.to_expr p, Val.to_expr port_2) in
-        Printf.printf "\nDest port might be port %s" (Val.str p);
         let cond = (Formula.And (f_p_not_p1, Formula.And (f_p_eq_p2, Formula.And (f_port_1_curr_conf ,f)))) in
         L.log L.Normal (lazy (Printf.sprintf "\nSEND: Generating formula %s" (Formula.str cond)));
         enqueue msg plist p mq, cond) dest_ports
@@ -198,7 +197,6 @@ module M
     if (!cosette) then EventSemantics.fresh_lvar xvar (MPConstants.portvarsuffix ^ (Val.str port)) conf NumberType
     else EventSemantics.set_var xvar port conf in
     let pp_list = SymbMap.add pc port cid (Val.to_literal) (Val.to_expr) in
-    Printf.printf "\nPort created successfully\n";
     (cid, conf'), pp_list
 
   (* Adds both entries to pp map. Note that we assume pre-existing values of p1 and p2 to have been removed. The map is bi-directional *)
