@@ -4,7 +4,7 @@
     String s: {{ "Type": "String", "StringData": s }} 
     Object o: {{ "Type": "Object", "Properties": {{ {{ "Key": prop1, "Value": val1 }},..., {{ "Key": propn, "Value": valn }} }} }}
 *)
-proc StructuredSerializeWithTransfer(xsc, vthis, msg, transfer){
+proc StructuredSerializeInternal(xsc, vthis, msg, transfer){
                   goto [(msg = undefined) or (msg = null)] basic notbasic;
 	basic:        type := {{ "Type", "primitive"}};
                   val := {{ "Value", msg}};
@@ -35,7 +35,7 @@ proc StructuredSerializeWithTransfer(xsc, vthis, msg, transfer){
     loop:         goto [(i < n)] addprop endobj;
     addprop:      prop := l-nth (props, i);
                   val := "i__getValue"({{ "o", msg, prop }});
-                  vs := "StructuredSerializeWithTransfer" (xsc, vthis, val, transfer);
+                  vs := "StructuredSerializeInternal" (xsc, vthis, val, transfer);
                   keyl := {{ "Key", prop }};
                   vall := {{ "Value", vs }};
                   keyval := {{ keyl, vall }};

@@ -113,33 +113,51 @@ MessagePort.prototype.transferReceivingSteps = function(dataHolder, value){
         // (This will disentangle dataHolder.[[RemotePort]] from the original port that was transferred.)
 }
 
+function StructuredSerializeWithTransfer(message, transfer){
+    // 1. Let memory be an empty map *)
+    var memory = {};
+    // 2. For each transferable of transferList: *)
+    // 2.1 (NOT SUPPORTED) If transferable has neither an [[ArrayBufferData]] internal slot ...
+    // 2.2 (NOT SUPPORTED) If transferable has an [[ArrayBufferData]] internal slot and ... 
+    // 2.3 If memory[transferable] exists, then throw a "DataCloneError" DOMException. 
+    // 2.4  
+
+    // Note: the StructuredSerializeInternal function is a JSIL function, found in ml/JS2JSIL/MP_runtime/Serialization.jsil
+    return StructuredSerializeInternal(message, transfer);
+}
+
 /*
 * @id postMessageSteps
 */
 function postMessageSteps(origPort, targetPort, message, options){
     // 1. Let transfer be options["transfer"].
     var transfer = options ? options['transfer'] : [];
+    var transferIds = ArrayUtils.map(transfer, function(p) {return p.__id});
     // 2. If transfer contains this MessagePort, then throw a "DataCloneError" DOMException.
-    if(transfer && transfer.indexOf(this) !== -1) throw new DOMException.DOMException(DOMException.DataCloneError);
+    if(transfer && transferIds.indexOf(origPort.__id) !== -1) throw new DOMException.DOMException(DOMException.DataCloneError);
     // 3. Let doomed be false.
     var doomed = false;
     // 4. If targetPort is not null and transfer contains targetPort, then set doomed to true
-    var transferIds = ArrayUtils.map(transfer, function(p) {return p.__id});
-    if(targetPort !== -1 && transfer && transferIds.indexOf(targetPort) !== -1) doomed = true;
+    // and optionally report to a developer console that the target port was posted to itself, causing the communication channel to be lost.
+    if(targetPort !== -1 && transfer && transferIds.indexOf(targetPort) !== -1){
+        doomed = true;
+        console.log('Target port was posted to itself which causes the communication channel to be lost.')
+    }
     // 5. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
     var serializeWithTransferResult = StructuredSerializeWithTransfer(message, transfer);
     // 6. If targetPort is null, or if doomed is true, then return.
     if(targetPort === -1 || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
+    // Note: This call to 'send' will enable our MessagePassing semantics, which will then  trigger the processMessageSteps function.
     MPSem.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort);
 }
 
 var scopeMP = {};
 
 /*
-    * @JSIL
-    * @id processMessageSteps
-    */
+* @JSIL
+* @id processMessageSteps
+*/
 function processMessageSteps(global, serializeWithTransferResult, targetPortId){
     console.log('Executing processMessageSteps, targetPortId: '+targetPortId);
     // 1. Let finalTargetPort be the MessagePort in whose port message queue the task now finds itself.

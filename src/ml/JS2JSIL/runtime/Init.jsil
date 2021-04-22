@@ -208,7 +208,7 @@ proc setupInitialHeap () {
 
 	  (* MESSAGE PASSING *)
 	  [$lg, "JSILSetGlobalObjProp"]                   := {{ "d", $ljsilsetmpscope, true, false, true }};
-	  [$lg, "StructuredSerializeWithTransfer"]        := {{ "d", $lserializewithtransfer, true, false, true }};
+	  [$lg, "StructuredSerializeInternal"]            := {{ "d", $lserializewithtransfer, true, false, true }};
 	  [$lg, "StructuredDeserializeWithTransfer"]      := {{ "d", $ldeserializewithtransfer, true, false, true }};
 
 	  [$lg, "__MP__wrapper__newPort"]			      := {{ "d", $lsmpnewport, true, false, true }};
@@ -891,7 +891,7 @@ thrw: ret := "EVENTS SEMANTICS ERROR: AddHandler called with non-callable object
 (* Message Passing *)
 proc setupInitialMP(){
 
-	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $lserializewithtransfer, "StructuredSerializeWithTransfer", empty, 1);
+	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $lserializewithtransfer, "StructuredSerializeInternal", empty, 1);
 	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $ldeserializewithtransfer, "StructuredDeserializeWithTransfer", empty, 1);
 
 	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $ljsilsetmpscope, "JSILSetGlobalObjProp", empty, 1);
