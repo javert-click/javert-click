@@ -113,17 +113,18 @@ MessagePort.prototype.transferReceivingSteps = function(dataHolder, value){
         // (This will disentangle dataHolder.[[RemotePort]] from the original port that was transferred.)
 }
 
-function StructuredSerializeWithTransfer(message, transfer){
+function StructuredSerializeWithTransfer(message){
     // 1. Let memory be an empty map *)
-    var memory = {};
-    // 2. For each transferable of transferList: *)
-    // 2.1 (NOT SUPPORTED) If transferable has neither an [[ArrayBufferData]] internal slot ...
-    // 2.2 (NOT SUPPORTED) If transferable has an [[ArrayBufferData]] internal slot and ... 
-    // 2.3 If memory[transferable] exists, then throw a "DataCloneError" DOMException. 
-    // 2.4  
+    // 2. For each transferable of transferList: 
+      // 2.1 (NOT SUPPORTED) If transferable has neither an [[ArrayBufferData]] internal slot ...
+      // 2.2 (NOT SUPPORTED) If transferable has an [[ArrayBufferData]] internal slot and ... 
+      // 2.3  If memory[transferable] exists, then throw a "DataCloneError" DOMException. 
+      // 2.4 Set memory[transferable] to { [[Type]]: an uninitialized value }.
+    // 3. Let serialized be ? StructuredSerializeInternal(value, false, memory).
+    var serialiazed = StructuredSerializeInternal(message, false);
 
     // Note: the StructuredSerializeInternal function is a JSIL function, found in ml/JS2JSIL/MP_runtime/Serialization.jsil
-    return StructuredSerializeInternal(message, transfer);
+    return serialiazed;
 }
 
 /*
@@ -144,7 +145,7 @@ function postMessageSteps(origPort, targetPort, message, options){
         console.log('Target port was posted to itself which causes the communication channel to be lost.')
     }
     // 5. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
-    var serializeWithTransferResult = StructuredSerializeWithTransfer(message, transfer);
+    var serializeWithTransferResult = StructuredSerializeWithTransfer(message);
     // 6. If targetPort is null, or if doomed is true, then return.
     if(targetPort === -1 || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:

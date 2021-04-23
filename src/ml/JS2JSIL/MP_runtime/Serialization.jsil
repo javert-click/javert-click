@@ -1,54 +1,203 @@
-(* Serializes msg and transfer array *)
-(* Result is as follows: 
+proc JSILMap_create(){
+    ret := {{ }};
+    return
+};
+
+proc JSILMap_add(map, key, value){
+    keyl := {{ "Key", key }};
+    vall := {{ "Value", value }};
+    keyval := {{ keyl, vall }};
+    map := map l+ {{ keyval }};
+    ret := map;
+    return
+};
+
+proc JSILMap_find(map, key){
+                  i := 0;
+                  len := l-len (map);
+    loop:         goto [i < len] loop end;
+                  kvpair := l-nth (map, i);
+                  keyl := l-nth (kvpair, 0);
+                  keyv := lnth (keyl, 1);
+                  goto [keyv = ekey] found nf;
+    found:        vall := l-nth(kvpair, 1);
+                  ret := l-nth (vall, 1);
+                  return;
+    nf:           i := i+1;
+                  goto loop;
+    end:          ret := null;
+                  return
+
+};
+
+proc SerializeErrorObj (xsc, vthis, value){
+                  (* 17.1 Let name be ? Get(value, "name").  *)
+                  name := "get" (value, "name") with elab;
+                  (* 17.2 If name is not one of "Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", *)
+                    (* "TypeError", or "URIError", then set name to "Error". *)
+                  goto [(name = "Error") or (name = "EvalError") or (name = "RangeError") or (name = "ReferenceError") or (name = "SyntaxError") or (name = "TypeError") or (name = "URIError")] cont namenotinsub;
+    namenotinsub: name := "Error";
+                  goto cont;
+    cont:         (* 17.3 Let valueMessageDesc be ? value.[[GetOwnProperty]]("message"). *)
+                  valueMessageDesc := "get" (value, "message") with elab;
+                  (* 17.4 Let message be undefined if IsDataDescriptor(valueMessageDesc) is false, and ? ToString(valueMessageDesc.[[Value]]) otherwise. *)
+                  isdatadesc := "i__isDataDescriptor" (valueMessageDesc);
+                  goto [isdatadesc = true] dd nondd;
+    dd:           mv := "get" (valueMessageDesc, "Value");
+                  message := "i__toString" (mv) with elab;
+                  goto errorobjret;
+    nondd:        message := undefined;
+                  goto errorobjret;
+    errorobjret:  (* 17.5 Set serialized to { [[Type]]: "Error", [[Name]]: name, [[Message]]: message }. *)
+                  type := {{ "Type", "Error" }};
+                  name := {{ "Name", name }}; 
+                  message := {{ "Message", message }};
+                  serialized := {{ type, name, message }};
+                  (* 17.6 (NOT SUPPORTEF) User agents should attach a serialized representation of any interesting accompanying data *)
+                   (* which are not yet specified, notably the stack property, to serialized. *)
+                  ret := serialized;
+                  return;
+    elab:         throw
+};
+
+(* Auxiliary function used to serialize object with primitive val. Example: 
     Num n:    {{ "Type": "Number", "NumberData": n }} 
     String s: {{ "Type": "String", "StringData": s }} 
-    Object o: {{ "Type": "Object", "Properties": {{ {{ "Key": prop1, "Value": val1 }},..., {{ "Key": propn, "Value": valn }} }} }}
 *)
-proc StructuredSerializeInternal(xsc, vthis, msg, transfer){
-                  goto [(msg = undefined) or (msg = null)] basic notbasic;
-	basic:        type := {{ "Type", "primitive"}};
-                  val := {{ "Value", msg}};
+proc SerializeObjectWithPrimVal (xsc, vthis, value){
+                  (* 6. Let serialized be an uninitialized value. *)
+                  serialized := undefined;
+                  m := metadata(value);
+			      clazz := [m, "@class"];
+                  (* 7. If value has a [[BooleanData]] internal slot, *)
+                   (* then set serialized to { [[Type]]: "Boolean", [[BooleanData]]: value.[[BooleanData]] }. *)
+			      goto [clazz = "Boolean"] boolobj nonboolobj;  
+    boolobj:      type := {{ "Type", "Boolean" }};
+                  booldata := "BP_valueOf" (xsc, value);
+                  booldatal := {{ "BooleanData", booldata }};
+                  serialized := {{ type, booldatal }};
                   goto succ;
-    
-    notbasic:     tv := typeOf msg;    
-                  goto [(tv = Num)] num notnum;
-    num:          type := {{ "Type", "Number" }};
-                  val := {{ "NumberData", msg }};
+    nonboolobj:   (* 8. Otherwise, if value has a [[NumberData]] internal slot, *)
+                   (* then set serialized to { [[Type]]: "Number", [[NumberData]]: value.[[NumberData]] }. *)
+                  goto [(clazz = "Number")] numobj nonnumobj;
+    numobj:       type := {{ "Type", "Number" }};
+                  numdata := "NP_valueOf" (xsc, value);
+                  numdatal := {{ "NumberData", numdata }};
+                  serialized := {{ type, numdatal }};
                   goto succ;
-    
-    notnum:       goto [(tv = Bool)] bool nonbool;
-    bool:         type := {{ "Type", "Boolean" }};
-                  val := {{ "BooleanData", msg }};
+    nonnumobj:    (* 9. (NOT SUPPORTED) Otherwise, if value has a [[BigIntData]] internal slot, 
+                   (* then set serialized to { [[Type]]: "BigInt", [[BigIntData]]: value.[[BigIntData]] }. *)
+                  (* 10. Otherwise, if value has a [[StringData]] internal slot, *)
+                   (* then set serialized to { [[Type]]: "String", [[StringData]]: value.[[StringData]] }. *)
+                  goto [(tv = "String")] strobj nonstrobj;
+    strobj:       type := {{ "Type", "String" }};
+                  strdata := "SP_valueOf" (xsc, value);
+                  strdatal := {{ "StringData", strdata }};
+                  serialized := {{ type, strdatal }};
+                  goto succ;  
+    nonstrobj:    (* 11. Otherwise, if value has a [[DateValue]] internal slot, *)
+                   (* then set serialized to { [[Type]]: "Date", [[DateValue]]: value.[[DateValue]] }. *)
+                  goto [(clazz = "Date")] dateobj nondateobj;
+    dateobj:      type := {{ "Type", "Date" }};
+                  datedata := "DP_valueOf" (xsc, value);
+                  datedatal := {{ "DateValue", datedata }};
+                  serialized := {{ type, datedatal }};
                   goto succ;
-    
-    nonbool:      goto [(tv = Str)] str nonstr;
-    str:          type := {{ "Type", "String" }};
-                  val := {{ "StringData", msg }};
-                  goto succ;
-
-    nonstr:       goto [(tv = Obj)] obj succ;
-    obj:          type := {{ "Type", "Object" }};
-                  props := "i__getFields" (msg);
-                  propvals := {{ }};
-                  i := 0;
-                  n := l-len (props);
-    loop:         goto [(i < n)] addprop endobj;
-    addprop:      prop := l-nth (props, i);
-                  val := "i__getValue"({{ "o", msg, prop }});
-                  vs := "StructuredSerializeInternal" (xsc, vthis, val, transfer);
-                  keyl := {{ "Key", prop }};
-                  vall := {{ "Value", vs }};
-                  keyval := {{ keyl, vall }};
-                  propvals := propvals l+ {{ keyval }};
-                  i := i+1;   
-                  goto loop;     
-                  
-    endobj:       propl := {{ "Properties", propvals}};
-                  ret := {{ type, propl }};
-                  return;
-    
-    succ:         ret := {{ type, val }};
+    nondateobj:   (* 12. (NOT SUPPORTED) Otherwise, if value has a [[RegExpMatcher]] internal slot, then set serialized to ... . *)
+                  (* 13. (NOT SUPPORTED) Otherwise, if value has an [[ArrayBufferData]] internal slot, then: *)
+                  (* 14. (NOT SUPPORTED) Otherwise, if value has a [[ViewedArrayBuffer]] internal slot, then: *)
+                  (* 15. (NOT SUPPORTED) Otherwise, if value has [[MapData]] internal slot, then: *)
+                  (* 16. (NOT SUPPORTED) Otherwise, if value has [[SetData]] internal slot, then: *)
+                  (* 17. Otherwise, if value has an [[ErrorData]] internal slot and value is not a platform object, then: *)
+                  goto [(clazz = "Error")] errorobj succ;
+                  (* Step 17 is implemented in SerializeErrorObj (defined above) *)
+    errorobj:     serialized := "SerializeErrorObj" (xsc, vthis, value);
+    succ:         ret := serialized;
                   return
+};
+
+proc SerializeObject(xsc, vthis, value){
+                  (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
+                  keys := "i__getFields" (value);
+                  keyvals := {{ }};
+                  i := 0;
+                  n := l-len (keys);
+    loop:         goto [i < n] addprop succ;
+    addprop:      key := l-nth (keys, i);
+                  (* 26.4.1 If ! HasOwnProperty(value, key) is true, then:*)
+                  hasprop := "OP_hasOwnProperty" (undefined, value, key);
+                  goto [hasprop = true] propfound propnf;
+                  (* 26.4.1.1 Let inputValue be ? value.[[Get]](key, value). *)
+    propnf:       inputVal := "get" (value, key);
+                  (* 26.4.1.2 Let outputValue be ? StructuredSerializeInternal(inputValue, forStorage, memory). *)
+                  outputValue := "StructuredSerializeInternal" (xsc, vthis, inputVal, forStorage);
+                  (* 26.4.1.3 Append { [[Key]]: key, [[Value]]: outputValue } to serialized.[[Properties]]. *)
+                  properties := "JSILMap_add" (properties, key, outputValue);
+                  serialized := {{ type, properties }};
+                  i := i+1;   
+                  goto loop;
+    propfound:    i := i+1;
+                  goto loop;  
+    succ:         ret := serialized;
+                  return                 
+};
+
+(* Serializes msg. Function follows PostMessage web standard *)
+proc StructuredSerializeInternal(xsc, vthis, value, forStorage){
+                  (* 1. If memory was not supplied, let memory be an empty map. *)
+                  memory := "JSILMap_create" ();
+                  (* 2. If memory[value] exists, then return memory[value].*)
+                  cache := "JSILMap_find" (memory, value);
+                  goto [cache = null] nullcache nonnullcache;
+    nonnullcache: ret := cache;
+                  return;
+    nullcache:    (* 3. Let deep be false. *)
+                  deep := false;
+                  (* 4. If Type(value) is Undefined, Null, Boolean, Number, BigInt, or String, then return *)
+                  (* { [[Type]]: "primitive", [[Value]]: value }. *)
+                  tv := typeOf value;
+                  goto [(value = undefined) or (value = null) or (tv = Bool) or (tv = Num) or (tv = Str)] basic notbasic;
+	basic:        type := {{ "Type", "primitive"}};
+                  val := {{ "Value", value}};
+                  ret := {{ type, val }};
+                  return;
+    notbasic:     (* 5. (NOT SUPPORTED) If Type(value) is Symbol, then throw a "DataCloneError" DOMException.*)
+                  goto [(tv = Obj)] obj elab;
+                  (* Steps 6 - 11 are implemented in SerializeObjectWithPrimVal *)
+    obj:          serialized := "SerializeObjectWithPrimVal" (xsc, vthis, value);
+                  goto [serialized = undefined] nonerrorobj updatemem;
+    nonerrorobj:  (* 18. (NOT SUPPORTED) Otherwise, if value is an Array exotic object, then: *)
+                  (* 19. (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object: *)
+                  (* 20. (NOT SUPPORTED) Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException. *)
+                  (* 21. Otherwise, if IsCallable(value) is true, then throw a "DataCloneError" DOMException. *)
+                  is_callable := "i__isCallable" (value);
+                  goto [is_callable = true] datacloneerr nodataclone;
+    datacloneerr: ret := "DataCloneError" ();
+                  throw;
+    nodataclone:  (* 22. Otherwise, if value has any internal slot other than [[Prototype]] or [[Extensible]], then throw a "DataCloneError" DOMException. *)
+                  (* 23. (NOT SUPPORTED) Otherwise, if value is an exotic object ... *)
+                  (* 24. Otherwise: *)
+                  (* 24.1 Set serialized to { [[Type]]: "Object", [[Properties]]: a new empty List }. *)
+                  type := {{ "Type", "Object" }};
+                  properties := "JSILMap_create" ();
+                  serialized := {{ type, properties }};
+                  (* 24.2 Set deep to true. *)
+                  deep := true;
+                  goto updatemem;
+    updatemem:    (* 25. (OPTIMIZATION NOT IMPLEMENTED) Set memory[value] to serialized. *)
+                  (* 26. If deep is true, then: *)
+                  goto [deep = true] deep succ;           
+    deep:         (* 26.1 (NOT SUPPORTED) If value has a [[MapData]] internal slot, then: *)
+                  (* 26.2 (NOT SUPPORTED) Otherwise, if value has a [[SetData]] internal slot, then: *)
+                  (* 26.3 (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object, ... *)
+                  (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
+                  (* Step 26.4 is implemented in SerializeObject (defined above) *)
+                  serialized := "SerializeObject"(xsc, vthis, value);
+                  goto succ;     
+    succ:         (* 27. Return serialized. *)
+                  ret := serialized;
+                  return;
+    elab:         throw
 };
 
 (* Deserializes msg based on serialization algorithm; applies reverse transformation *)

@@ -189,6 +189,7 @@ proc setupInitialHeap () {
       [$lg, "SyntaxError"]        		  			  := {{ "d", $lserr, true, false, true }};
       [$lg, "TypeError"]          		  			  := {{ "d", $lterr, true, false, true }};
       [$lg, "URIError"]           		  			  := {{ "d", $luerr, true, false, true }};
+	  [$lg, "DataCloneError"]                         := {{ "d", $ldcerr, true, false, true}};
       [$lg, "JSON"]                       			  := {{ "d", $ljson, true, false, true }};
       (* Print *)
       [$lg, "console"]             		  			  := {{ "d", $lconsole, true, false, true }};
@@ -744,6 +745,7 @@ proc setupInitialHeap () {
 			ret := "create_object_with_call_construct_concrete" ($lserr,  "SyntaxError_call",    "Error_construct", 1);
 			ret := "create_object_with_call_construct_concrete" ($lterr,  "TypeError_call",      "Error_construct", 1);
 			ret := "create_object_with_call_construct_concrete" ($luerr,  "URIError_call",       "Error_construct", 1);
+			ret := "create_object_with_call_construct_concrete" ($ldcerr,  "DataCloneError_call","Error_construct", 1);
 
 			[$leerr,  "prototype"] := {{ "d", $leerr_proto, false, false, false }};
 			[$lrgerr, "prototype"] := {{ "d", $lrgerr_proto, false, false, false }};
@@ -751,6 +753,7 @@ proc setupInitialHeap () {
 			[$lserr,  "prototype"] := {{ "d", $lserr_proto, false, false, false }};
 			[$lterr,  "prototype"] := {{ "d", $lterr_proto, false, false, false }};
 			[$luerr,  "prototype"] := {{ "d", $luerr_proto, false, false, false }};
+			[$ldcerr,  "prototype"]:= {{ "d", $ldcerr_proto, false, false, false }};
 
 			[$leerr,  "name"] := {{ "d", "EvalError", true, false, true }};
 			[$lrgerr, "name"] := {{ "d", "RangeError", true, false, true }};
@@ -758,6 +761,7 @@ proc setupInitialHeap () {
 			[$lserr,  "name"] := {{ "d", "SyntaxError", true, false, true }};
 			[$lterr,  "name"] := {{ "d", "TypeError", true, false, true }};
 			[$luerr,  "name"] := {{ "d", "URIError", true, false, true }};
+			[$ldcerr,  "name"]:= {{ "d", "DataCloneError", true, false, true }};
 
 			(* Native error prototypes *)
 
@@ -767,6 +771,7 @@ proc setupInitialHeap () {
 			ret := "create_default_object_concrete" ($lserr_proto,  $lerr_proto, "Error", true);
 			ret := "create_default_object_concrete" ($lterr_proto,  $lerr_proto, "Error", true);
 			ret := "create_default_object_concrete" ($luerr_proto,  $lerr_proto, "Error", true);
+			ret := "create_default_object_concrete" ($ldcerr_proto, $lerr_proto, "Error", true);
 
 			[$leerr_proto,  "constructor"]    := {{ "d", $leerr, true, false, true }};
 			[$lrgerr_proto, "constructor"]    := {{ "d", $lrgerr, true, false, true }};
@@ -774,6 +779,7 @@ proc setupInitialHeap () {
 			[$lserr_proto,  "constructor"]    := {{ "d", $lserr, true, false, true }};
 			[$lterr_proto,  "constructor"]    := {{ "d", $lterr, true, false, true }};
 			[$luerr_proto,  "constructor"]    := {{ "d", $luerr, true, false, true }};
+			[$ldcerr_proto,  "constructor"]   := {{ "d", $ldcerr, true, false, true }};
 
 			[$leerr_proto,  "name"]    := {{ "d", "EvalError", true, false, true }};
 			[$lrgerr_proto, "name"]    := {{ "d", "RangeError", true, false, true }};
@@ -781,6 +787,7 @@ proc setupInitialHeap () {
 			[$lserr_proto,  "name"]    := {{ "d", "SyntaxError", true, false, true }};
 			[$lterr_proto,  "name"]    := {{ "d", "TypeError", true, false, true }};
 			[$luerr_proto,  "name"]    := {{ "d", "URIError", true, false, true }};
+			[$ldcerr_proto,  "name"]   := {{ "d", "DataCloneError", true, false, true }};
 
 			[$leerr_proto,  "message"]    := {{ "d", "", true, false, true }};
 			[$lrgerr_proto, "message"]    := {{ "d", "", true, false, true }};
@@ -788,6 +795,7 @@ proc setupInitialHeap () {
 			[$lserr_proto,  "message"]    := {{ "d", "", true, false, true }};
 			[$lterr_proto,  "message"]    := {{ "d", "", true, false, true }};
 			[$luerr_proto,  "message"]    := {{ "d", "", true, false, true }};
+			[$ldcerr_proto, "message"]    := {{ "d", "", true, false, true }};
 
 			(* JS2JSIL List *)
 			ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitjsillist, "initJS2JSILList", empty, 1);
