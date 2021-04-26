@@ -43,11 +43,11 @@ proc SerializeErrorObj (xsc, vthis, value){
     namenotinsub: name := "Error";
                   goto cont;
     cont:         (* 17.3 Let valueMessageDesc be ? value.[[GetOwnProperty]]("message"). *)
-                  valueMessageDesc := "get" (value, "message") with elab;
+                  valueMessageDesc := "getOwnProperty" (value, "message") with elab;
                   (* 17.4 Let message be undefined if IsDataDescriptor(valueMessageDesc) is false, and ? ToString(valueMessageDesc.[[Value]]) otherwise. *)
                   isdatadesc := "i__isDataDescriptor" (valueMessageDesc);
                   goto [isdatadesc = true] dd nondd;
-    dd:           mv := "get" (valueMessageDesc, "Value");
+    dd:           mv := l-nth (valueMessageDesc, 1);
                   message := "i__toString" (mv) with elab;
                   goto errorobjret;
     nondd:        message := undefined;
@@ -93,7 +93,7 @@ proc SerializeObjectWithPrimVal (xsc, vthis, value){
                    (* then set serialized to { [[Type]]: "BigInt", [[BigIntData]]: value.[[BigIntData]] }. *)
                   (* 10. Otherwise, if value has a [[StringData]] internal slot, *)
                    (* then set serialized to { [[Type]]: "String", [[StringData]]: value.[[StringData]] }. *)
-                  goto [(tv = "String")] strobj nonstrobj;
+                  goto [(clazz = "String")] strobj nonstrobj;
     strobj:       type := {{ "Type", "String" }};
                   strdata := "SP_valueOf" (xsc, value);
                   strdatal := {{ "StringData", strdata }};
@@ -236,6 +236,7 @@ proc DeserializeTypeAndVal(xsc, vthis, serialized){
 };
 
 proc DeserializeObjectWithPrimVal (xsc, vthis, type, v){
+               value := undefined;
                (* 6. Otherwise, if serialized.[[Type]] is "Boolean", then set value to a new Boolean object in 
                   targetRealm whose [[BooleanData]] internal slot value is serialized.[[BooleanData]]. *)
                 goto [type = "Boolean"] bool nbool;
@@ -269,10 +270,74 @@ proc DeserializeObjectWithPrimVal (xsc, vthis, type, v){
                 return
 };
 
-(* TODO: IMPLEMENT *)
+proc DeserializeErrorProps(xsc, vthis, serialized){
+                goto [(typeOf serialized = List) and ((l-len (serialized)) > 1)] sok elab;
+    sok:        typel := l-nth (serialized,0);
+                namel := l-nth (serialized, 1);
+                msgl := l-nth (serialized, 2);
+                goto [(typeOf typel = List) and (typeOf namel = List) and (typeOf msgl = List)] propsok elab;
+    propsok:    type := l-nth (typel, 1);
+                name := l-nth (namel, 1);
+                msg := l-nth (msgl, 1);
+                ret := {{ type, name, msg }};
+                return;
+    elab:       ret := "TypeError" ();
+                throw 
+
+};
+
 proc DeserializeErrorObj(xsc, vthis, serialized){
-                ret := null;
-                return
+                err := "DeserializeErrorProps" (xsc, vthis, serialized);
+                type := l-nth (err, 0);
+                name := l-nth (err, 1);
+                (* 19.1 Let prototype be %Error.prototype%. *)
+                prototype := $lerr_proto;
+                (* 19.2 If serialized.[[Name]] is "EvalError", then set prototype to %EvalError.prototype%. *)
+                goto [name = "EvalError"] evalerr nevalerr;
+    evalerr:    prototype := $leerr_proto;
+                goto cont;  
+    nevalerr:   (* 19.3 If serialized.[[Name]] is "RangeError", then set prototype to %RangeError.prototype%. *)
+                goto [name = "RangeError"] rangeerr nrangeerr;
+    rangeerr:   prototype := $lrgerr_proto;
+                goto cont;
+    nrangeerr:  (* 19.4 If serialized.[[Name]] is "ReferenceError", then set prototype to %ReferenceError.prototype%. *)
+                goto [name = "ReferenceError"] referr nreferr;
+    referr:     prototype := $lrferr_proto;
+                goto cont;
+    nreferr:    (* 19.5 If serialized.[[Name]] is "SyntaxError", then set prototype to %SyntaxError.prototype%. *)
+                goto [name = "SyntaxError"] serr nserr;
+    serr:       prototype := $lserr_proto;
+                goto cont;
+    nserr:      (* 19.6 If serialized.[[Name]] is "TypeError", then set prototype to %TypeError.prototype%. *)
+                goto [name = "TypeError"] terr nterr;
+    terr:       prototype := $lterr_proto;
+                goto cont;
+    nterr:      (* 19.7 If serialized.[[Name]] is "URIError", then set prototype to %URIError.prototype%. *)
+                goto [name = "URIError"] urierr cont;
+    urierr:     prototype := $luerr_proto;
+                goto cont;
+    cont:       (* 19.8. Let message be serialized.[[Message]]. *)
+                message := l-nth (err, 2);
+                (* 19.9 Set value to ! ObjectCreate(prototype, « [[ErrorData]] »). *)
+                value := "Object_create" (xsc, vthis, prototype);
+                (* 19.10 Let messageDesc be *)
+                  (* PropertyDescriptor{ [[Value]]: message, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }. *)
+                (* Creating desc with 
+                    1. enumerable: false
+                    2. configurable: true
+                    3. value: message
+                    4. writable: true
+                    5. get: empty (not specified)
+                    6. set: empty (not specified) *)
+                messageDesc := {{ "g", false, true, message, true, empty, empty }};
+                (* 19.11 If message is not undefined, then perform ! OrdinaryDefineOwnProperty(value, "message", messageDesc). *)
+                goto [not (message = undefined)] msgundef succ;
+    msgundef:   x := "defineOwnProperty"(value, "message", messageDesc);
+                goto succ;
+    succ:       (* 19.12 (VAGUE) Any interesting accompanying data attached to serialized should be deserialized and attached to value. *)
+                ret := value;
+                return;
+    elab:       throw
 };
 
 proc DeserializeObjectProperty(propval){      
@@ -333,7 +398,6 @@ proc StructuredDeserializeWithMemory(xsc, vthis, serialized, memory){
                 goto mem;
                 (* Steps 6 - 17 are implemented in DeserializeObjectWithPrimVal (defined above) *)
     nprim:      value := "DeserializeObjectWithPrimVal" (xsc, vthis, type, v);
-                goto mem;
                 (* 18. Otherwise, if serialized.[[Type]] is "Object", then: *)
                 goto [type = "Object"] obj nobj;
     obj:        (* 18.1 Set value to a new Object in targetRealm. *)

@@ -1,5 +1,5 @@
-import { JsUnitCore } from '../../js/Assert/JsUnitCore.js'
-import { Promise } from '../../js/Promises/Promise';
+import {assertEquals, assertNotNull, assertNull, assertTrue, assertFalse, assertDeepEqual, assertEqualsArray} from '../js/Assert/JsUnitCore.js'
+import { Promise } from '../js/Promises/Promise';
 
 function spyOn(mod, fname, thisobj, ntimes){
     var f_spy = {fun_name: fname, called: false, n_called: 0, throws: false, calls: []};
@@ -37,13 +37,13 @@ function expect(spyInfo){
         toHaveBeenCalledWith: function(){
             var actual_args = spyInfo.args;
             var expected_args = arguments;
-            JsUnitCore.assertEqualsArray(actual_args, expected_args);
+            assertEqualsArray(actual_args, expected_args);
         },
         notToHaveBeenCalled: function(){
-            JsUnitCore.assertFalse(spyInfo.called);
+            assertFalse(spyInfo.called);
         },
         toHaveBeenCalledTimes: function(n){
-            JsUnitCore.assertEquals(n, spyInfo.n_called);
+            assertEquals(n, spyInfo.n_called);
         }
     }
 }
@@ -75,7 +75,7 @@ function waitToBeCalledWith(spyInfo, argsarr){
         function checkMock(){
             var actual_args = spyInfo.args;
             try{
-                JsUnitCore.assertEqualsArray(argsarr, actual_args);
+                assertEqualsArray(argsarr, actual_args);
                 resolve();
             } catch (e){
                 scheduleCheck();
@@ -97,8 +97,11 @@ function expectNotToThrow(f){
     } catch (e) { throw e }
 }
 
+/*
+* @id expectToEqual
+*/
 function expectToEqual(actual, expected){
-    if (!(JsUnitCore.assertDeepEqual(actual, expected))) throw new Error("Actual value ("+actual+") different from expected ("+expected+")");
+    if (!(assertDeepEqual(actual, expected))) throw new Error("Actual value ("+actual+") different from expected ("+expected+")");
 }
 
 function expectToBeInstanceOf(obj, mod){
@@ -108,7 +111,7 @@ function expectToBeInstanceOf(obj, mod){
 }
 
 function expectToEqualArray(actual, expected){
-    return JsUnitCore.assertEqualsArray(actual, expected);
+    return assertEqualsArray(actual, expected);
 }
 
 function asMock(mod, fname){ 
