@@ -65,3 +65,6 @@ environment
 *.synctex.gz
 main.pdf
 .merlin
+package-lock.json
+lock.javert
+node_modules

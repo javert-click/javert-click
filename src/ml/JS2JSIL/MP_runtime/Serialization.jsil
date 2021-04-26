@@ -15,11 +15,11 @@ proc JSILMap_add(map, key, value){
 proc JSILMap_find(map, key){
                   i := 0;
                   len := l-len (map);
-    loop:         goto [i < len] loop end;
-                  kvpair := l-nth (map, i);
+    loop:         goto [i < len] search end;
+    search:       kvpair := l-nth (map, i);
                   keyl := l-nth (kvpair, 0);
-                  keyv := lnth (keyl, 1);
-                  goto [keyv = ekey] found nf;
+                  keyv := l-nth (keyl, 1);
+                  goto [keyv = key] found nf;
     found:        vall := l-nth(kvpair, 1);
                   ret := l-nth (vall, 1);
                   return;
@@ -120,8 +120,9 @@ proc SerializeObjectWithPrimVal (xsc, vthis, value){
                   return
 };
 
-proc SerializeObject(xsc, vthis, value, forStorage, memory){
+proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory){
                   (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
+                  serialized := {{ }};
                   keys := "i__getFields" (value);
                   keyvals := {{ }};
                   i := 0;
@@ -132,15 +133,15 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory){
                   hasprop := "OP_hasOwnProperty" (undefined, value, key);
                   goto [hasprop = true] propfound propnf;
                   (* 26.4.1.1 Let inputValue be ? value.[[Get]](key, value). *)
-    propnf:       inputVal := "get" (value, key);
+    propfound:    inputVal := "get" (value, key);
                   (* 26.4.1.2 Let outputValue be ? StructuredSerializeInternal(inputValue, forStorage, memory). *)
-                  outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memorys);
+                  outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory);
                   (* 26.4.1.3 Append { [[Key]]: key, [[Value]]: outputValue } to serialized.[[Properties]]. *)
                   properties := "JSILMap_add" (properties, key, outputValue);
                   serialized := {{ type, properties }};
                   i := i+1;   
                   goto loop;
-    propfound:    i := i+1;
+    propnf:       i := i+1;
                   goto loop;  
     succ:         ret := serialized;
                   return                 
@@ -194,7 +195,7 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* 26.3 (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object, ... *)
                   (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
                   (* Step 26.4 is implemented in SerializeObject (defined above) *)
-                  serialized := "SerializeObject"(xsc, vthis, value, forStorage, memory);
+                  serialized := "SerializeObject"(xsc, vthis, value, type, properties, forStorage, memory);
                   goto succ;     
     succ:         (* 27. Return serialized. *)
                   ret := serialized;
@@ -236,8 +237,8 @@ proc DeserializeTypeAndVal(xsc, vthis, serialized){
 };
 
 proc DeserializeObjectWithPrimVal (xsc, vthis, type, v){
-               value := undefined;
-               (* 6. Otherwise, if serialized.[[Type]] is "Boolean", then set value to a new Boolean object in 
+                value := undefined;
+                (* 6. Otherwise, if serialized.[[Type]] is "Boolean", then set value to a new Boolean object in 
                   targetRealm whose [[BooleanData]] internal slot value is serialized.[[BooleanData]]. *)
                 goto [type = "Boolean"] bool nbool;
     bool:       value := "Boolean_construct" (xsc, vthis, v);
@@ -360,7 +361,7 @@ proc DeserializeObjectProperty(propval){
 proc DeserializeObject(xsc, vthis, value, props, memory){
                 goto [typeOf props = List] valok elab;
     valok:      i := 0;
-                n := l-len (val);
+                n := l-len (props);
                 (* 22.3.1 For each Record { [[Key]], [[Value]] } entry of serialized.[[Properties]]: *)
     loop:       goto [i < n] addprop end;
     addprop:    kvserialized := l-nth (props, i);
@@ -370,7 +371,7 @@ proc DeserializeObject(xsc, vthis, value, props, memory){
                 (* 22.3.1.1 Let deserializedValue be ? StructuredDeserialize(entry.[[Value]], targetRealm, memory). *)
                 deserializedValue := "StructuredDeserializeWithMemory"(xsc, vthis, entryvalue, memory);
                 (* 22.3.1.2 Let result be ! CreateDataProperty(value, entry.[[Key]], deserializedValue). *)
-                result := "put" (value, entry, deserializedValue);
+                result := "put" (value, entrykey, deserializedValue);
                 i := i+1;
                 goto loop;
     end:        ret := value;
@@ -419,7 +420,8 @@ proc StructuredDeserializeWithMemory(xsc, vthis, serialized, memory){
                 (* 22.2 (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "Set", then: *)
                 (* 22.3 Otherwise, if serialized.[[Type]] is "Array" or "Object", then: *)
                 goto [(type = "Array") or (type = "Object")] arrobj narrobj;
-    arrobj:     value := "DeserializeObject" (xsc, vthis, value, v, memory) with elab;  
+    arrobj:     keys := l-nth(serialized, 1);
+                value := "DeserializeObject" (xsc, vthis, value, keys, memory) with elab;  
     narrobj:    (* 22.4 (NOT SUPPORTED) Otherwise: Perform the appropriate deserialization steps for the interface identified by *)
                   (* serialized.[[Type]], given serialized and value. *)
                 goto succ;
