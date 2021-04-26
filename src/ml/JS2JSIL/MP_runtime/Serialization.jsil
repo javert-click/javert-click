@@ -185,7 +185,8 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* 24.2 Set deep to true. *)
                   deep := true;
                   goto updatemem;
-    updatemem:    (* 25. (OPTIMIZATION NOT IMPLEMENTED) Set memory[value] to serialized. *)
+    updatemem:    (* 25. Set memory[value] to serialized. *)
+                  memory := "JSILMap_add" (memory, value, serialized);
                   (* 26. If deep is true, then: *)
                   goto [deep = true] deep succ;           
     deep:         (* 26.1 (NOT SUPPORTED) If value has a [[MapData]] internal slot, then: *)
@@ -218,8 +219,7 @@ proc StructuredSerializeInternal(xsc, vthis, value, forStorage){
 (******DESERIALIZATION******)
 (***************************)
 
-(* Deserializes msg based on serialization algorithm; applies reverse transformation *)
-proc StructuredDeserialize (xsc, vthis, serialized){
+proc DeserializeTypeAndVal(xsc, vthis, serialized){
                 tser := typeOf serialized;
                 goto [(tser = List) and ((l-len (serialized)) > 1)] oklist elab;
     oklist:     typelist := l-nth (serialized, 0);
@@ -229,14 +229,53 @@ proc StructuredDeserialize (xsc, vthis, serialized){
                 goto [(ttype = List) and (valltype = List) and ((l-len (typelist)) > 1) and ((l-len (vallist)) > 1)] oktv elab;
     oktv:       type := l-nth (typelist, 1);
                 val := l-nth (vallist, 1);
-                goto [(type = "Object")] obj nonobj;
-    obj:        deserialized := "Object_construct" ();
-                valtype := typeOf val;
-                goto [(valtype = List)] valok elab;
-    valok:      i := 0;
-                n := l-len (val);
-    loop:       goto [(i < n)] addprop end;
-    addprop:    propval := l-nth (val, i);
+                ret := {{ type, val }};
+                return;
+    elab:       ret := "TypeError" ();
+                throw
+};
+
+proc DeserializeObjectWithPrimVal (xsc, vthis, type, v){
+               (* 6. Otherwise, if serialized.[[Type]] is "Boolean", then set value to a new Boolean object in 
+                  targetRealm whose [[BooleanData]] internal slot value is serialized.[[BooleanData]]. *)
+                goto [type = "Boolean"] bool nbool;
+    bool:       value := "Boolean_construct" (xsc, vthis, v);
+                goto succ;      
+    nbool:      (* 7. Otherwise, if serialized.[[Type]] is "Number", then set value to a new Number object in 
+                  targetRealm whose [[NumberData]] internal slot value is serialized.[[NumberData]]. *)
+                goto [type = "Number"] num nnum;  
+    num:        value := "Number_construct" (xsc, vthis, v);
+                goto succ;
+    nnum:       (* 8. (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "BigInt", then set value to a new BigInt object in ... *)
+                (* 9. Otherwise, if serialized.[[Type]] is "String", then set value to a new String object in *)
+                 (* targetRealm whose [[StringData]] internal slot value is serialized.[[StringData]]. *)
+                goto [type = "String"] str nstr;
+    str:        value := "String_construct" (xsc, vthis, v);
+                goto succ;
+    nstr:       (* 10. Otherwise, if serialized.[[Type]] is "Date", then set value to a new Date object in *)
+                  (* targetRealm whose [[DateValue]] internal slot value is serialized.[[DateValue]]. *)
+                goto [type = "Date"] date ndate;
+    date:       value := "Date_construct" (xsc, vthis, v);
+                goto succ;
+    ndate:      (* 11. (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "RegExp", then set value to a new RegExp object in ... *)
+                (* 12. (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "SharedArrayBuffer", then: *)
+                (* 13. (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "ArrayBuffer", then set value to a new ArrayBuffer object in ... *)
+                (* 14. (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "ArrayBufferView", then: *)
+                (* 15. (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "Map", then: *)
+                (* 16. (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "Set", then: *)
+                (* 17. (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "Array", then: *)
+                goto succ;
+    succ:       ret := value;
+                return
+};
+
+(* TODO: IMPLEMENT *)
+proc DeserializeErrorObj(xsc, vthis, serialized){
+                ret := null;
+                return
+};
+
+proc DeserializeObjectProperty(propval){      
                 tpropval := typeOf propval;
                 goto [(tpropval = List) and ((l-len (propval)) > 1)] pvok elab;
     pvok:       propl := l-nth (propval, 0);
@@ -246,15 +285,93 @@ proc StructuredDeserialize (xsc, vthis, serialized){
                 vall := l-nth (propval, 1);
                 tvall := typeOf vall;
                 goto [(tvall = List) and ((l-len (vall)) > 1)] vallok elab;
-   vallok:      v := l-nth (vall, 1);
-                valres := "StructuredDeserialize"(xsc, vthis, v);
-                x := "i__putValue" ({{ "o", deserialized, prop }}, valres);
-                i := i+1;
-                goto loop;
-    end:        ret := deserialized;
-                return;
-    nonobj:     ret := val;
+    vallok:     v := l-nth (vall, 1);
+                ret := {{ prop, v }};
                 return;
     elab:       ret := "TypeError" ();
                 throw
+};
+
+proc DeserializeObject(xsc, vthis, value, props, memory){
+                goto [typeOf props = List] valok elab;
+    valok:      i := 0;
+                n := l-len (val);
+                (* 22.3.1 For each Record { [[Key]], [[Value]] } entry of serialized.[[Properties]]: *)
+    loop:       goto [i < n] addprop end;
+    addprop:    kvserialized := l-nth (props, i);
+                kv := "DeserializeObjectProperty"(kvserialized);
+                entrykey := l-nth (kv, 0);
+                entryvalue := l-nth (kv, 1);
+                (* 22.3.1.1 Let deserializedValue be ? StructuredDeserialize(entry.[[Value]], targetRealm, memory). *)
+                deserializedValue := "StructuredDeserializeWithMemory"(xsc, vthis, entryvalue, memory);
+                (* 22.3.1.2 Let result be ! CreateDataProperty(value, entry.[[Key]], deserializedValue). *)
+                result := "put" (value, entry, deserializedValue);
+                i := i+1;
+                goto loop;
+    end:        ret := value;
+                return;
+    elab:       ret := "TypeError" ();
+                throw       
+};
+
+proc StructuredDeserializeWithMemory(xsc, vthis, serialized, memory){
+                (* 2. If memory[serialized] exists, then return memory[serialized]. *)
+                cache := "JSILMap_find" (memory, serialized);
+                goto [cache = null] nullcache nnullcache;
+    nnullcache: ret := cache;
+                return;
+    nullcache:  (* 3. Let deep be false. *)
+                deep := false;
+                (* 4. Let value be an uninitialized value. *)
+                value := undefined;
+                (* 5. If serialized.[[Type]] is "primitive", then set value to serialized.[[Value]]. *)
+                typeval := "DeserializeTypeAndVal" (xsc, vthis, serialized) with elab;
+                type := l-nth (typeval, 0);
+                v := l-nth (typeval, 1);
+                goto [type = "primitive"] prim nprim;
+    prim:       value := v;
+                goto mem;
+                (* Steps 6 - 17 are implemented in DeserializeObjectWithPrimVal (defined above) *)
+    nprim:      value := "DeserializeObjectWithPrimVal" (xsc, vthis, type, v);
+                goto mem;
+                (* 18. Otherwise, if serialized.[[Type]] is "Object", then: *)
+                goto [type = "Object"] obj nobj;
+    obj:        (* 18.1 Set value to a new Object in targetRealm. *)
+                value := "Object_construct" ();
+                (* 18.2 Set deep to true. *)
+                deep := true;
+                goto mem;
+    nobj:       (* 19. Otherwise, if serialized.[[Type]] is "Error", then: *)
+                goto [type = "Error"] err nerr;
+    err:        value := "DeserializeErrorObj" (xsc, vthis, serialized);
+                goto mem;
+    nerr:       (* 20. (NOT SUPPORTED) Otherwise: *)
+                goto mem;
+    mem:        (* 21. Set memory[serialized] to value. *)
+                memory := "JSILMap_add" (memory, serialized, value);
+                (* 22. If deep is true, then: *)
+                goto [deep = true] deept succ;
+    deept:      (* 22.1 (NOT SUPPORTED) If serialized.[[Type]] is "Map", then: *)
+                (* 22.2 (NOT SUPPORTED) Otherwise, if serialized.[[Type]] is "Set", then: *)
+                (* 22.3 Otherwise, if serialized.[[Type]] is "Array" or "Object", then: *)
+                goto [(type = "Array") or (type = "Object")] arrobj narrobj;
+    arrobj:     value := "DeserializeObject" (xsc, vthis, value, v, memory) with elab;  
+    narrobj:    (* 22.4 (NOT SUPPORTED) Otherwise: Perform the appropriate deserialization steps for the interface identified by *)
+                  (* serialized.[[Type]], given serialized and value. *)
+                goto succ;
+    succ:       ret := value;
+                return;                
+    elab:       ret := "TypeError" ();
+                throw
+};
+
+(* Deserializes msg based on serialization algorithm; applies reverse transformation *)
+proc StructuredDeserialize (xsc, vthis, serialized){
+                (* 1. If memory was not supplied, let memory be an empty map. *)
+                memory := "JSILMap_create" ();
+                (* The remaining steps are implemented in StructuredDeserializeWithMemory (defined above) *)
+                deserialized := "StructuredDeserializeWithMemory" (xsc, vthis, serialized, memory) with elab;
+    succ:       ret := deserialized;
+                return;
+    elab:       throw
 };
