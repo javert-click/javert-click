@@ -124,7 +124,13 @@ function StructuredSerializeWithTransfer(message){
     var serialiazed = StructuredSerializeInternal(message, false);
 
     // Note: the StructuredSerializeInternal function is a JSIL function, found in ml/JS2JSIL/MP_runtime/Serialization.jsil
+    // Note: we skip the steps related to transfer ports, as we are handling this in the MP semantics.
     return serialiazed;
+}
+
+function StructuredDeserializeWithTransfer(serializeWithTransferResult){
+    var deserialized = StructuredDeserialize(serializeWithTransferResult);
+    return deserialized;
 }
 
 /*
@@ -172,7 +178,7 @@ function processMessageSteps(global, serializeWithTransferResult, targetPortId){
     if(!finalTargetPort.__Enabled) return;
 
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
-    var deserializeRecord = StructuredDeserializeWithTransfer(serializeWithTransferResult);
+    var deserializeRecord = scopeMP.StructuredDeserializeWithTransfer(serializeWithTransferResult);
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
     //var messageClone = deserializeRecord.Deserialized;
     var messageClone = deserializeRecord;
@@ -192,6 +198,7 @@ function processMessageSteps(global, serializeWithTransferResult, targetPortId){
 scopeMP.MessagePort  = MessagePort;
 scopeMP.MessageEvent = MessageEvent;
 scopeMP.ArrayUtils   = ArrayUtils;
+scopeMP.StructuredDeserializeWithTransfer = StructuredDeserializeWithTransfer;
 
 JSILSetGlobalObjProp("__scopeMP", scopeMP);
 
