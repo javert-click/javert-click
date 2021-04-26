@@ -1,12 +1,9 @@
-console.log('MAIN: Going to initiliaze heap!');
-var MP = initMessagePassing();
-console.log('MAIN: Heap initialized!');
-var Worker = MP.Worker.Worker;
+const Worker = require('../../../../MessagePassing/WebWorkers/Worker');
 
 var str = "Bom dia, querido Jose";
-var stringReverseWorker = new Worker('StringReverseWorker.js');
+var stringReverseWorker = new Worker.Worker('StringReverseWorker.js');
 console.log('MAIN: stringReverseWorker created with id '+stringReverseWorker.__id);
-var stringRemoveWhiteSpacesWorker = new Worker('StringRemoveWhiteSpacesWorker.js');
+var stringRemoveWhiteSpacesWorker = new Worker.Worker('StringRemoveWhiteSpacesWorker.js');
 console.log('MAIN: stringRemoveWhiteSpacesWorker created with id '+stringRemoveWhiteSpacesWorker.__id);
 console.log('MAIN: going to send message to stringRemoveWhiteSpacesWorker');
 stringRemoveWhiteSpacesWorker.postMessage(str);

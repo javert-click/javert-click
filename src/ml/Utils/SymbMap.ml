@@ -223,8 +223,7 @@ let add_symbolic
   (map : ('a, 'b) t) 
   (k : 'a) 
   (v : 'b) 
-  (val_to_expr: 'a -> Expr.t) : (('a, 'b) t * Formula.t) list =
-      Printf.printf "\nAdd symbolic!\n"; 
+  (val_to_expr: 'a -> Expr.t) : (('a, 'b) t * Formula.t) list = 
       let (map_concrete, map_symbolic) = map in
       (* The SYMBOLIC event is not equal to any of the existing CONCRETE AND SYMBOLIC ones *)
       symbolic_nf map_concrete map_symbolic k (Some v) val_to_expr

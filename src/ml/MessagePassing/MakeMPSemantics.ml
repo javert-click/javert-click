@@ -200,28 +200,24 @@ module M
     (cid, conf'), pp_list
 
   (* Adds both entries to pp map. Note that we assume pre-existing values of p1 and p2 to have been removed. The map is bi-directional *)
-  let rec pair_ports (p1: port_t) (p2: port_t) (plist: port_t list) (pp: pp_map_t) : (pp_map_t * Formula.t) list =
+  let pair_ports (p1: port_t) (p2: port_t) (plist: port_t list) (pp: pp_map_t) : (pp_map_t * Formula.t) list =
     (* Pair p1 and p2 by adding both (p1, p2) and (p2, p1) to the map *)
     (* 1: Adding (p1, p2) to pp *)
     (* I have to assume that both ports belong to the port configuration map *)
     match plist with
     | [] -> []
-    | p :: ps ->
+    | ps ->
+        let pp_paired_1 = SymbMap.add pp p1 p2 Val.to_literal Val.to_expr in
+        let f_port_1_curr_conf = List.fold_left (fun f port -> Formula.Or (f, Formula.Eq (Val.to_expr p1, Val.to_expr port))) Formula.False ps in
+        let f_port_2_curr_conf = List.fold_left (fun f port -> Formula.Or (f, Formula.Eq (Val.to_expr p2, Val.to_expr port))) Formula.False ps in
         List.concat (List.map (
-          fun p' ->
-            (*Printf.printf "\n Going to add (%s, %s) to pp" (Val.str p) (Val.str p');*)
-            let pp_paired_1 = SymbMap.add pp p p' Val.to_literal Val.to_expr in
-            List.concat (List.map (
               fun (pp', f) -> 
                 (* 2: Adding (p2, p1) to pp *)
                 (*Printf.printf "\n Going to add (%s, %s) to pp" (Val.str p') (Val.str p);*)
-                let pp_paired_2 = SymbMap.add pp' p' p Val.to_literal Val.to_expr in
-                let f_p1_p = Formula.Eq (Val.to_expr p1, Val.to_expr p) in
-                let f_p2_p' = Formula.Eq (Val.to_expr p2, Val.to_expr p') in
+                let pp_paired_2 = SymbMap.add pp' p2 p1 Val.to_literal Val.to_expr in
                 (* f and f' and {p1, p2} \in dom(pc) and p1 != p2 *)
-                List.map (fun (pp'', f') -> pp'', Formula.And (Formula.And (f, f'), Formula.And (f_p1_p, f_p2_p'))) pp_paired_2
+                List.map (fun (pp'', f') -> pp'', Formula.And (Formula.And (f, f'), Formula.And (f_port_1_curr_conf, f_port_2_curr_conf))) pp_paired_2
             ) pp_paired_1)
-        ) ps) @ pair_ports p1 p2 ps pp 
 
   (* Returns the port paired with the given port *)
   let get_paired (xvar: string) (port: port_t) (conf: event_conf_t) (pp: pp_map_t) : (event_conf_t * Formula.t) list =
