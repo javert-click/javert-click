@@ -1,11 +1,27 @@
-proc JSILList_create(xscope, xthis){
-    lv := {{ }};
-    ret := lv;
-    return
+proc JSILList_create(xscope, vthis){
+            lv := {{ }};
+            ret := lv;
+            return
 };
 
 proc JSILList_add(xsc, xthis, lv, v){
-    lv := lv l+ {{ v }};
-    ret := lv;
-    return
+             lv := lv l+ {{ v }};
+             ret := lv;
+             return 
+};
+
+proc JSILList_to_Array(xsc, vthis, lv){
+              goto [typeOf lv = List] oklist elab;
+    oklist:   i := 0;
+              n := l-len lv;
+              arr := "Array_construct" () with elab;
+    loop:     goto [i < n] addelem done;
+    addelem:  elem := l-nth (lv, i);
+              x := "AP_push" (empty, arr, elem);
+              i := i+1;
+              goto loop;
+    done:     ret := arr;
+              return;
+    elab:     ret := "TypeError" ();
+              throw   
 };

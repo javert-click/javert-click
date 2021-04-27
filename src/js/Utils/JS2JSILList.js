@@ -12,4 +12,10 @@ function JS2JSILList(arr){
     return jsilList;
 }
 
+function JSILListToArray(arr){
+    //JSIL Call!
+    return JSILList_to_Array(arr);
+}
+
 exports.JS2JSILList = JS2JSILList;
+exports.JSILListToArray = JSILListToArray;

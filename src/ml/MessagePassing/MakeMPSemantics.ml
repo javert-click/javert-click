@@ -241,7 +241,7 @@ module M
             | None -> raise (Failure ("Invalid Configuration Identifier."))
             | Some (cid, econf) -> 
             let event = Val.from_literal (String MPConstants.mevent) in
-            let econfs' = EventSemantics.fire_event event vs econf in
+            let econfs' = EventSemantics.fire_event event (vs @ [Val.from_list plist]) econf in
             let cq_list = List.map (fun econf' -> set_conf (cid, econf') cq) econfs' in
             cq_list, pcs_fs')  
     ) cids_fs)) in

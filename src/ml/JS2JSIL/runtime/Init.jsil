@@ -226,6 +226,7 @@ proc setupInitialHeap () {
 	  [$lg, "initJS2JSILList"]                        := {{ "d", $linitjsillist, true, false, true }};
 	  [$lg, "JSILList_create"]                        := {{ "d", $lcreatejsillist, true, false, true }};
 	  [$lg, "JSILList_add"]                           := {{ "d", $ljsillistadd, true, false, true }};
+	  [$lg, "JSILList_to_Array"]                      := {{ "d", $ljsillisttoarray, true, false, true }};
 
 	  (* Obj Utils *)
 	  [$lg, "initObjectUtils"]                        := {{ "d", $linitobjectutils, true, false, true }};
@@ -801,6 +802,7 @@ proc setupInitialHeap () {
 			ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitjsillist, "initJS2JSILList", empty, 1);
 			ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $lcreatejsillist, "JSILList_create", empty, 1);
 			ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $ljsillistadd, "JSILList_add", empty, 1);
+			ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $ljsillisttoarray, "JSILList_to_Array", empty, 1);
 
 			(* Obj Utils *)
 			ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $linitobjectutils, "initObjectUtils", empty, 1);

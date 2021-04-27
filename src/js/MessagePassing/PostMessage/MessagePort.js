@@ -3,6 +3,7 @@ const EventTarget  = require('../../DOM/Events/EventTarget');
 const DOMException = require('../../DOM/Common/DOMException');
 const ArrayUtils   = require('../../Utils/ArrayUtils');
 const MessageEvent = require('../../DOM/Events/MessageEvent');
+const JS2JSILList  = require('../../Utils/JS2JSILList'); 
 
 var MPSem = new MPSemantics.MPSemantics();
 
@@ -20,26 +21,28 @@ EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Elem
 /*
 * @id MessagePort
 */
-function MessagePort(){
+function MessagePort(id){
     EventTarget.EventTarget.call(this);
-    this.__id                = MPSem.newPort();
+    this.__id                = id ? id : MPSem.newPort();
     this.__Enabled           = false;
     this.__Detached          = false;
     this.__PrimaryInterface  = 'MessagePort'; //TODO CHECK
     this.__HasBeenShipped    = false;
-    MessagePort.prototype.ports.push(this);
+    MessagePort.prototype.ports[this.__id] = this;
 }
 
 MessagePort.prototype = Object.create(EventTarget.EventTarget.prototype);
 
-MessagePort.prototype.ports = [];
+MessagePort.prototype.ports = {};
 
 Object.defineProperty(MessagePort.prototype, 'onmessage', {
     /*
     * @id MessagePortOnMessage
     */
     set: function(f){
+        console.log('MessagePortOnMessage, this: '+this);
         this.__Enabled = true;
+        console.log('MessagePortOnMessage2');
         this.addEventListener('message', f);
     }
 });
@@ -85,17 +88,16 @@ MessagePort.prototype.close = function(){
     MPSem.unpairPort(this.__id);
 }
 
-// TODO: I believe these 2 functions are not necessary. The has been shipped flag seems to be used only for scheduling the messages.
-
+// TODOMP: I believe these 2 functions below are not necessary. The has been shipped flag seems to be used only for scheduling the messages.
+// We are handling this at the level of the MP-Semantics
 /*
 * @id MessagePortTransferSteps
 */
-MessagePort.prototype.transferSteps = function(value, dataHolder){
-    this.__id = -1; //TODO: check if this is the right thing to do
+function TransferSteps(value, dataHolder){
     // 1. Set value's has been shipped flag to true.
-    this.__HasBeenShipped = true;
-    // 2. Set dataHolder.[[PortMessageQueue]] to value's port message queue.
-    // 3. If value is entangled with another port remotePort, then:
+    value.__HasBeenShipped = true;
+    // 2. (MP-Semantics) Set dataHolder.[[PortMessageQueue]] to value's port message queue.
+    // 3. (MP-Semantics) If value is entangled with another port remotePort, then:
         // 3.1. Set remotePort's has been shipped flag to true. TODO: how can we do this?
         // 3.2. Set dataHolder.[[RemotePort]] to remotePort.
     // 4. Otherwise, set dataHolder.[[RemotePort]] to null.
@@ -104,33 +106,64 @@ MessagePort.prototype.transferSteps = function(value, dataHolder){
 /*
 * @id MessagePortTransferReceivingSteps
 */
-MessagePort.prototype.transferReceivingSteps = function(dataHolder, value){
+function TransferReceivingSteps(value){
     // 1. Set value's has been shipped flag to true.
-    // 2. Move all the tasks that are to fire message events in dataHolder.[[PortMessageQueue]] to the port message queue of value, 
+    value.__HasBeenShipped = true;
+    // 2. (MP-Semantics) Move all the tasks that are to fire message events in dataHolder.[[PortMessageQueue]] to the port message queue of value, 
         // if any, leaving value's port message queue in its initial disabled state, and, if value's relevant global object is a Window, 
         // associating the moved tasks with value's relevant global object's associated Document.
-    // 3. If dataHolder.[[RemotePort]] is not null, then entangle dataHolder.[[RemotePort]] and value. 
+    // 3. (ALSO NOT NECESSARY) If dataHolder.[[RemotePort]] is not null, then entangle dataHolder.[[RemotePort]] and value. 
         // (This will disentangle dataHolder.[[RemotePort]] from the original port that was transferred.)
 }
 
-function StructuredSerializeWithTransfer(message){
+function StructuredSerializeWithTransfer(message, transfer){
     // 1. Let memory be an empty map *)
+    var memory = {};
     // 2. For each transferable of transferList: 
+    transfer.map(transferable => {
       // 2.1 (NOT SUPPORTED) If transferable has neither an [[ArrayBufferData]] internal slot ...
       // 2.2 (NOT SUPPORTED) If transferable has an [[ArrayBufferData]] internal slot and ... 
       // 2.3  If memory[transferable] exists, then throw a "DataCloneError" DOMException. 
+      if(memory[transferable.__id]) throw new DOMException.DOMException(DOMException.DataCloneError);
       // 2.4 Set memory[transferable] to { [[Type]]: an uninitialized value }.
+      memory[transferable.__id] = {'Type': undefined};
+    });
     // 3. Let serialized be ? StructuredSerializeInternal(value, false, memory).
     var serialiazed = StructuredSerializeInternal(message, false);
-
+    // 4. Let transferDataHolders be a new empty List.
     // Note: the StructuredSerializeInternal function is a JSIL function, found in ml/JS2JSIL/MP_runtime/Serialization.jsil
-    // Note: we skip the steps related to transfer ports, as we are handling this in the MP semantics.
+    // Note: we skip the steps (4-5) related to transferDataHolders, as we are handling this in the MP semantics.
     return serialiazed;
 }
 
-function StructuredDeserializeWithTransfer(serializeWithTransferResult){
-    var deserialized = StructuredDeserialize(serializeWithTransferResult);
-    return deserialized;
+/*
+* @id StructuredDeserializeWithTransfer
+*/
+function StructuredDeserializeWithTransfer(message, transferIds){
+    // 1. Let memory be an empty map.
+    // This step is performed during StructuredDeserialize (at the JSIL level)
+    // 2. Let transferredValues be a new empty List.
+    var transferredValues = [];
+    // 3. For each transferDataHolder of serializeWithTransferResult.[[TransferDataHolders]]:
+    transferIds.map ((transferId) => {
+        // 3.1 Let value be an uninitialized value.
+        var value;
+        // 3.2 (NOT SUPPORTED) If transferDataHolder.[[Type]] is "ArrayBuffer", then set value to a new ArrayBuffer object in ...
+        // 3.3 Otherwise:
+           // 3.3.1 (NOT SUPPORTED) Let interfaceName be transferDataHolder.[[Type]].
+           // 3.3.2 (NOT SUPPORTED) If the interface identified by interfaceName is not exposed in targetRealm, then throw a "DataCloneError" DOMException.
+           // 3.3.3 Set value to a new instance of the interface identified by interfaceName, created in targetRealm.
+           value = new MessagePort(transferId);
+           // 3.3.4 Perform the appropriate transfer-receiving steps for the interface identified by interfaceName given transferDataHolder and value.
+           TransferReceivingSteps(value);
+           // 3.4 (NOT SUPPORTED) Set memory[transferDataHolder] to value.
+        // 3.5 Append value to transferredValues.
+        transferredValues.push(value);
+    });
+    // 4. Let deserialized be ? StructuredDeserialize(serializeWithTransferResult.[[Serialized]], targetRealm, memory).
+    var deserialized = StructuredDeserialize(message);
+    // 5. Return { [[Deserialized]]: deserialized, [[TransferredValues]]: transferredValues }.
+    return { 'Deserialized': deserialized, 'TransferredValues': transferredValues };
 }
 
 /*
@@ -138,7 +171,7 @@ function StructuredDeserializeWithTransfer(serializeWithTransferResult){
 */
 function postMessageSteps(origPort, targetPort, message, options){
     // 1. Let transfer be options["transfer"].
-    var transfer = options ? options['transfer'] : [];
+    var transfer = options ? ((options instanceof Array) ? options : options['transfer']) : [];
     var transferIds = ArrayUtils.map(transfer, function(p) {return p.__id});
     // 2. If transfer contains this MessagePort, then throw a "DataCloneError" DOMException.
     if(transfer && transferIds.indexOf(origPort.__id) !== -1) throw new DOMException.DOMException(DOMException.DataCloneError);
@@ -151,7 +184,7 @@ function postMessageSteps(origPort, targetPort, message, options){
         console.log('Target port was posted to itself which causes the communication channel to be lost.')
     }
     // 5. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
-    var serializeWithTransferResult = StructuredSerializeWithTransfer(message);
+    var serializeWithTransferResult = StructuredSerializeWithTransfer(message, transfer);
     // 6. If targetPort is null, or if doomed is true, then return.
     if(targetPort === -1 || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
@@ -165,39 +198,38 @@ var scopeMP = {};
 * @JSIL
 * @id processMessageSteps
 */
-function processMessageSteps(global, serializeWithTransferResult, targetPortId){
-    console.log('Executing processMessageSteps, targetPortId: '+targetPortId);
-    // 1. Let finalTargetPort be the MessagePort in whose port message queue the task now finds itself.
+function processMessageSteps(global, message, targetPortId, transferIds){
+    // Initial setup
     var scopeMP = global.__scopeMP;
-    console.log('this configuration contains '+scopeMP.MessagePort.prototype.ports.length+' ports with id '+scopeMP.MessagePort.prototype.ports[0].__id);
-    var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
-    //var finalTargetPort = global.__scopeMP.MessagePort.prototype.ports[targetPortId]; // TODO: check whether or not this is feasible 
-    console.log('finalTargetPort: '+finalTargetPort);
-    // 2. Let targetRealm be finalTargetPort's relevant Realm.
-    // TODO: what to do with these realms?
+    transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
+    console.log('Executing processMessageSteps, targetPortId: '+targetPortId+', transferIds: '+transferIds);
+    // 1. Let finalTargetPort be the MessagePort in whose port message queue the task now finds itself.
+    var finalTargetPort = scopeMP.MessagePort.prototype.ports[targetPortId];
+    // 2. (NOT SUPPORTED) Let targetRealm be finalTargetPort's relevant Realm.
+    // As we model the message queue via MP Semantics, we add this step here to make sure the target port is enabled
     if(!finalTargetPort.__Enabled) return;
-
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
-    var deserializeRecord = scopeMP.StructuredDeserializeWithTransfer(serializeWithTransferResult);
+    var deserializeRecord = scopeMP.StructuredDeserializeWithTransfer(message, transferIds);
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
     //var messageClone = deserializeRecord.Deserialized;
-    var messageClone = deserializeRecord;
+    var messageClone = deserializeRecord.Deserialized;
+    console.log('MESSAGE DESERIALIZED: '+messageClone);
     // 5. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
-    //var newPorts = deserializeRecord.transferredValues;
-    //Object.freeze(newPorts);
+    // TODOMP: WHAT IS A FROZEN ARRAY??? SHOULD THE OBJECTS BE FROZEN?
+    //var newPorts = deserializeRecord.TransferredValues.map(p => { return Object.freeze(p) });
+    var newPorts = deserializeRecord.TransferredValues;
     // 6. Fire an event named message at finalTargetPort, using MessageEvent, with the data attribute initialized to messageClone and the ports attribute initialized to newPorts.
     var event = new scopeMP.MessageEvent.MessageEvent();
-    event.data = messageClone;
-    //event.ports = newPorts; // TODO: How to keep ids updated? 
-    event.ports = [];
+    event.data = messageClone; 
+    event.ports = newPorts;
     console.log('Going to dispatch message event');
     finalTargetPort.dispatchEvent(event);
-    //global.dispatchEvent(event);
 }
 
 scopeMP.MessagePort  = MessagePort;
 scopeMP.MessageEvent = MessageEvent;
 scopeMP.ArrayUtils   = ArrayUtils;
+scopeMP.JS2JSILList  = JS2JSILList;
 scopeMP.StructuredDeserializeWithTransfer = StructuredDeserializeWithTransfer;
 
 JSILSetGlobalObjProp("__scopeMP", scopeMP);

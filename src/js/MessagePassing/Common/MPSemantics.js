@@ -1,6 +1,8 @@
 const JS2JSILList = require('../../Utils/JS2JSILList');
 const EventsSemantics = require('../../DOM/Events/EventsSemantics');
 
+// TODOMP: implement singleton pattern here
+
 /*
 * @id MPSemantics
 */
