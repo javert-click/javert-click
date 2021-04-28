@@ -21,7 +21,7 @@ module type M = sig
 
   type event_label_t = (await_conf_t, conf_info_t, vt, message_label_t) EventInterceptor.t
 
-  val make_step : state_t -> (((vt -> (vt list) option) -> (vt -> Literal.t option) -> (Literal.t -> vt) -> string -> string -> vt list -> message_label_t option) option) -> (state_t * event_label_t option) list
+  val make_step : state_t -> (((vt -> (vt list) option) -> (vt -> Literal.t option) -> (Literal.t -> vt) -> string -> string -> vt list -> message_label_t option) option) -> (state_t * event_label_t option) list * state_t option
 
   val fire_event : event_t -> vt list -> state_t -> state_t list
 

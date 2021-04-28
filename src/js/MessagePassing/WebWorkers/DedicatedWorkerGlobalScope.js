@@ -1,5 +1,3 @@
-//const WorkerGlobalScope = require('./WorkerGlobalScope');
-
 /*
 * @id DedicatedWorkerGlobalScope
 */

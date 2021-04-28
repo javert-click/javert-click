@@ -264,18 +264,20 @@ module M
         Hashtbl.iter (fun (proc_name, i) _ -> output_string out ("\""^proc_name^"\"" ^ " " ^ (string_of_int i) ^ "\n")) lines_executed;
         close_out out
 
-  let make_step (state : state_t) (ext_intercept : ((vt -> (vt list) option) -> (vt -> Literal.t option) -> (Literal.t -> vt) -> string -> string -> vt list -> message_label_t option) option) : (state_t * event_label_t option) list = 
+  let make_step (state : state_t) (ext_intercept : ((vt -> (vt list) option) -> (vt -> Literal.t option) -> (Literal.t -> vt) -> string -> string -> vt list -> message_label_t option) option) : (state_t * event_label_t option) list * state_t option = 
     let (conf : Interpreter.econf_t), ehs, hq = state in
-    let cconf, _ = conf in
     (*if (Interpreter.printing_allowed cconf) then 
       print_state state;*)
     if (Interpreter.final conf) then (
       (*Printf.printf "\nConfiguration is final!";*)
-      List.map (fun s -> s, None) (exec_handler state)
+      let new_states = List.map (fun s -> s, None) (exec_handler state) in
+      match new_states with
+      | [] -> [], Some state
+      | new_states -> new_states, None
     ) else (
       (** Conf is NOT final *)
       let rets = Interpreter.make_step lines_executed conf (Some (EventInterceptor.intercept ext_intercept)) in 
-      List.concat (List.map (fun ret -> process_label ret state) rets)
+      List.concat (List.map (fun ret -> process_label ret state) rets), None
     )
 
   let rec make_steps (states: state_t list) : state_t list = 
@@ -283,9 +285,11 @@ module M
     | [] -> []
     | state :: sts ->
       (** We ignore the labels here, as the top-level semantics interacts via make_step *)
-      let (states, _) = List.split (make_step state None) in 
-      (match states with 
-      | st :: rest when final st -> st :: (make_steps sts)
+      let (states, fconf) = make_step state None in
+      let (states, _) = List.split states in 
+      (match states, fconf with 
+      | [], Some fconf -> [fconf]
+      | st :: rest, _ when final st -> st :: (make_steps sts)
       | _ -> make_steps (states @ sts)
       )
 
