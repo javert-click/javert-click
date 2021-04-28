@@ -134,8 +134,8 @@ module M
   (* TODO: check if sat before enqueuing!!! *)
   (* Updates mp conf based on new message msg sent to the specified port *)
   let send (cid: cid_t) (msg: vt list) (plist: port_t list) (port_1: port_t) (port_2: port_t) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : (mq_t * Formula.t) list =
-    Printf.printf "\nFound msg: %s\n" (String.concat "," (List.map Val.str msg));
-    Printf.printf "\nDest port: %s\n" (Val.str port_2);
+    (*Printf.printf "\nFound msg: %s\n" (String.concat "," (List.map Val.str msg));*)
+    (*Printf.printf "\nDest port: %s\n" (Val.str port_2);*)
     let dest_ports = SymbMap.find pp port_1 Val.to_literal Val.to_expr in
     let ports_curr_conf = List.map Val.to_expr (SymbMap.filter pc cid Val.from_literal) in
     (* We need to guarantee that the sender belongs to the current configuration *)
@@ -227,14 +227,14 @@ module M
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
   let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * (pc_map_t * Formula.t) list =
-    Printf.printf "\nProcessing message sent to port %s" (Val.str port);
+    (*Printf.printf "\nProcessing message sent to port %s" (Val.str port);*)
     let (vs, plist) = msg in
-    Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));
+    (*Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));*)
     let cids_fs = SymbMap.find pc port Val.to_literal Val.to_expr in
-    Printf.printf "\nFound %d confs for port %s" (List.length cids_fs) (Val.str port);
+    (*Printf.printf "\nFound %d confs for port %s" (List.length cids_fs) (Val.str port);*)
     let cq_l_l, pcs_l_l = (List.split (List.map (
         fun (cid, f) ->
-          Printf.printf "\nGoing to process message in configuration %d\n" cid; 
+          (*Printf.printf "\nGoing to process message in configuration %d\n" cid; *)
           let redirects = redirect plist cid pc in
           let pcs_fs' = List.map  (fun (pc', f') -> pc', Formula.And (f, f')) redirects in
           (match get_conf cid cq with

@@ -22,7 +22,7 @@ MPSemantics.prototype.newPort = function(){
 * @id MPSemanticsSend
 */
 MPSemantics.prototype.send = function(message, plist, orig_port, dest_port){
-    console.log('MPSem: send');
+    //console.log('MPSem: send');
     var mplist = JS2JSILList.JS2JSILList([message, dest_port]); 
     var plistJSIL = JS2JSILList.JS2JSILList(plist);
     __MP__wrapper__send(mplist, plistJSIL, orig_port, dest_port);
@@ -32,7 +32,7 @@ MPSemantics.prototype.send = function(message, plist, orig_port, dest_port){
 * @id MPSemanticsCreate
 */
 MPSemantics.prototype.create = function(url, setup_fid, outsidePortId, isShared){
-    console.log('MPSem: create, outsideportid: '+outsidePortId);
+    //console.log('MPSem: create, outsideportid: '+outsidePortId);
     var argslist = JS2JSILList.JS2JSILList([url, outsidePortId, isShared]); 
     return __MP__wrapper__create(url, setup_fid, argslist);
 }
@@ -43,7 +43,7 @@ MPSemantics.prototype.create = function(url, setup_fid, outsidePortId, isShared)
 MPSemantics.prototype.pairPorts = function(port1Id, port2Id){
     this.unpairPort(port1Id);
     this.unpairPort(port2Id);
-    console.log('MPSem: pair');
+    //console.log('MPSem: pair');
     __MP__wrapper__pairPorts(port1Id, port2Id);
 }
 
@@ -51,7 +51,7 @@ MPSemantics.prototype.pairPorts = function(port1Id, port2Id){
 * @id MPSemanticsUnpairPorts
 */
 MPSemantics.prototype.unpairPort = function(portId){
-    console.log('MPSem: unpair');
+    //console.log('MPSem: unpair');
     __MP__wrapper__unpairPort(portId);
 }
 
@@ -59,7 +59,7 @@ MPSemantics.prototype.unpairPort = function(portId){
 * @id MPSemanticsGetPaired
 */
 MPSemantics.prototype.getPaired = function(portId){
-    console.log('MPSem: getPaired');
+    //console.log('MPSem: getPaired');
     return __MP__wrapper__getPaired(portId);
 }
 

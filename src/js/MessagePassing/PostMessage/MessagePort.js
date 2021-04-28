@@ -40,9 +40,7 @@ Object.defineProperty(MessagePort.prototype, 'onmessage', {
     * @id MessagePortOnMessage
     */
     set: function(f){
-        console.log('MessagePortOnMessage, this: '+this);
         this.__Enabled = true;
-        console.log('MessagePortOnMessage2');
         this.addEventListener('message', f);
     }
 });
@@ -213,7 +211,6 @@ function processMessageSteps(global, message, targetPortId, transferIds){
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
     //var messageClone = deserializeRecord.Deserialized;
     var messageClone = deserializeRecord.Deserialized;
-    console.log('MESSAGE DESERIALIZED: '+messageClone);
     // 5. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
     // TODOMP: WHAT IS A FROZEN ARRAY??? SHOULD THE OBJECTS BE FROZEN?
     //var newPorts = deserializeRecord.TransferredValues.map(p => { return Object.freeze(p) });

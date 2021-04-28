@@ -22,7 +22,7 @@ function __setupConf(workerURL, outsidePortId, isShared, main_fid){
         //MP.SharedWorkerGlobalScope.SharedWorkerGlobalScope(workerURL)
     } else { 
         console.log('WORKER: isShared: false');
-        global.DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScopeAlternative(global, workerURL);
+        global.DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope(global, workerURL);
     }
     // Create inside port and associate it with global object
     // 16. Let inside port be a new MessagePort object in inside settings's Realm.
