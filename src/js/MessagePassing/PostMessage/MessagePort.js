@@ -1,7 +1,6 @@
 const MPSemantics  = require('../Common/MPSemantics');
 const EventTarget  = require('../../DOM/Events/EventTarget');
 const DOMException = require('../../DOM/Common/DOMException');
-const ArrayUtils   = require('../../Utils/ArrayUtils');
 const MessageEvent = require('../../DOM/Events/MessageEvent');
 const JS2JSILList  = require('../../Utils/JS2JSILList'); 
 
@@ -170,7 +169,7 @@ function StructuredDeserializeWithTransfer(message, transferIds){
 function postMessageSteps(origPort, targetPort, message, options){
     // 1. Let transfer be options["transfer"].
     var transfer = options ? ((options instanceof Array) ? options : options['transfer']) : [];
-    var transferIds = ArrayUtils.map(transfer, function(p) {return p.__id});
+    var transferIds = transfer.map(function(p) {return p.__id});
     // 2. If transfer contains this MessagePort, then throw a "DataCloneError" DOMException.
     if(transfer && transferIds.indexOf(origPort.__id) !== -1) throw new DOMException.DOMException(DOMException.DataCloneError);
     // 3. Let doomed be false.
@@ -225,7 +224,6 @@ function processMessageSteps(global, message, targetPortId, transferIds){
 
 scopeMP.MessagePort  = MessagePort;
 scopeMP.MessageEvent = MessageEvent;
-scopeMP.ArrayUtils   = ArrayUtils;
 scopeMP.JS2JSILList  = JS2JSILList;
 scopeMP.StructuredDeserializeWithTransfer = StructuredDeserializeWithTransfer;
 
