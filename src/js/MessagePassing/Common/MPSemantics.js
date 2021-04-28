@@ -1,14 +1,21 @@
 const JS2JSILList = require('../../Utils/JS2JSILList');
 const EventsSemantics = require('../../DOM/Events/EventsSemantics');
 
-// TODOMP: implement singleton pattern here
-
 /*
 * @id MPSemantics
 */
 function MPSemantics(){
     this.ESem = new EventsSemantics.EventsSemantics();
     this.ESem.addHandler("ProcessMessage", "processMessageSteps");
+}
+
+var MPSem;
+
+function getMPSemanticsInstance(){
+    if(!MPSem){
+        MPSem = new MPSemantics();
+    }
+    return MPSem;
 }
 
 /*
@@ -84,4 +91,4 @@ MPSemantics.prototype.endAtomic = function(){
     return __MP__wrapper__endAtomic();
 } 
 
-exports.MPSemantics = MPSemantics;
+exports.getMPSemanticsInstance = getMPSemanticsInstance;

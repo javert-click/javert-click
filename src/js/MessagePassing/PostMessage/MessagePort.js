@@ -4,7 +4,7 @@ const DOMException = require('../../DOM/Common/DOMException');
 const MessageEvent = require('../../DOM/Events/MessageEvent');
 const JS2JSILList  = require('../../Utils/JS2JSILList'); 
 
-var MPSem = new MPSemantics.MPSemantics();
+var MPSem = MPSemantics.getMPSemanticsInstance();
 
 // THIS IS TO AVOID CIRCULAR DEPENDENCY BETWEEN NODE AND EVENT TARGET!
 const Node              = require('../../DOM/Events/Node');

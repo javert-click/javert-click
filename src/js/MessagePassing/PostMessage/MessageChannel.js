@@ -1,7 +1,7 @@
 const MessagePort = require('./MessagePort');
 const MPSemantics = require('../Common/MPSemantics');
 
-var MPSem = new MPSemantics.MPSemantics();
+var MPSem = MPSemantics.getMPSemanticsInstance();
 
 /*
 * @id MessageChannel

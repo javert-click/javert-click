@@ -31,7 +31,7 @@ function __setupConf(workerURL, outsidePortId, isShared, main_fid){
     console.log('WORKER: created inside port with id '+insidePort.__id);
     // 17. Associate inside port with worker global scope.
     global.__port = insidePort;
-    var MPSem = new global.MPSemantics.MPSemantics();
+    var MPSem = global.MPSemantics.getMPSemanticsInstance();
     // 18. Entangle outside port and inside port.
     MPSem.pairPorts(outsidePortId, insidePort.__id);
     console.log('WORKER: just paired ports '+outsidePortId+' and '+insidePort.__id);

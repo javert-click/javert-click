@@ -4,7 +4,7 @@ const MessagePort       = require('../PostMessage/MessagePort');
 const SharedWorker      = require('./SharedWorker');
 const WorkerGlobalScope = require('./WorkerGlobalScope');
 
-var MPSem = new MPSemantics.MPSemantics();
+var MPSem = MPSemantics.getMPSemanticsInstance();
 
 /*
 * @id Worker
