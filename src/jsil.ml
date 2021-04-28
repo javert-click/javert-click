@@ -115,13 +115,23 @@ let string_of_ret_val (heap : CHeap.t) (ret_flag : Flag.t) (v : Literal.t) : str
   | Normal -> Literal.str v
   | Error -> if (!js) then CInterpreter.M.string_of_js_error heap v else ""
 
-let run f (prog : Prog.t) : unit = 
-  let prog = init_prog prog in
-  let ret     = f prog in
-  CCommon.print_by_need := false; 
-  L.log L.Normal (lazy( Printf.sprintf "Final state: \n%s\n" (CInterpreter.M.string_of_result ret)));
-  print_heap_as_prog ret; 
-  return_to_exit (CInterpreter.M.valid_result ret)
+let run (prog : Prog.t) : unit = 
+  let prog = init_prog prog in 
+  if (!events) then (
+    let ret = EventCSemantics.M.evaluate_prog prog in
+    L.log L.Normal (lazy( Printf.sprintf "---------------Final Event State---------------\n\t%s\n" (EventCSemantics.M.string_of_result ret)));
+    return_to_exit (EventCSemantics.M.valid_result ret)
+  ) else if (!mp) then (
+    let ret = MPCSemantics.M.evaluate_prog prog in
+    L.log L.Normal (lazy( Printf.sprintf "---------------Final MP State---------------\n\t%s\n" (MPCSemantics.M.string_of_result ret)));
+    return_to_exit (MPCSemantics.M.valid_result ret)
+  ) else (
+    let ret = CInterpreter.M.evaluate_prog prog in 
+    L.log L.Normal (lazy( Printf.sprintf "---------------Final state---------------\n\t%s\n" (CInterpreter.M.string_of_result ret)));
+    CCommon.print_by_need := false;
+    print_heap_as_prog ret; 
+    return_to_exit (CInterpreter.M.valid_result ret)
+  )
 
 let main () =
   arguments ();
@@ -136,7 +146,7 @@ let main () =
       let basename = Filename.basename (Filename.chop_extension !file) in
       let (ext_prog, cc_tbl, vis_tbl) = JS2JSIL_Compiler.js2jsil e offset_converter false basename in
         let prog = Parsing_Utils.eprog_to_prog ext_prog in
-          run CInterpreter.M.evaluate_prog prog
+          run prog
         with
           | JSParser.ParserFailure file -> Printf.printf "\nParsing problems with the file '%s'.\n" file; exit 1
           | JS2JSIL_Preprocessing.EarlyError e -> Printf.printf "\nParser post-processing threw an EarlyError: %s\n" e; exit 1
@@ -146,11 +156,7 @@ let main () =
     let basename = Filename.basename (Filename.chop_extension !file) in
     let ext_prog = {ext_prog with filename = basename} in
     let prog = Parsing_Utils.eprog_to_prog ext_prog in
-    let f = if (!events) 
-      then EventCSemantics.M.evaluate_prog
-      else if (!mp) then MPCSemantics.M.evaluate_prog
-      else CInterpreter.M.evaluate_prog in 
-      run f prog
+    run prog
 
   );
   if (!stats) then print_statistics ();

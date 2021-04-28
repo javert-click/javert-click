@@ -77,7 +77,7 @@ module type M = sig
 
   val valid_result : result_t list -> bool
 
-  val conf_to_result : cconf_t list -> result_t list
+  val conf_to_result : cconf_t -> result_t
 
   val assume : cconf_t -> Formula.t list -> cconf_t option
 

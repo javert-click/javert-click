@@ -59,6 +59,13 @@ module M
   (* Most of the operations will manipulate a single configuration. There is then a function to update the mp_conf based on the new reduced conf and the optional action *)
   type reduced_mp_conf_t = event_conf_t * mq_t * pc_map_t * pp_map_t * optional_action_t option * Formula.t
   
+  (* Message Passing Result *)
+  (* 1. Respective results of event configurations, each with the assciated cid *)
+  (* 2. Final message queue *)
+  (* 3. Final port configurations map *)
+  (* 4. Final paired ports map *)
+  type result_t = (cid_t * EventSemantics.result_t) list * mq_t * pc_map_t * pp_map_t
+  
   (***** AUXILIARY FUNCTIONS *****)
 
   (* Enqueues message in message queue by adding message to the back of the queue *)
@@ -300,27 +307,41 @@ module M
         | _ -> [(cid, conf'), mq, pc, pp, None, Formula.True]
       ) confs), None
 
-    let print_mpconf (mpconf: mp_conf_t) : unit =
-      let (econfs, mq, pc, pp, lead_conf) = mpconf in
-      let e_confs_str = 
-        String.concat "\n" (List.map (
-          fun econf -> 
-            let (cid, conf) = econf in
-            Printf.sprintf "\n-----Event Conf-----: \n--CID: %d\n--E-Conf: \n\t\t%s" cid (EventSemantics.state_str conf)
-        ) econfs) in
-      let mq_str = "Messages: " ^ String.concat ", " (List.map (
-        fun (msg, port) ->
-          let (data, transfer) = msg in
-          Printf.sprintf "Data: %s" (String.concat ", " (List.map Val.str data))
-      )
-      mq) in
-      let pc_str = 
-        Printf.sprintf "\nPort-Confs map: %s" (SymbMap.str pc Val.str string_of_int) in
-      let pp_str =
-        Printf.sprintf "\nPort-Port map: %s\n" (SymbMap.str pp Val.str Val.str) in
-      let str = e_confs_str ^ mq_str ^ pc_str ^ pp_str in
-      L.log L.Normal (lazy (Printf.sprintf
+  let mq_str mq = "Messages: " ^ String.concat ", " (List.map (
+    fun (msg, port) ->
+      let (data, transfer) = msg in
+      Printf.sprintf "Data: %s" (String.concat ", " (List.map Val.str data))
+  ) mq)
+      
+  let pc_str pc = 
+    Printf.sprintf "\nPort-Confs map: %s" (SymbMap.str pc Val.str string_of_int)
+  
+  let pp_str pp =
+      Printf.sprintf "\nPort-Port map: %s\n" (SymbMap.str pp Val.str Val.str)
+
+  let print_mpconf (mpconf: mp_conf_t) : unit =
+    let (econfs, mq, pc, pp, lead_conf) = mpconf in
+    let e_confs_str = 
+      String.concat "\n" (List.map (
+        fun econf -> 
+          let (cid, conf) = econf in
+          Printf.sprintf "\n-----Event Conf-----: \n--CID: %d\n--E-Conf: \n\t\t%s" cid (EventSemantics.state_str conf)
+      ) econfs) in
+    let str = e_confs_str ^ mq_str mq ^ pc_str pc ^ pp_str pp in
+    L.log L.Normal (lazy (Printf.sprintf
       "\n-------------------MP CONFIGURATION------------------------\n%s\n------------------------------------------------------\n" str))
+  
+  let string_of_result (rets: result_t list) : string =
+    "\n------Event Configuration Queue------\n" ^
+    String.concat "\n" (List.map 
+      (fun ret -> 
+        let (erets, mq, pc, pp) = ret in
+          let erets_str = String.concat "\n" 
+            (List.map (
+              fun (cid, eret) -> "\n----Event Configuration (Cid: " ^ string_of_int cid ^ ")----" ^ EventSemantics.string_of_result [eret]
+            ) erets) in
+            erets_str ^ mq_str mq ^ pc_str pc ^ pp_str pp
+      ) rets) 
   
   let make_step (conf : mp_conf_t) : (mp_conf_t list) * (mp_conf_t option) = 
     print_mpconf conf;
@@ -364,18 +385,20 @@ module M
       | [], Some conf -> [conf]
       | new_confs, _ -> make_steps (new_confs @ mpconfs))
 
-  let evaluate_prog (prog: UP.prog) : EventSemantics.result_t list =
+  let evaluate_prog (prog: UP.prog) : result_t list =
     let initial_econf = EventSemantics.create_initial_state prog in
     let first_cid = generate_new_conf_id [] in
     let initial_mpconf = [first_cid, initial_econf], [], SymbMap.init (), SymbMap.init (), None in
     let final_confs = make_steps [initial_mpconf] in
     Printf.printf "\nMP-Semantics: Finished execution\n";
-    let e_confs = List.fold_left (
-      fun confs_so_far mp_conf -> 
-        let (econfs, _, _, _, _) = mp_conf in
-        let (cids, econfs) = List.split econfs in
-        confs_so_far @ econfs
-      ) [] final_confs in
-    EventSemantics.econf_to_result e_confs
+    List.map (fun (cq, mq, pc, pp, _) -> 
+      let erets = List.map (fun (cid, econf) -> cid, EventSemantics.econf_to_result econf) cq in
+      (erets, mq, pc, pp)) final_confs
+  
+  let valid_result (rets: result_t list) : bool =
+    List.fold_left (
+      fun valid_so_far (erets_with_cids, _, _, _) ->
+        let (_, erets) = List.split erets_with_cids in 
+        valid_so_far && EventSemantics.valid_result erets) true rets
 
 end

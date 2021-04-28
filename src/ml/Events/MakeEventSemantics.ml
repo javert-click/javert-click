@@ -8,7 +8,7 @@ module M
   (Val           : Val.M) 
   (Error         : Error.M with type vt = Val.t and type event_t = string)
   (Interpreter   : Interpreter.M with type vt = Val.t and type err_t = Error.t) 
-    : EventSemantics.M with type vt = Val.t and type result_t = Interpreter.result_t and type await_conf_t = Interpreter.cconf_t and type conf_info_t = Interpreter.conf_info_t = struct
+    : EventSemantics.M with type vt = Val.t and type await_conf_t = Interpreter.cconf_t and type conf_info_t = Interpreter.conf_info_t = struct
 
   type vt = Val.t 
 
@@ -17,8 +17,6 @@ module M
   type err_t = Error.t 
 
   type fid_t = Interpreter.fid_t
-  
-  type result_t = Interpreter.result_t
 
   type await_conf_t = Interpreter.cconf_t
   
@@ -39,6 +37,8 @@ module M
   type handler_queue_t = hq_element list 
 
   type state_t = Interpreter.econf_t * event_handlers_t * handler_queue_t
+
+  type result_t = Interpreter.result_t * event_handlers_t * handler_queue_t
 
   exception Event_not_found of string;;
 
@@ -129,21 +129,30 @@ module M
                let hq' = hs @ [ (CondConf (conf_info, pred, vs)) ] in 
                [ (conf, ehs, hq') ]
             )
-          
-    let state_str (state : state_t) : string =
-      let (econf, ehs, hq) = state in
-      let args_string args = (String.concat ", Args--: \n" (List.map (fun (arg) -> Printf.sprintf "Arg: %s" (Val.str arg)) args)) in
-      let hq_elem_string x = 
-        match x with
-        | Conf (c, _) -> Interpreter.string_of_cconf c
-        | CondConf _ -> ""
-        | Handler (_, fid, event, args) -> Printf.sprintf "\t Fid: %s, Event: %s, Args: %s \n" (Val.str fid) (Val.str event) (args_string args) in
-      let hq_string = (String.concat "\n" (List.map hq_elem_string hq)) in
-      let handlers_str handlers = (String.concat " " (List.map (fun (fid, _) -> Printf.sprintf "\n\t\t\t Fid: %s" (Val.str fid)) handlers))  in 
-        "\n--Event Handlers--" ^ (SymbMap.str ehs Val.str handlers_str) ^ "\n--Handlers Queue--\n" ^ hq_string ^ "\n"
+
+  let handlers_str handlers = (String.concat " " (List.map (fun (fid, _) -> Printf.sprintf "\n\t\t\t Fid: %s" (Val.str fid)) handlers))
   
-  let string_of_result (states: state_t list) : string =
-    String.concat "Final Result: \n" (List.map (fun state -> state_str state) states) 
+  let hq_elem_string (x: hq_element) : string = 
+    let args_string args = (String.concat ", Args--: \n" (List.map (fun (arg) -> Printf.sprintf "Arg: %s" (Val.str arg)) args)) in
+    match x with
+    | Conf (c, _) -> Interpreter.string_of_cconf c
+    | CondConf _ -> ""
+    | Handler (_, fid, event, args) -> Printf.sprintf "\t Fid: %s, Event: %s, Args: %s \n" (Val.str fid) (Val.str event) (args_string args)
+  
+  let hq_string (hq: handler_queue_t) : string = (String.concat "\n" (List.map hq_elem_string hq))
+
+  let state_str (state : state_t) : string =
+    let (econf, ehs, hq) = state in
+    "\n--Event Handlers--" ^ (SymbMap.str ehs Val.str handlers_str) ^ "\n--Handlers Queue--\n" ^ hq_string hq ^ "\n"
+  
+  let string_of_result (rets: result_t list) : string =
+    String.concat "Event Semantics Result: \n" (List.map 
+      (fun ret -> 
+        let (lret, ehs, hq) = ret in
+          Interpreter.string_of_result [lret] ^ 
+          "\n--Event Handlers--" ^ (SymbMap.str ehs Val.str handlers_str) ^
+          "\n--Handlers Queue--\n" ^ hq_string hq ^ "\n"
+      ) rets) 
     
   let print_state (state : state_t) : unit = 
     L.log L.Normal (lazy (Printf.sprintf
@@ -297,15 +306,14 @@ module M
     let initial_conf = (Interpreter.create_initial_conf prog None, prog) in
     initial_conf, SymbMap.init (), []
 
-  let econf_to_result (states: state_t list) : result_t list =
-    Interpreter.conf_to_result (List.map (fun state -> let (econf, _, _) = state in let (conf, _) = econf in conf) states)
-    
+  let econf_to_result (state: state_t) : result_t =
+    let (econf, eh, hq) = state in let (conf, _) = econf in (Interpreter.conf_to_result conf, eh, hq)
 
   let evaluate_prog (prog: UP.prog) : result_t list =
     let initial_state = create_initial_state prog in
     let states = make_steps [initial_state] in
     if (!jsil_line_numbers) then print_jsil_line_numbers prog;
-    econf_to_result states
+    List.map econf_to_result states
 
   let new_conf (url: string) (setup_fid: string) (args: vt list) : state_t = 
     let econf = Interpreter.new_conf url setup_fid args in
@@ -327,5 +335,9 @@ module M
     let ((conf, prog), ehs, hq) = state in
     let conf' = Interpreter.fresh_lvar x v conf vart in
     (conf', prog), ehs, hq
+
+  let valid_result (rets: result_t list) : bool =
+    let lrets = List.map (fun (lret, _, _) -> lret) rets in
+    Interpreter.valid_result lrets
 
 end 

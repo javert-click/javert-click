@@ -33,7 +33,7 @@ module type M = sig
 
   val create_initial_state : UP.prog -> state_t
 
-  val econf_to_result : state_t list -> result_t list
+  val econf_to_result : state_t -> result_t
 
   val evaluate_prog : UP.prog -> result_t list
 
@@ -42,5 +42,9 @@ module type M = sig
   val assume : state_t -> Formula.t -> state_t
 
   val fresh_lvar : string -> string -> state_t -> Type.t -> state_t
+
+  val string_of_result : result_t list -> string
+
+  val valid_result : result_t list -> bool
   
 end

@@ -842,7 +842,7 @@ let evaluate_prog (prog : UP.prog) : result_t list =
 *)
 let string_of_result (result : result_t list) : string =
 
-  let f i res = Printf.sprintf "RESULT: %d.\n%s" i (string_of_single_result res) in
+  let f i res = Printf.sprintf "\nJSIL RESULT: %d.\n%s" i (string_of_single_result res) in
 
   String.concat "" (List.mapi f result)
 
@@ -863,11 +863,11 @@ let deconstruct_result (ret : result_t list) : vt * state_t =
     | RFail _ -> print_to_all "FAIL"; assert(false)
 
 
-let rec conf_to_result (confs: cconf_t list ) : result_t list =
+let conf_to_result (confs: cconf_t ) : result_t =
   match confs with
-  | (ConfFinish (fl, v, state, _)) :: rest_confs -> (RSucc (fl, v, state)) :: conf_to_result rest_confs
-  | (ConfErr (proc, i, state, errs)) :: rest_confs -> RFail (proc, i, state, errs) :: conf_to_result rest_confs
-  | _ -> []
+  | ConfFinish (fl, v, state, _) -> RSucc (fl, v, state)
+  | ConfErr (proc, i, state, errs) -> RFail (proc, i, state, errs)
+  | _ -> raise (Failure "Invalid Final Configuration")
 
 let assume (conf: cconf_t) (formulas: Formula.t list) : cconf_t option =
   let state = get_state conf in

@@ -85,13 +85,17 @@ let process_file (path : string) : unit =
   ) else ( 
     (match UP.init_prog prog with
     | Error _ -> raise (Failure "Creation of unification plans failed.")
-    | Ok prog' -> 
-      let rets = 
-        if (!events) then EventSSemantics.M.evaluate_prog prog' 
-          else if (!mp) then MPSSemantics.M.evaluate_prog prog'
-          else SInterpreter.M.evaluate_proc (fun x -> x) prog' (JS2JSIL_Constants.main_fid ^ basename) [] (SState.M.init None) 
-      in 
-        L.log L.Normal (lazy(Printf.sprintf "Final states: \n%s\n" (SInterpreter.M.string_of_result rets)));
+    | Ok prog' ->  
+        if (!events) then (
+          let rets = EventSSemantics.M.evaluate_prog prog' in
+          L.log L.Normal (lazy(Printf.sprintf "Final Event States: \n%s\n" (EventSSemantics.M.string_of_result rets)));
+        ) else if (!mp) then (
+          let rets = MPSSemantics.M.evaluate_prog prog' in
+          L.log L.Normal (lazy(Printf.sprintf "Final MP States: \n%s\n" (MPSSemantics.M.string_of_result rets)));
+        ) else ( 
+          let rets = SInterpreter.M.evaluate_proc (fun x -> x) prog' (JS2JSIL_Constants.main_fid ^ basename) [] (SState.M.init None) in
+          L.log L.Normal (lazy(Printf.sprintf "Final states: \n%s\n" (SInterpreter.M.string_of_result rets)));
+        ) 
     )
   )
   
