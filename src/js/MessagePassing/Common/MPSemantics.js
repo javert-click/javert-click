@@ -67,7 +67,9 @@ MPSemantics.prototype.unpairPort = function(portId){
 */
 MPSemantics.prototype.getPaired = function(portId){
     //console.log('MPSem: getPaired');
-    return __MP__wrapper__getPaired(portId);
+    var paired_port = __MP__wrapper__getPaired(portId);
+    //console.log('MPSem returned '+paired_port+' as getPaired('+portId+')');
+    return paired_port;
 }
 
 /*

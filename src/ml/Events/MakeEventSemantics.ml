@@ -142,7 +142,8 @@ module M
   let hq_string (hq: handler_queue_t) : string = (String.concat "\n" (List.map hq_elem_string hq))
 
   let state_str (state : state_t) : string =
-    let (econf, ehs, hq) = state in
+    let (_, ehs, hq) = state in
+    (*"\n--JSIL Conf--" ^ Interpreter.print_cconf econf ^*)
     "\n--Event Handlers--" ^ (SymbMap.str ehs Val.str handlers_str) ^ "\n--Handlers Queue--\n" ^ hq_string hq ^ "\n"
   
   let string_of_result (rets: result_t list) : string =
@@ -319,10 +320,9 @@ module M
     let econf = Interpreter.new_conf url setup_fid args in
     econf, SymbMap.init (), []
   
-  let set_var (xvar: Var.t) (v: vt) (state: state_t) : state_t =
+  let set_var (xvar: Var.t) (v: vt) (state: state_t) : state_t = 
     let ((c, prog), h, q) = state in
-    let c' = Interpreter.set_var xvar v c in
-    ((c', prog), h, q)
+    ((Interpreter.set_var xvar v c, prog), h, q)
 
   (* Environment event dispatch. Adds handlers at the back of the continuation queue *) 
   let fire_event (event: event_t) (args: vt list) (state: state_t) : state_t list =

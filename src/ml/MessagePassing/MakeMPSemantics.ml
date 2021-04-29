@@ -119,7 +119,14 @@ module M
       | Some cid' when cid' = cid -> cq', None
       | _ -> cq', lead_conf)
     | None -> cq', lead_conf) in
-    assume cq'' f, mq', pc', pp', lead_conf'
+    (*L.log L.Normal (lazy (Printf.sprintf "\nBefore assuming that %s: %d confs\n" (Formula.str f) (List.length cq'')));*)
+    let new_cq = assume cq'' f in 
+    (*L.log L.Normal (lazy (Printf.sprintf "\nAfter assuming that %s: %d confs\n" (Formula.str f) (List.length new_cq)));*)
+    (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
+    (*List.iter (fun (cid, econf) -> L.log L.Normal (lazy (Printf.sprintf "\nCID: %d, CONF: \n%s\n" cid (EventSemantics.state_str econf)))) new_cq;*)
+    (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
+    new_cq, mq', pc', pp', lead_conf'
+
 
   let compute_cid_from_val (v: vt) : cid_t =
     let lit = Val.to_literal v in
@@ -196,6 +203,7 @@ module M
     ) pps_fs ) pcs_fs)
 
 
+  (* TODOMP: fix the call to SymbMap.add, making the port symbolic (LVar s)... *)
   (* Creates new port, adds to current configuration and sets return variable to new port id *)
   let new_port (xvar: string) (conf: event_conf_t) (pc: pc_map_t) : event_conf_t * (pc_map_t * Formula.t) list = 
     let port = generate_new_port_id pc in
@@ -230,7 +238,10 @@ module M
   let get_paired (xvar: string) (port: port_t) (conf: event_conf_t) (pp: pp_map_t) : (event_conf_t * Formula.t) list =
     let (cid, conf) = conf in 
     let ps_fs = SymbMap.find pp port Val.to_literal Val.to_expr in
-    List.map (fun (port', f) -> (cid, EventSemantics.set_var xvar port' conf), f) ps_fs
+    List.map (fun (port', f) -> 
+      let f_ps_diff = Formula.Not (Formula.Eq (Val.to_expr port, Val.to_expr port')) in
+      (cid, EventSemantics.set_var xvar port' conf), Formula.And(f, f_ps_diff)) ps_fs
+
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
   let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * (pc_map_t * Formula.t) list =
@@ -279,9 +290,7 @@ module M
       | UnpairPort (port) -> 
         let pp_fs = unpair_port port pp in
         List.map (fun (pp', f) -> (cid, conf), mq, pc, pp', None, f) pp_fs
-      | GetPaired (xvar, port) -> 
-        let confs_fs = get_paired xvar port (cid, conf) pp in
-        List.map (fun (conf'', f) -> conf'', mq, pc, pp, None, f) confs_fs
+      | GetPaired (xvar, port) -> List.map (fun (conf'', f) -> conf'', mq, pc, pp, None, f) (get_paired xvar port (cid, conf) pp)
       | BeginAtomic -> L.log L.Normal (lazy "\nFound beginAtomic\n");
         [(cid, conf), mq, pc, pp, Some (HoldConf cid), Formula.True] 
       | EndAtomic -> L.log L.Normal (lazy "\nFound endAtomic\n");
@@ -301,11 +310,14 @@ module M
     match EventSemantics.make_step conf (Some (MPInterceptor.intercept)) with
     | [], Some fconf -> [], Some ((cid, fconf), mq, pc, pp, None, Formula.True) 
     | confs, _ ->
-      List.concat (List.map (fun (conf', (label : event_label_t option)) ->
+      let res = List.concat (List.map (fun (conf', (label : event_label_t option)) ->
         match label with
-        | Some MLabel label -> process_mp_label label cids cid conf' mq pc pp 
+        | Some MLabel label -> 
+           process_mp_label label cids cid conf' mq pc pp 
         | _ -> [(cid, conf'), mq, pc, pp, None, Formula.True]
-      ) confs), None
+      ) confs) in
+      L.log L.Normal (lazy (Printf.sprintf "\nResult of running current mp-conf: %d resulting mp-confs\n" (List.length res)));
+      res, None
 
   let mq_str mq = "Messages: " ^ String.concat ", " (List.map (
     fun (msg, port) ->
@@ -382,8 +394,11 @@ module M
     | [] -> []
     | conf :: mpconfs -> 
       (match make_step conf with
-      | [], Some conf -> [conf]
-      | new_confs, _ -> make_steps (new_confs @ mpconfs))
+      | [], Some conf -> 
+         conf :: make_steps mpconfs
+      | new_confs, _ -> 
+         (*Printf.printf "\nGot %d more mp confs\n" (List.length new_confs);*)
+         make_steps (new_confs @ mpconfs))
 
   let evaluate_prog (prog: UP.prog) : result_t list =
     let initial_econf = EventSemantics.create_initial_state prog in

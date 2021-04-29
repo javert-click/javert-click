@@ -3,6 +3,7 @@ const EventTarget  = require('../../DOM/Events/EventTarget');
 const DOMException = require('../../DOM/Common/DOMException');
 const MessageEvent = require('../../DOM/Events/MessageEvent');
 const JS2JSILList  = require('../../Utils/JS2JSILList'); 
+const ArrayUtils   = require('../../Utils/ArrayUtils'); 
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
 
@@ -27,12 +28,12 @@ function MessagePort(id){
     this.__Detached          = false;
     this.__PrimaryInterface  = 'MessagePort'; //TODO CHECK
     this.__HasBeenShipped    = false;
-    MessagePort.prototype.ports[this.__id] = this;
+    MessagePort.prototype.ports.push(this);
 }
 
 MessagePort.prototype = Object.create(EventTarget.EventTarget.prototype);
 
-MessagePort.prototype.ports = {};
+MessagePort.prototype.ports = [];
 
 Object.defineProperty(MessagePort.prototype, 'onmessage', {
     /*
@@ -201,10 +202,10 @@ function processMessageSteps(global, message, targetPortId, transferIds){
     transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
     console.log('Executing processMessageSteps, targetPortId: '+targetPortId+', transferIds: '+transferIds);
     // 1. Let finalTargetPort be the MessagePort in whose port message queue the task now finds itself.
-    var finalTargetPort = scopeMP.MessagePort.prototype.ports[targetPortId];
+    var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
     // 2. (NOT SUPPORTED) Let targetRealm be finalTargetPort's relevant Realm.
     // As we model the message queue via MP Semantics, we add this step here to make sure the target port is enabled
-    if(!finalTargetPort.__Enabled) return;
+    if(!finalTargetPort || !finalTargetPort.__Enabled) return;
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
     var deserializeRecord = scopeMP.StructuredDeserializeWithTransfer(message, transferIds);
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
@@ -225,6 +226,7 @@ function processMessageSteps(global, message, targetPortId, transferIds){
 scopeMP.MessagePort  = MessagePort;
 scopeMP.MessageEvent = MessageEvent;
 scopeMP.JS2JSILList  = JS2JSILList;
+scopeMP.ArrayUtils   = ArrayUtils;
 scopeMP.StructuredDeserializeWithTransfer = StructuredDeserializeWithTransfer;
 
 JSILSetGlobalObjProp("__scopeMP", scopeMP);

@@ -101,8 +101,10 @@ let get_predecessor (prog : UP.prog) (cs : CallStack.t) (prev : int) (i : int) :
 
 let update_store (state : State.t) (x : string) (v : Val.t) : State.t =
   let store  = State.get_store state in
-  let _      = Store.put store x v in
-  let state' = State.set_store state store in
+  let store' = Store.copy store in
+  let _      = Store.put store' x v in
+  let state' = State.copy state in
+  let state' = State.set_store state' store' in
     state'
 
 (* FIXME: This function is never used *)
