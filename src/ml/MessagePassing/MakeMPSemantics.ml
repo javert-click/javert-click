@@ -103,7 +103,11 @@ module M
 
   (* Adds a constraint f to the path condition of each configuration in cq *)
   let assume (cq: cq_t) (f: Formula.t) : cq_t =
-    List.map (fun (cid, conf) -> cid, EventSemantics.assume conf f) cq
+    (*L.log L.Normal (lazy (Printf.sprintf "\nASSUME: Going to assume formula %s" (Formula.str f)));*)
+    List.fold_left (fun acc (cid, conf) -> 
+      match EventSemantics.assume conf f with
+      | Some conf' -> acc @ [(cid, conf')] 
+      | None -> acc ) [] cq
 
   (* Updates the configuration queue based on the result of running a single configuration *)
   let update_full_conf_from_reduced_conf (cq_pre: cq_t) (cq_pos: cq_t) (mq: mq_t) (pc: pc_map_t) (pp:pp_map_t) (lead_conf: cid_t option) (new_reduced_conf: reduced_mp_conf_t) : mp_conf_t =
@@ -237,9 +241,13 @@ module M
   (* Returns the port paired with the given port *)
   let get_paired (xvar: string) (port: port_t) (conf: event_conf_t) (pp: pp_map_t) : (event_conf_t * Formula.t) list =
     let (cid, conf) = conf in 
+    (*Printf.printf "\nGetPaired: searching for paired port of %s" (Val.str port);*)
     let ps_fs = SymbMap.find pp port Val.to_literal Val.to_expr in
     List.map (fun (port', f) -> 
       let f_ps_diff = Formula.Not (Formula.Eq (Val.to_expr port, Val.to_expr port')) in
+      (*L.log L.Normal (lazy (Printf.sprintf "\nGetPaired: generating formula %s\n" (Formula.str (Formula.And(f, f_ps_diff)))));
+      L.log L.Normal (lazy (Printf.sprintf "\nGetPaired: going to set %s to %s\n" (Var.str xvar) (Val.str port')));*)
+      (*L.log L.Normal (lazy (Printf.sprintf "\n(GET_PAIRED) NEW STATE:%s\n" (EventSemantics.state_str new_state))); *)
       (cid, EventSemantics.set_var xvar port' conf), Formula.And(f, f_ps_diff)) ps_fs
 
 
@@ -369,7 +377,7 @@ module M
         | new_reduced_confs, _ ->
         let res = List.map (fun new_reduced_conf -> update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf) new_reduced_confs, None in
         res)
-      | _, None, _ -> raise (Failure "Configuration not found")) 
+      | _, None, _ -> [], None) (*raise (Failure "Configuration not found")*) 
     | None ->
       (* Scheduler decides if a configuration or a message is scheduled *)
       (match Scheduler.schedule cq mq final with
@@ -405,7 +413,7 @@ module M
     let first_cid = generate_new_conf_id [] in
     let initial_mpconf = [first_cid, initial_econf], [], SymbMap.init (), SymbMap.init (), None in
     let final_confs = make_steps [initial_mpconf] in
-    Printf.printf "\nMP-Semantics: Finished execution\n";
+    Printf.printf "\nMP-Semantics: Finished execution with %d MP-configurations.\n" (List.length final_confs);
     List.map (fun (cq, mq, pc, pp, _) -> 
       let erets = List.map (fun (cid, econf) -> cid, EventSemantics.econf_to_result econf) cq in
       (erets, mq, pc, pp)) final_confs

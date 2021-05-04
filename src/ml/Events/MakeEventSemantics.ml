@@ -83,11 +83,9 @@ module M
       | _ -> false
     ) else ( false )
 
-  let assume (state: state_t) (f: Formula.t) : state_t =
+  let assume (state: state_t) (f: Formula.t) : state_t option =
     let (conf, prog), ehs, hq = state in
-    match Interpreter.assume conf [f] with
-    | Some conf' -> (conf',prog), ehs, hq
-    | None -> (conf, prog), ehs, hq
+    Option.map (fun conf' -> (conf', prog), ehs, hq) (Interpreter.assume conf [f])
 
   let eval_expr (estate: state_t) (expr: Expr.t) : vt = 
     let ((cconf,_), _, _) = estate in
