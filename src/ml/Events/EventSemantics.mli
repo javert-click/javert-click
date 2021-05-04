@@ -46,5 +46,9 @@ module type M = sig
   val string_of_result : result_t list -> string
 
   val valid_result : result_t list -> bool
+
+  val add_spec_var : string list -> state_t -> state_t
+
+  val assume_type : string -> Type.t -> state_t -> state_t
   
 end

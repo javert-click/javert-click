@@ -733,7 +733,7 @@ let rec encode_logical_expression (le : Expr.t) : ZExpr.expr =
 
   | ALoc var -> ZExpr.mk_const ctx (mk_string_symb var) extended_literal_sort
 
-  | PVar _   -> raise (Failure "Program variable in pure formula: FIRE")
+  | PVar _   -> Printf.printf "\nencode_logical_expr: %s\n" (Expr.str le); raise (Failure "Program variable in pure formula: FIRE")
 
   | UnOp (op, le) -> encode_unop op (f le)
 

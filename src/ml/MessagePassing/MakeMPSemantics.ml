@@ -55,6 +55,7 @@ module M
                            | RemConf of cid_t 
                            | HoldConf of cid_t
                            | FreeConf of cid_t
+                           | AddSpecVar of string list
 
   (* Most of the operations will manipulate a single configuration. There is then a function to update the mp_conf based on the new reduced conf and the optional action *)
   type reduced_mp_conf_t = event_conf_t * mq_t * pc_map_t * pp_map_t * optional_action_t option * Formula.t
@@ -122,6 +123,10 @@ module M
       (match lead_conf with
       | Some cid' when cid' = cid -> cq', None
       | _ -> cq', lead_conf)
+    | Some AddSpecVar x -> 
+      (List.map (fun (cid, conf) -> 
+        Printf.printf "\nAdding specvar %s to conf %d\n" (String.concat "," (List.map (fun v -> v) x)) cid;
+        cid, EventSemantics.add_spec_var x conf) cq'), lead_conf
     | None -> cq', lead_conf) in
     (*L.log L.Normal (lazy (Printf.sprintf "\nBefore assuming that %s: %d confs\n" (Formula.str f) (List.length cq'')));*)
     let new_cq = assume cq'' f in 
@@ -253,9 +258,9 @@ module M
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
   let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * (pc_map_t * Formula.t) list =
-    (*Printf.printf "\nProcessing message sent to port %s" (Val.str port);*)
+    Printf.printf "\nProcessing message sent to port %s" (Val.str port);
     let (vs, plist) = msg in
-    (*Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));*)
+    Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));
     let cids_fs = SymbMap.find pc port Val.to_literal Val.to_expr in
     (*Printf.printf "\nFound %d confs for port %s" (List.length cids_fs) (Val.str port);*)
     let cq_l_l, pcs_l_l = (List.split (List.map (
@@ -304,8 +309,10 @@ module M
       | EndAtomic -> L.log L.Normal (lazy "\nFound endAtomic\n");
         [(cid, conf), mq, pc, pp, Some (FreeConf cid), Formula.True]
       | Assume (f) -> [(cid, conf), mq, pc, pp, None, f]
-      | AssumeType (x, t) -> raise (Failure "not impl yet!")
-      | SpecVar x -> raise (Failure "not impl yet!")
+      | AssumeType (x, t) -> 
+        let f = Formula.Eq (UnOp (TypeOf, (LVar x)), Lit (Type t)) in
+        [(cid, conf), mq, pc, pp, None, f]
+      | SpecVar x -> [(cid, conf), mq, pc, pp, Some (AddSpecVar x), Formula.True]
       | GroupLabel (ls) ->
         (match ls with
         | [] -> [(cid, conf), mq, pc, pp, None, Formula.True]

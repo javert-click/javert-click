@@ -114,6 +114,9 @@ function TransferReceivingSteps(value){
         // (This will disentangle dataHolder.[[RemotePort]] from the original port that was transferred.)
 }
 
+/*
+* @id StructuredSerializeWithTransfer
+*/
 function StructuredSerializeWithTransfer(message, transfer){
     // 1. Let memory be an empty map *)
     var memory = {};

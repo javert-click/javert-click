@@ -338,4 +338,12 @@ module M
     let lrets = List.map (fun (lret, _, _) -> lret) rets in
     Interpreter.valid_result lrets
 
+  let add_spec_var (x:string list) (state: state_t) : state_t =
+    let ((conf, prog), ehs, hq) = state in
+    ((Interpreter.add_spec_var x conf), prog), ehs, hq
+  
+  let assume_type (x: string) (t: Type.t) (state: state_t) : state_t =
+    let ((conf, prog), ehs, hq) = state in
+    ((Interpreter.assume_type x t conf), prog), ehs, hq
+
 end 

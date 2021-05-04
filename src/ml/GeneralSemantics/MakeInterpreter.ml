@@ -240,11 +240,15 @@ let assert_formula (f: Formula.t) (state: State.t) : State.t list =
           | _ -> raise (Failure (Printf.sprintf "ERROR: AssumeType: Variable %s cannot be turned into a value." x)))
 
     | Assume f ->
+        Printf.printf "\nAssume(%s): going to start assume!\n" (Formula.str f);
         let store_subst = Store.to_ssubst (State.get_store state) in
+        Printf.printf "\nAssume(%s): store_to_subst done!\n" (Formula.str f);
         let f' = Formula.substitution store_subst true f in
+        Printf.printf "\nAssume(%s): Formula.substitution done!\n" (Formula.str f);
         let f' = State.simplify_formula state f' in
+        Printf.printf "\nAssume(%s): Formula simplified to %s!\n" (Formula.str f) (Formula.str f');
         (match State.assume_a state [ f' ] with
-          | Some state' -> [ state', [MPInterceptor.Assume (f)] ]
+          | Some state' -> Printf.printf "\nAssume(%s): assume_a worked!\n" (Formula.str f); [ state', [MPInterceptor.Assume (f)] ]
           | _ -> (* Printf.printf "WARNING: ASSUMING FALSE\n"; *) [])
 
     | SpecVar xs -> [ State.add_spec_vars state (Var.Set.of_list xs), [MPInterceptor.SpecVar xs] ]
@@ -1047,15 +1051,30 @@ let new_conf (url: string) (setup_fid: string) (args: vt list) : econf_t =
     initial_conf, prog
   | _ -> raise (Failure "Program could not be initialised")
 
+let add_spec_var (x:string list) (conf: cconf_t) : cconf_t =
+  let state     = get_state conf in
+  let state'    = State.add_spec_vars state (Var.Set.of_list x) in
+  set_state conf state'
 
-  let fresh_lvar (x: string) (s:string) (conf: cconf_t) (vart: Type.t) : cconf_t =
-    let state     = get_state conf in
-    let state'    = State.add_spec_vars state (Var.Set.of_list [ s ]) in
-    let f = Formula.Eq (UnOp (TypeOf, (LVar s)), Lit (Type vart)) in
-    match State.assume_a state' [ f ] with
-    | Some state'' -> let v = make_eval_expr state'' (LVar s) in
-                      let state'' = update_store state'' x v in
-                      set_state conf state'' 
-    | None -> raise (Failure "Cannot create fresh lvar")
+let assume_type (x: string) (t: Type.t) (conf: cconf_t) : cconf_t =
+  let state     = get_state conf in
+  let msg = Printf.sprintf "Cannot assume type %s for var %s" (Type.str t) x in
+  match Val.from_expr (LVar x) with
+  | Some v_x ->
+    (match State.assume_t state v_x t with
+      | Some state' -> set_state conf state'
+      | None -> raise (Failure msg))
+  | None -> raise (Failure msg)
+
+
+let fresh_lvar (x: string) (s:string) (conf: cconf_t) (vart: Type.t) : cconf_t =
+  let state     = get_state conf in
+  let state'    = State.add_spec_vars state (Var.Set.of_list [ s ]) in
+  let f = Formula.Eq (UnOp (TypeOf, (LVar s)), Lit (Type vart)) in
+  match State.assume_a state' [ f ] with
+  | Some state'' -> let v = make_eval_expr state'' (LVar s) in
+                    let state'' = update_store state'' x v in
+                    set_state conf state'' 
+  | None -> raise (Failure "Cannot create fresh lvar")
 
 end

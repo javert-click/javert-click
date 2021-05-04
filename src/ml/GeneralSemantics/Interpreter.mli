@@ -96,5 +96,9 @@ module type M = sig
   val set_var : Var.t -> vt -> cconf_t -> cconf_t
 
   val new_conf : string -> string -> vt list -> econf_t
+
+  val add_spec_var : string list -> cconf_t -> cconf_t
+
+  val assume_type : string -> Type.t -> cconf_t -> cconf_t
   
 end
