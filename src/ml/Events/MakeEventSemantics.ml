@@ -314,9 +314,10 @@ module M
     if (!jsil_line_numbers) then print_jsil_line_numbers prog;
     List.map econf_to_result states
 
-  let new_conf (url: string) (setup_fid: string) (args: vt list) : state_t = 
-    let econf = Interpreter.new_conf url setup_fid args in
-    econf, SymbMap.init (), []
+  let new_conf (url: string) (setup_fid: string) (args: vt list) (state: state_t) : state_t = 
+    let (econf, _, _) = state in
+    let econf' = Interpreter.new_conf url setup_fid args econf in
+    econf', SymbMap.init (), []
   
   let set_var (xvar: Var.t) (v: vt) (state: state_t) : state_t = 
     let ((c, prog), h, q) = state in

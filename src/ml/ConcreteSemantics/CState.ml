@@ -290,3 +290,6 @@ let update_subst (state : t) (subst : st) : unit = ()
 
 let simplify_formula (state : t) (f : Formula.t) = f
 
+(* Here we just return the new state as it is, as there is no path condition in concrete state *)
+let transfer_path_condition (_ : t) (new_state : t) : t = new_state
+

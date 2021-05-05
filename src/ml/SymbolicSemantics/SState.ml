@@ -646,6 +646,14 @@ module M = struct
         ) [] in
   List.iter (fun (x, e) -> SSubst.put subst x e) new_bindings
 
+let transfer_path_condition (state : t) (new_state : t) : t = 
+  (* 1. Isolate path condition of current state *)
+  let _, _, pfs, gamma, spec_vars = state in
+  (* 2. Obtain heap and store of new state and ignore path condition of newly created state *)
+  let heap, store, _, _, _ = new_state in
+  (* 3. Do the merge *)
+  heap, store, PFS.copy pfs, TypEnv.copy gamma, spec_vars
+
 end
 
 

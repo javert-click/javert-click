@@ -179,7 +179,7 @@ module M
     let cid, econf = conf in
     let new_cid = generate_new_conf_id cids in
     let conf' = EventSemantics.set_var xvar (Val.from_literal (Num (float_of_int new_cid))) econf in
-    let new_conf = EventSemantics.new_conf url setup_fid args in
+    let new_conf = EventSemantics.new_conf url setup_fid args econf in
     (cid, conf'), (new_cid, new_conf)
 
   (* Unpairs a port. Unpair means removing both p and port paired with p in pp map. We assume that the map is bi-directional *)

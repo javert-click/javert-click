@@ -1037,7 +1037,8 @@ let set_var (xvar: Var.t) (v: vt) (conf: cconf_t) : cconf_t =
   let state' = update_store state xvar v in
   set_state conf state'
 
-let new_conf (url: string) (setup_fid: string) (args: vt list) : econf_t =
+(* TODOMP: copy spec vars already defined in current state! *)
+let new_conf (url: string) (setup_fid: string) (args: vt list) ((conf, _): econf_t) : econf_t =
   let jsil_path = IO_Utils.parse_url url in
   let ext_prog = Parsing_Utils.parse_eprog_from_file jsil_path in
   let basename = Filename.basename (Filename.chop_extension jsil_path) in
@@ -1048,7 +1049,10 @@ let new_conf (url: string) (setup_fid: string) (args: vt list) : econf_t =
   match prog with 
   | Ok prog -> 
     let initial_conf = create_initial_conf prog (Some (setup_fid, args @ [Val.from_literal (String main_fid)])) in
-    initial_conf, prog
+    let state = get_state conf in
+    let new_initial_state = get_state initial_conf in
+    let new_state = State.transfer_path_condition state new_initial_state in
+    (set_state initial_conf new_state), prog
   | _ -> raise (Failure "Program could not be initialised")
 
 let add_spec_var (x:string list) (conf: cconf_t) : cconf_t =

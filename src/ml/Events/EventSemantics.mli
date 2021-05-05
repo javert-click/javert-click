@@ -27,7 +27,7 @@ module type M = sig
 
   val final : state_t -> bool
 
-  val new_conf : string -> string -> vt list -> state_t
+  val new_conf : string -> string -> vt list -> state_t -> state_t
 
   val set_var : Var.t -> vt -> state_t -> state_t  
 
