@@ -260,7 +260,7 @@ module M
   let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * (pc_map_t * Formula.t) list =
     Printf.printf "\nProcessing message sent to port %s" (Val.str port);
     let (vs, plist) = msg in
-    Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));
+    (*Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));*)
     let cids_fs = SymbMap.find pc port Val.to_literal Val.to_expr in
     (*Printf.printf "\nFound %d confs for port %s" (List.length cids_fs) (Val.str port);*)
     let cq_l_l, pcs_l_l = (List.split (List.map (

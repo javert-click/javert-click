@@ -206,6 +206,12 @@ let assert_formula (f: Formula.t) (state: State.t) : State.t list =
       L.log L.Normal (lazy msg);
       raise (State_error ([ err ], state)))
 
+let assume_formula (formulas: Formula.t list) (state: state_t) : state_t option =
+  let store_subst = Store.to_ssubst (State.get_store state) in
+  let formulas = List.map (fun f -> Formula.substitution store_subst true f) formulas in
+  let formulas = List.map (fun f -> State.simplify_formula state f) formulas in
+  State.assume_a state formulas
+
 (* ************** *
  * Main Functions *
  * ************** *)
@@ -240,15 +246,8 @@ let assert_formula (f: Formula.t) (state: State.t) : State.t list =
           | _ -> raise (Failure (Printf.sprintf "ERROR: AssumeType: Variable %s cannot be turned into a value." x)))
 
     | Assume f ->
-        Printf.printf "\nAssume(%s): going to start assume!\n" (Formula.str f);
-        let store_subst = Store.to_ssubst (State.get_store state) in
-        Printf.printf "\nAssume(%s): store_to_subst done!\n" (Formula.str f);
-        let f' = Formula.substitution store_subst true f in
-        Printf.printf "\nAssume(%s): Formula.substitution done!\n" (Formula.str f);
-        let f' = State.simplify_formula state f' in
-        Printf.printf "\nAssume(%s): Formula simplified to %s!\n" (Formula.str f) (Formula.str f');
-        (match State.assume_a state [ f' ] with
-          | Some state' -> Printf.printf "\nAssume(%s): assume_a worked!\n" (Formula.str f); [ state', [MPInterceptor.Assume (f)] ]
+        (match assume_formula [f] state with
+          | Some state' -> [ state', [MPInterceptor.Assume (f)] ]
           | _ -> (* Printf.printf "WARNING: ASSUMING FALSE\n"; *) [])
 
     | SpecVar xs -> [ State.add_spec_vars state (Var.Set.of_list xs), [MPInterceptor.SpecVar xs] ]
@@ -877,7 +876,7 @@ let conf_to_result (confs: cconf_t ) : result_t =
 
 let assume (conf: cconf_t) (formulas: Formula.t list) : cconf_t option =
   let state = get_state conf in
-  match State.assume_a state formulas with
+  match assume_formula formulas state with
   | Some new_state ->
       (match conf with
       | ConfErr  (proc, i, state, errs) -> Some (ConfErr (proc, i, new_state , errs))
