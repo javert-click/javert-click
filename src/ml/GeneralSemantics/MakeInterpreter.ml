@@ -1036,7 +1036,6 @@ let set_var (xvar: Var.t) (v: vt) (conf: cconf_t) : cconf_t =
   let state' = update_store state xvar v in
   set_state conf state'
 
-(* TODOMP: copy spec vars already defined in current state! *)
 let new_conf (url: string) (setup_fid: string) (args: vt list) ((conf, _): econf_t) : econf_t =
   let jsil_path = IO_Utils.parse_url url in
   let ext_prog = Parsing_Utils.parse_eprog_from_file jsil_path in
