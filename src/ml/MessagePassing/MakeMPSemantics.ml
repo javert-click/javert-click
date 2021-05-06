@@ -163,7 +163,7 @@ module M
     let ports_curr_conf = List.map Val.to_expr (SymbMap.filter pc cid Val.from_literal) in
     (* We need to guarantee that the sender belongs to the current configuration *)
     let port_1_expr = Val.to_expr port_1 in
-    let f_port_1_curr_conf = List.fold_left (fun f port -> Formula.And (f, Formula.Eq (port_1_expr, port))) Formula.True ports_curr_conf in
+    let f_port_1_curr_conf = List.fold_left (fun f port -> Formula.Or (f, Formula.Eq (port_1_expr, port))) Formula.False ports_curr_conf in
     (*let f_port_1_curr_conf = Formula.SetMem (Val.to_expr port_1, Expr.ESet ports_curr_conf) in*)
     List.map (
       fun (p, f) -> 
