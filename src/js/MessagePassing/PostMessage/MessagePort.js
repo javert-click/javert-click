@@ -180,14 +180,14 @@ function postMessageSteps(origPort, targetPort, message, options){
     var doomed = false;
     // 4. If targetPort is not null and transfer contains targetPort, then set doomed to true
     // and optionally report to a developer console that the target port was posted to itself, causing the communication channel to be lost.
-    if(targetPort !== -1 && transfer && transferIds.indexOf(targetPort) !== -1){
+    if(targetPort !== null && transfer && transferIds.indexOf(targetPort) !== -1){
         doomed = true;
         console.log('Target port was posted to itself which causes the communication channel to be lost.')
     }
     // 5. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
     var serializeWithTransferResult = StructuredSerializeWithTransfer(message, transfer);
     // 6. If targetPort is null, or if doomed is true, then return.
-    if(targetPort === -1 || doomed === true) return;
+    if(targetPort === null || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
     // Note: This call to 'send' will enable our MessagePassing semantics, which will then  trigger the processMessageSteps function.
     MPSem.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort);

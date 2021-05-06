@@ -1610,6 +1610,9 @@ Test.prototype.step = function(func, this_obj)
     }
 };
 
+/*
+* @id TestStepFunc
+*/ 
 Test.prototype.step_func = function(func, this_obj)
 {
     var test_this = this;
@@ -1625,6 +1628,9 @@ Test.prototype.step_func = function(func, this_obj)
     };
 };
 
+/*
+* @id TestStepFuncDone
+*/ 
 Test.prototype.step_func_done = function(func, this_obj)
 {
     var test_this = this;
@@ -1633,16 +1639,23 @@ Test.prototype.step_func_done = function(func, this_obj)
         this_obj = test_this;
     }
 
+    /*
+    * @id TestStepFuncDoneRet
+    */
     return function()
     {
         if (func) {
             test_this.step.apply(test_this, [func, this_obj].concat(
                 Array.prototype.slice.call(arguments)));
         }
-        test_this.done();
+        //TODOMP: this line was not commented before but this disables MP handlers to be executed.
+        //test_this.done();
     };
 };
 
+/*
+* @id TestUnreachedFunc
+*/ 
 Test.prototype.unreached_func = function(description)
 {
     return this.step_func(function() {
@@ -1650,6 +1663,9 @@ Test.prototype.unreached_func = function(description)
     });
 };
 
+/*
+* @id TestStepTimeout
+*/ 
 Test.prototype.step_timeout = function(f, timeout) {
     var test_this = this;
     var args = Array.prototype.slice.call(arguments, 2);
@@ -1664,6 +1680,9 @@ Test.prototype.step_timeout = function(f, timeout) {
 * method in order to hide implementation details from the harness status
 * message in the case errors.
 */
+/*
+* @id Test_AddCleanup
+*/
 Test.prototype._add_cleanup = function(callback) {
     this.cleanup_callbacks.push(callback);
 };
@@ -1674,11 +1693,17 @@ Test.prototype._add_cleanup = function(callback) {
 * influence the result of the test, but if an exception is thrown, the
 * test harness will report an error.
 */
+/*
+* @id TestAddCleanup
+*/
 Test.prototype.add_cleanup = function(callback) {
     this._user_defined_cleanup_count += 1;
     this._add_cleanup(callback);
 };
 
+/*
+* @id TestSetTimeout
+*/
 Test.prototype.set_timeout = function()
 {
     if (this.timeout_length !== null) {
@@ -1690,6 +1715,9 @@ Test.prototype.set_timeout = function()
     }
 };
 
+/*
+* @id TestSetStatus
+*/
 Test.prototype.set_status = function(status, message, stack)
 {
     this.status = status;
@@ -1697,6 +1725,9 @@ Test.prototype.set_status = function(status, message, stack)
     this.stack = stack ? stack : null;
 };
 
+/*
+* @id TestTimeout
+*/
 Test.prototype.timeout = function()
 {
     this.timeout_id = null;
@@ -1711,6 +1742,9 @@ Test.prototype.force_timeout = Test.prototype.timeout;
  * Update the test status, initiate "cleanup" functions, and signal test
  * completion.
  */
+/*
+* @id TestDone
+*/
 Test.prototype.done = function()
 {
     if (this.phase >= this.phases.CLEANING) {
@@ -1838,7 +1872,6 @@ function cleanup_done(test, error_count, bad_value_count) {
 
         tests.status.stack = null;
     }
-
     test.phase = test.phases.COMPLETE;
     tests.result(test);
     forEach(test._done_callbacks,
@@ -2220,7 +2253,6 @@ Tests.prototype.timeout = function() {
                     if (test.phase === test.phases.CLEANING) {
                         test_in_cleanup = test;
                     }
-
                     test.phase = test.phases.COMPLETE;
                 });
 

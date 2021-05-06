@@ -248,12 +248,17 @@ module M
     let (cid, conf) = conf in 
     (*Printf.printf "\nGetPaired: searching for paired port of %s" (Val.str port);*)
     let ps_fs = SymbMap.find pp port Val.to_literal Val.to_expr in
-    List.map (fun (port', f) -> 
-      let f_ps_diff = Formula.Not (Formula.Eq (Val.to_expr port, Val.to_expr port')) in
-      (*L.log L.Normal (lazy (Printf.sprintf "\nGetPaired: generating formula %s\n" (Formula.str (Formula.And(f, f_ps_diff)))));
-      L.log L.Normal (lazy (Printf.sprintf "\nGetPaired: going to set %s to %s\n" (Var.str xvar) (Val.str port')));*)
-      (*L.log L.Normal (lazy (Printf.sprintf "\n(GET_PAIRED) NEW STATE:%s\n" (EventSemantics.state_str new_state))); *)
-      (cid, EventSemantics.set_var xvar port' conf), Formula.And(f, f_ps_diff)) ps_fs
+    if ((List.length ps_fs) = 0) then
+    (
+      (* return null if no paired port is found *)
+      [(cid, EventSemantics.set_var xvar (Val.from_literal Null) conf), Formula.True]
+    ) else (
+      List.map (fun (port', f) -> 
+        let f_ps_diff = Formula.Not (Formula.Eq (Val.to_expr port, Val.to_expr port')) in
+        (cid, EventSemantics.set_var xvar port' conf), Formula.And(f, f_ps_diff)) ps_fs 
+    )
+    
+    
 
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
