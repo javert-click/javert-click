@@ -1,4 +1,4 @@
-// Title: basic messagechannel test</title>
+// Title: basic messagechannel test
 
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
 import { assert_equals, async_test } from '../../../js/DOM/Events/Testharness';
