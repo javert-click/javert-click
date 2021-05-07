@@ -1,5 +1,7 @@
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
-import { test, async_test, assert_true, assert_equals } from '../../../js/DOM/Events/Testharness';
+import { test, async_test, assert_true, assert_equals, assert_throws_dom } from '../../../js/DOM/Events/Testharness';
+const Window = require('../../../js/DOM/Events/Window');
+var self = Window.getInstance();
 
 // How long (in ms) these tests should wait before deciding no further messages
 // will be received.
@@ -64,10 +66,11 @@ async_test(t => {
     c.port2.postMessage('TEST');
     c.port2.postMessage('DONE');
   }, 'Close in onmessage should not cancel inflight messages.');
-/*
+
 test(() => {
     const c = new MessageChannel();
     c.port1.close();
     assert_throws_dom("DataCloneError", () => self.postMessage(null, "*", [c.port1]));
     self.postMessage(null, "*", [c.port2]);
-}, "close() detaches a MessagePort (but not the one its entangled with)");*/
+    console.log('Test done!');
+}, "close() detaches a MessagePort (but not the one its entangled with)");

@@ -9,7 +9,7 @@ const Window = require('./Window');
 */
 var Event = function(type, eventInit){
     this.type = type.toString();
-    this.timeStamp = (new Date()).getTime() - Window.window.timeStamp;
+    this.timeStamp = (new Date()).getTime() - Window.getInstance().timeStamp;
     //console.log('creating event with timestamp '+timeStamp);
     this.bubbles = false;
     this.cancelable = false;

@@ -27,7 +27,7 @@ function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element
     scopeEvents.MouseEvent       = MouseEvent;
     scopeEvents.Element          = Element;
     scopeEvents.Text             = Text;
-    scopeEvents.window           = Window.window;
+    scopeEvents.window           = Window.getInstance();
 }
 
 /*

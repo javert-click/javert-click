@@ -15,6 +15,7 @@ policies and contribution forms [3].
 
 import {Node} from './Node';
 import {Promise} from '../../Promises/Promise';
+const DOMException = require('../../DOM/Common/DOMException');
 
 //TODOMP: check if this solution can work!
 var global_scope = executeJSILProc("JSILGetGlobal");
@@ -1459,6 +1460,198 @@ function assert_throws(code, func, description)
     }
 }
 expose(assert_throws, "assert_throws");
+
+/**
+     * Assert a DOMException with the expected type is thrown.
+     *
+     * @param {number|string} type The expected exception name or code.  See the
+     *        table of names and codes at
+     *        https://heycam.github.io/webidl/#dfn-error-names-table
+     *        If a number is passed it should be one of the numeric code values
+     *        in that table (e.g. 3, 4, etc).  If a string is passed it can
+     *        either be an exception name (e.g. "HierarchyRequestError",
+     *        "WrongDocumentError") or the name of the corresponding error code
+     *        (e.g. "HIERARCHY_REQUEST_ERR", "WRONG_DOCUMENT_ERR").
+     *
+     * For the remaining arguments, there are two ways of calling
+     * promise_rejects_dom:
+     *
+     * 1) If the DOMException is expected to come from the current global, the
+     * second argument should be the function expected to throw and a third,
+     * optional, argument is the assertion description.
+     *
+     * 2) If the DOMException is expected to come from some other global, the
+     * second argument should be the DOMException constructor from that global,
+     * the third argument the function expected to throw, and the fourth, optional,
+     * argument the assertion description.
+     */
+    function assert_throws_dom(type, funcOrConstructor, descriptionOrFunc, maybeDescription)
+    {
+        let constructor, func, description;
+        if (funcOrConstructor.name === "DOMException") {
+            constructor = funcOrConstructor;
+            func = descriptionOrFunc;
+            description = maybeDescription;
+        } else {
+            //constructor = self.DOMException;
+            constructor = DOMException.DOMException;
+            func = funcOrConstructor;
+            description = descriptionOrFunc;
+            assert(maybeDescription === undefined,
+                   "Too many args pased to no-constructor version of assert_throws_dom");
+        }
+        assert_throws_dom_impl(type, func, description, "assert_throws_dom", constructor)
+    }
+    //expose(assert_throws_dom, "assert_throws_dom");
+
+    /**
+     * Similar to assert_throws_dom but allows specifying the assertion type
+     * (assert_throws_dom or promise_rejects_dom, in practice).  The
+     * "constructor" argument must be the DOMException constructor from the
+     * global we expect the exception to come from.
+     */
+    function assert_throws_dom_impl(type, func, description, assertion_type, constructor)
+    {
+        try {
+            func.call(this);
+            assert(false, assertion_type, description,
+                   "${func} did not throw", {func:func});
+        } catch (e) {
+            if (e instanceof AssertionError) {
+                throw e;
+            }
+
+            // Basic sanity-checks on the thrown exception.
+            assert(typeof e === "object",
+                   assertion_type, description,
+                   "${func} threw ${e} with type ${type}, not an object",
+                   {func:func, e:e, type:typeof e});
+
+            assert(e !== null,
+                   assertion_type, description,
+                   "${func} threw null, not an object",
+                   {func:func});
+
+            // Sanity-check our type
+            assert(typeof type == "number" ||
+                   typeof type == "string",
+                   assertion_type, description,
+                   "${type} is not a number or string",
+                   {type:type});
+
+            var codename_name_map = {
+                INDEX_SIZE_ERR: 'IndexSizeError',
+                HIERARCHY_REQUEST_ERR: 'HierarchyRequestError',
+                WRONG_DOCUMENT_ERR: 'WrongDocumentError',
+                INVALID_CHARACTER_ERR: 'InvalidCharacterError',
+                NO_MODIFICATION_ALLOWED_ERR: 'NoModificationAllowedError',
+                NOT_FOUND_ERR: 'NotFoundError',
+                NOT_SUPPORTED_ERR: 'NotSupportedError',
+                INUSE_ATTRIBUTE_ERR: 'InUseAttributeError',
+                INVALID_STATE_ERR: 'InvalidStateError',
+                SYNTAX_ERR: 'SyntaxError',
+                INVALID_MODIFICATION_ERR: 'InvalidModificationError',
+                NAMESPACE_ERR: 'NamespaceError',
+                INVALID_ACCESS_ERR: 'InvalidAccessError',
+                TYPE_MISMATCH_ERR: 'TypeMismatchError',
+                SECURITY_ERR: 'SecurityError',
+                NETWORK_ERR: 'NetworkError',
+                ABORT_ERR: 'AbortError',
+                URL_MISMATCH_ERR: 'URLMismatchError',
+                QUOTA_EXCEEDED_ERR: 'QuotaExceededError',
+                TIMEOUT_ERR: 'TimeoutError',
+                INVALID_NODE_TYPE_ERR: 'InvalidNodeTypeError',
+                DATA_CLONE_ERR: 'DataCloneError'
+            };
+
+            var name_code_map = {
+                IndexSizeError: 1,
+                HierarchyRequestError: 3,
+                WrongDocumentError: 4,
+                InvalidCharacterError: 5,
+                NoModificationAllowedError: 7,
+                NotFoundError: 8,
+                NotSupportedError: 9,
+                InUseAttributeError: 10,
+                InvalidStateError: 11,
+                SyntaxError: 12,
+                InvalidModificationError: 13,
+                NamespaceError: 14,
+                InvalidAccessError: 15,
+                TypeMismatchError: 17,
+                SecurityError: 18,
+                NetworkError: 19,
+                AbortError: 20,
+                URLMismatchError: 21,
+                QuotaExceededError: 22,
+                TimeoutError: 23,
+                InvalidNodeTypeError: 24,
+                DataCloneError: 25,
+
+                EncodingError: 0,
+                NotReadableError: 0,
+                UnknownError: 0,
+                ConstraintError: 0,
+                DataError: 0,
+                TransactionInactiveError: 0,
+                ReadOnlyError: 0,
+                VersionError: 0,
+                OperationError: 0,
+                NotAllowedError: 0
+            };
+
+            var code_name_map = {};
+            for (var key in name_code_map) {
+                if (name_code_map[key] > 0) {
+                    code_name_map[name_code_map[key]] = key;
+                }
+            }
+
+            var required_props = {};
+            var name;
+
+            if (typeof type === "number") {
+                if (type === 0) {
+                    throw new AssertionError('Test bug: ambiguous DOMException code 0 passed to assert_throws_dom()');
+                } else if (!(type in code_name_map)) {
+                    throw new AssertionError('Test bug: unrecognized DOMException code "' + type + '" passed to assert_throws_dom()');
+                }
+                name = code_name_map[type];
+                required_props.code = type;
+            } else if (typeof type === "string") {
+                name = type in codename_name_map ? codename_name_map[type] : type;
+                if (!(name in name_code_map)) {
+                    throw new AssertionError('Test bug: unrecognized DOMException code name or name "' + type + '" passed to assert_throws_dom()');
+                }
+
+                required_props.code = name_code_map[name];
+            }
+
+            if (required_props.code === 0 ||
+               ("name" in e &&
+                e.name !== e.name.toUpperCase() &&
+                e.name !== "DOMException")) {
+                // New style exception: also test the name property.
+                required_props.name = name;
+            }
+
+            for (var prop in required_props) {
+                assert(prop in e && e[prop] == required_props[prop],
+                       assertion_type, description,
+                       "${func} threw ${e} that is not a DOMException " + type + ": property ${prop} is equal to ${actual}, expected ${expected}",
+                       {func:func, e:e, prop:prop, actual:e[prop], expected:required_props[prop]});
+            }
+
+            // Check that the exception is from the right global.  This check is last
+            // so more specific, and more informative, checks on the properties can
+            // happen in case a totally incorrect exception is thrown.
+            assert(e.constructor === constructor,
+                   assertion_type, description,
+                   "${func} threw an exception from the wrong global",
+                   {func});
+
+        }
+    }
 
 function assert_unreached(description) {
     assert(false, "assert_unreached", description,
@@ -3382,7 +3575,8 @@ export { test, assert_equals,
             assert_not_equals, 
             assert_true, 
             assert_false, 
-            assert_throws, 
+            assert_throws,
+            assert_throws_dom, 
             assert_unreached,
             assert_array_equals,
             assert_greater_than_equal,
