@@ -1069,14 +1069,15 @@ let assume_type (x: string) (t: Type.t) (conf: cconf_t) : cconf_t =
   | None -> raise (Failure msg)
 
 
-let fresh_lvar (x: string) (s:string) (conf: cconf_t) (vart: Type.t) : cconf_t =
+let fresh_lvar (x: string) (s:string) (conf: cconf_t) (vart: Type.t) : cconf_t * vt =
   let state     = get_state conf in
   let state'    = State.add_spec_vars state (Var.Set.of_list [ s ]) in
   let f = Formula.Eq (UnOp (TypeOf, (LVar s)), Lit (Type vart)) in
   match State.assume_a state' [ f ] with
   | Some state'' -> let v = make_eval_expr state'' (LVar s) in
+                    Printf.printf "\nmake_eval_expr of LVar %s evaluated to %s" s (Val.str v);
                     let state'' = update_store state'' x v in
-                    set_state conf state'' 
+                    set_state conf state'', v 
   | None -> raise (Failure "Cannot create fresh lvar")
 
 end

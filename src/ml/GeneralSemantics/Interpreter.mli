@@ -65,7 +65,7 @@ module type M = sig
 
   val eval_expr : cconf_t -> Expr.t -> vt
 
-  val fresh_lvar : string -> string -> cconf_t -> Type.t -> cconf_t
+  val fresh_lvar : string -> string -> cconf_t -> Type.t -> cconf_t * vt
 
   val continue_with_conf : econf_t -> econf_t -> econf_t
 

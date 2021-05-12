@@ -211,17 +211,19 @@ module M
           fun (pp, f_pp) -> mq', pc, pp, Formula.And (f_pc, f_pp)
     ) pps_fs ) pcs_fs)
 
-
-  (* TODOMP: fix the call to SymbMap.add, making the port symbolic (LVar s)... *)
   (* Creates new port, adds to current configuration and sets return variable to new port id *)
-  let new_port (xvar: string) (conf: event_conf_t) (pc: pc_map_t) : event_conf_t * (pc_map_t * Formula.t) list = 
-    let port = generate_new_port_id pc in
+  let new_port (xvar: string) (conf: event_conf_t) (pc: pc_map_t) : event_conf_t * (pc_map_t * Formula.t) list * optional_action_t option = 
+    let port_id = generate_new_port_id pc in
     let (cid, conf) = conf in
-    let conf' = 
-    if (!cosette) then EventSemantics.fresh_lvar xvar (MPConstants.portvarsuffix ^ (Val.str port)) conf NumberType
-    else EventSemantics.set_var xvar port conf in
+    let (conf', port), label, f_lvar_num = 
+      if (!cosette) then (
+          let lvar = MPConstants.portvarsuffix ^ (Val.str port_id) in
+          let f_lvar_num = Formula.Eq (UnOp (TypeOf, (LVar lvar)), Lit (Type NumberType)) in
+          (EventSemantics.fresh_lvar xvar lvar conf NumberType), Some (AddSpecVar [lvar]), f_lvar_num
+      ) else ((EventSemantics.set_var xvar port_id conf, port_id), None, Formula.True) in
     let pp_list = SymbMap.add pc port cid (Val.to_literal) (Val.to_expr) in
-    (cid, conf'), pp_list
+    let pp_list = List.map (fun (pc', f) -> pc', Formula.And(f, f_lvar_num)) pp_list in
+    (cid, conf'), pp_list, label
 
   (* Adds both entries to pp map. Note that we assume pre-existing values of p1 and p2 to have been removed. The map is bi-directional *)
   let pair_ports (p1: port_t) (p2: port_t) (plist: port_t list) (pp: pp_map_t) : (pp_map_t * Formula.t) list =
@@ -300,8 +302,8 @@ module M
         let pc_pp_mq_l = terminate plist mq pc pp in
         List.map (fun (mq', pc', pp', f) -> (cid, conf), mq', pc', pp', Some (RemConf (cid')), f) pc_pp_mq_l
       | NewPort (xvar) -> 
-        let conf'', pc_fs = new_port xvar (cid, conf) pc in
-        List.map (fun (pc', f) -> conf'', mq, pc', pp, None, f) pc_fs
+        let conf'', pc_fs, label = new_port xvar (cid, conf) pc in
+        List.map (fun (pc', f) -> conf'', mq, pc', pp, label, f) pc_fs
       | PairPorts (p1, p2) -> 
         let pp_fs = pair_ports p1 p2 (SymbMap.get_keys pc Val.from_literal) pp in
         List.map (fun (pp', f) -> (cid, conf), mq, pc, pp', None, f) pp_fs

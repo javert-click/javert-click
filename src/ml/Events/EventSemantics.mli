@@ -41,7 +41,7 @@ module type M = sig
 
   val assume : state_t -> Formula.t -> state_t option
 
-  val fresh_lvar : string -> string -> state_t -> Type.t -> state_t
+  val fresh_lvar : string -> string -> state_t -> Type.t -> state_t * vt
 
   val string_of_result : result_t list -> string
 

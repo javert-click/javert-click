@@ -330,10 +330,10 @@ module M
     (* How to obtain xvar? The ideal thing to do would be allow calls without ret vars... *) 
     dispatch event state listeners "" args false
 
-  let fresh_lvar (x: string) (v: string) (state: state_t) (vart: Type.t) : state_t =
+  let fresh_lvar (x: string) (v: string) (state: state_t) (vart: Type.t) : state_t * vt =
     let ((conf, prog), ehs, hq) = state in
-    let conf' = Interpreter.fresh_lvar x v conf vart in
-    (conf', prog), ehs, hq
+    let conf', v = Interpreter.fresh_lvar x v conf vart in
+    ((conf', prog), ehs, hq), v
 
   let valid_result (rets: result_t list) : bool =
     let lrets = List.map (fun (lret, _, _) -> lret) rets in
