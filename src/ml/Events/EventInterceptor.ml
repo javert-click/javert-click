@@ -44,7 +44,7 @@ let intercept
             (** Remove Handler (event is fst arg) **) 
             Some (RemoveHandler(event, handler))
 
-        | ec, (fid :: args) when ec = EventsConstants.schedule ->
+        | ec, (_ :: _ :: fid :: args) when ec = EventsConstants.schedule ->
             (** Schedule **)
             Some (Schedule (x, fid, args))
 

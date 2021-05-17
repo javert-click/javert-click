@@ -1,4 +1,5 @@
 const Event = require('./Event');
+const Window = require('./Window');
 
 /*
 * @id MessageEvent
@@ -13,6 +14,12 @@ function MessageEvent(){
 };
 
 MessageEvent.prototype = Object.create(Event.Event.prototype);
+
+Object.defineProperty(Window.Window.prototype, 'MessageEvent', {
+    get: function(){
+        return MessageEvent;
+    }
+});
 
 /*
 * @id MessageEventToString

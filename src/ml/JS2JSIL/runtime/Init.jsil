@@ -203,7 +203,8 @@ proc setupInitialHeap () {
 	  [$lg, "__ES__wrapper__aDispatch"]	  			  := {{ "d", $ladispatchnative, true, false, true }};
 	  [$lg, "__ES__wrapper__syncDispatch"]			  := {{ "d", $lsdispatch, true, false, true }};
 	  [$lg, "__ES__wrapper__asyncDispatch"]			  := {{ "d", $ladispatch, true, false, true }};
-      [$lg, "__ES__schedule"]		      			  := {{ "d", $l_es_schedule, true, false, true }};
+      [$lg, "__ES__wrapper__schedule"]			      := {{ "d", $lschedule, true, false, true }};
+	  [$lg, "__ES__schedule"]		      			  := {{ "d", $l_es_schedule, true, false, true }};
 	  [$lg, "__ES__addHandler"]		      			  := {{ "d", $l_es_addhandler, true, false, true }};
 	  [$lg, "__ES__wrapper__js_await"]    			  := {{ "d", $ljsawait, true, false, true }};
 
@@ -858,7 +859,8 @@ proc setupEvents(){
 	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $ladispatchnative, "__ES__wrapper__aDispatch", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lremovehandler, "__ES__wrapper__removeHandler", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($laddhandler, "__ES__wrapper__addHandler", empty, 1);
-    ret := "create_object_with_call_construct_concrete"($l_es_schedule, "__ES__schedule", empty, 1);
+    ret := "create_object_with_call_construct_concrete"($lschedule, "__ES__wrapper__schedule", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($l_es_schedule, "__ES__schedule", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($l_es_addhandler, "__ES__addHandler", empty, 1);
 	ret := empty;
 	return
@@ -867,14 +869,14 @@ proc setupEvents(){
 (* Event Scheduler *)
 proc __ES__schedule (vscope, vthis, fid) {
       call := "i__isCallable" (fid);
-			goto [call] cont thrw;
+	  goto [call] cont thrw;
 
 cont:  m := metadata(fid);
       x_scope := [m, "@scope"];
       x_body  := [m, "@call"];
 
       (* NOTE: THERE IS NO ERROR LABEL AND NO ARGUMENTS CAN BE PASSED *)
-      ret := "__ES__wrapper__schedule" (x_body, x_scope, undefined);
+      ret := "__ES__wrapper__schedule" (vscope, vthis, x_body, x_scope, undefined);
       return;
 
 thrw: ret := "EVENTS SEMANTICS ERROR: Scheduler called with non-callable object";

@@ -14,10 +14,10 @@ const DocumentFragment  = require('../../DOM/Events/DocumentFragment');
 const MouseEvent        = require('../../DOM/Events/MouseEvent');
 const Element           = require('../../DOM/Events/Element');
 const Text              = require('../../DOM/Events/Text');
-const Window            = require('../../DOM/Events/Window');
+const WindowInfo        = require('../../DOM/Events/Window');
 const Serialization     = require('./MessageSerialization');
 
-EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, Window);
+EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo);
 
 /*
 * @id MessagePort
@@ -54,7 +54,6 @@ Object.defineProperty(MessagePort.prototype, 'onmessageerror', {
         this.addEventListener('messageerror', f);
     }
 });
-
 
 /*
 * @id MessagePortPostMessage
@@ -142,6 +141,78 @@ function processMessageSteps(global, message, targetPortId, transferIds){
     event.data = messageClone; 
     event.ports = newPorts;
     finalTargetPort.dispatchEvent(event);
+}
+
+var Window = WindowInfo.Window;
+
+Object.defineProperty(Window.prototype, 'onmessage', {
+    /*
+    * @id WindowOnMessage
+    */
+    set: function(f){
+        this.addEventListener('message', f);
+    }
+});
+
+/*
+* @id WindowPostMessageWithOptions
+*/
+Window.prototype.postMessage = function(message, options, transfer){
+    // 1. Let targetWindow be this Window object.
+    var targetWindow = this;
+    // check which version of postMessage is called:
+    // postMessage(message [, options ]) or postMessage(message, targetOrigin [, transfer ])
+    if (!options['targetOrigin']) {
+        options = { 'targetOrigin': options, 'transfer': transfer };
+    }
+    // 2. Run the window post message steps providing targetWindow, message, and options.
+    windowPostMessageSteps(targetWindow, message, options);
+}
+
+
+
+/*
+* @id WindowPostMessageSteps
+*/ 
+function windowPostMessageSteps(targetWindow, message, options){
+    // 1. (NOT SUPPORTED) Let targetRealm be targetWindow's Realm.
+    // 2. (NOT SUPPORTED) Let incumbentSettings be the incumbent settings object.
+    // 3. Let targetOrigin be options["targetOrigin"].
+    var targetOrigin = options['targetOrigin'];
+    // 4. TODOMP: If targetOrigin is a single U+002F SOLIDUS character (/), then set targetOrigin to incumbentSettings's origin.
+    // 5. TODOMP: Otherwise, if targetOrigin is not a single U+002A ASTERISK character (*), then:
+    // 6. Let transfer be options["transfer"].
+    var transfer = options['transfer'] ? options['transfer'] : [];
+    var transferIds = transfer.map(function(p) {return p.__id});
+    // 7. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
+    var serializeWithTransferResult = Serialization.StructuredSerializeWithTransfer(message, transfer);
+    // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
+    __ES__wrapper__schedule("windowProcessMessageSteps", scopeMP, serializeWithTransferResult, transferIds, targetWindow);
+}
+
+/*
+* @JSIL
+* @id windowProcessMessageSteps
+*/
+function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, targetWindow){
+    //transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
+    // 8.1 If the targetOrigin argument is not a single literal U+002A ASTERISK character (*) and targetWindow's associated Document's origin is not same origin with targetOrigin, then return.
+    // 8.2 Let origin be the serialization of incumbentSettings's origin.
+    // 8.3 Let source be the WindowProxy object corresponding to incumbentSettings's global object (a Window object).
+    // 8.4 Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
+    var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(serializeWithTransferResult, transferIds, scopeMP.MessagePort);
+    // 8.5 Let messageClone be deserializeRecord.[[Deserialized]].
+    var messageClone = deserializeRecord.Deserialized;
+    // 8.6 Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
+    var newPorts = deserializeRecord.TransferredValues;
+    // 8.7 Fire an event named message at targetWindow, using MessageEvent, 
+     // with the origin attribute initialized to origin, the source attribute initialized to source, 
+     // the data attribute initialized to messageClone, and the ports attribute initialized to newPorts.
+    var event = new scopeMP.MessageEvent.MessageEvent();
+    event.data = messageClone; 
+    event.ports = newPorts;
+    console.log('Going to dispatch message event');
+    targetWindow.dispatchEvent(event);
 }
 
 scopeMP.MessagePort  = MessagePort;
