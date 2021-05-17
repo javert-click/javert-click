@@ -164,7 +164,7 @@ Window.prototype.postMessage = function(message, options, transfer){
     var targetWindow = this;
     // check which version of postMessage is called:
     // postMessage(message [, options ]) or postMessage(message, targetOrigin [, transfer ])
-    if (!options['targetOrigin']) {
+    if (options['targetOrigin'] === undefined && transfer !== undefined) {
         options = { 'targetOrigin': options, 'transfer': transfer };
     }
     // 2. Run the window post message steps providing targetWindow, message, and options.
@@ -184,7 +184,7 @@ function windowPostMessageSteps(targetWindow, message, options){
     // 4. TODOMP: If targetOrigin is a single U+002F SOLIDUS character (/), then set targetOrigin to incumbentSettings's origin.
     // 5. TODOMP: Otherwise, if targetOrigin is not a single U+002A ASTERISK character (*), then:
     // 6. Let transfer be options["transfer"].
-    var transfer = options['transfer'] ? options['transfer'] : [];
+    var transfer = (options['transfer'] !== undefined) ? options['transfer'] : [];
     var transferIds = transfer.map(function(p) {return p.__id});
     // 7. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
     var serializeWithTransferResult = Serialization.StructuredSerializeWithTransfer(message, transfer);

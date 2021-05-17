@@ -1462,6 +1462,76 @@ function assert_throws(code, func, description)
 expose(assert_throws, "assert_throws");
 
 /**
+     * Assert a JS Error with the expected constructor is thrown.
+     *
+     * @param {object} constructor The expected exception constructor.
+     * @param {Function} func Function which should throw.
+     * @param {string} description Error description for the case that the error is not thrown.
+     */
+    function assert_throws_js(constructor, func, description)
+    {
+        assert_throws_js_impl(constructor, func, description,
+                              "assert_throws_js");
+    }
+    //expose_assert(assert_throws_js, "assert_throws_js");
+
+    /**
+     * Like assert_throws_js but allows specifying the assertion type
+     * (assert_throws_js or promise_rejects_js, in practice).
+     */
+    function assert_throws_js_impl(constructor, func, description,
+                                   assertion_type)
+    {
+        try {
+            func.call(this);
+            assert(false, assertion_type, description,
+                   "${func} did not throw", {func:func});
+        } catch (e) {
+            if (e instanceof AssertionError) {
+                throw e;
+            }
+
+            // Basic sanity-checks on the thrown exception.
+            assert(typeof e === "object",
+                   assertion_type, description,
+                   "${func} threw ${e} with type ${type}, not an object",
+                   {func:func, e:e, type:typeof e});
+
+            assert(e !== null,
+                   assertion_type, description,
+                   "${func} threw null, not an object",
+                   {func:func});
+
+            // Basic sanity-check on the passed-in constructor
+            assert(typeof constructor == "function",
+                   assertion_type, description,
+                   "${constructor} is not a constructor",
+                   {constructor:constructor});
+            var obj = constructor;
+            while (obj) {
+                if (typeof obj === "function" &&
+                    obj.name === "Error") {
+                    break;
+                }
+                obj = Object.getPrototypeOf(obj);
+            }
+            assert(obj != null,
+                   assertion_type, description,
+                   "${constructor} is not an Error subtype",
+                   {constructor:constructor});
+
+            // And checking that our exception is reasonable
+            assert(e.constructor === constructor &&
+                   e.name === constructor.name,
+                   assertion_type, description,
+                   "${func} threw ${actual} (${actual_name}) expected instance of ${expected} (${expected_name})",
+                   {func:func, actual:e, actual_name:e.name,
+                    expected:constructor,
+                    expected_name:constructor.name});
+        }
+    }
+
+/**
      * Assert a DOMException with the expected type is thrown.
      *
      * @param {number|string} type The expected exception name or code.  See the
@@ -3576,6 +3646,7 @@ export { test, assert_equals,
             assert_true, 
             assert_false, 
             assert_throws,
+            assert_throws_js,
             assert_throws_dom, 
             assert_unreached,
             assert_array_equals,
