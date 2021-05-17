@@ -143,6 +143,8 @@ function processMessageSteps(global, message, targetPortId, transferIds){
     finalTargetPort.dispatchEvent(event);
 }
 
+//TODOMP: think of a better solution for this. 
+
 var Window = WindowInfo.Window;
 
 Object.defineProperty(Window.prototype, 'onmessage', {
