@@ -19,6 +19,7 @@ type t =
   | Print          of Expr.t                                     (** Printing *)
   | ReturnNormal                                                 (** Normal return *)
   | ReturnError                                                  (** Error return *)
+  | Debug                                                        (* Inserts breakpoint for debugging *)
 
 (** JSIL All Statements *)
 let str (str_tabs : string) (i : int) (cmd : t) : string =	
@@ -73,6 +74,7 @@ let str (str_tabs : string) (i : int) (cmd : t) : string =
   | Print e      -> (Printf.sprintf "printOut(%s)" (se e))
   | ReturnNormal -> str_tabs ^ Printf.sprintf "%sreturn" str_i
   | ReturnError  -> str_tabs ^ Printf.sprintf "%sthrow"  str_i
+  | Debug        -> str_tabs ^ Printf.sprintf "%sdebugger" str_i
   | Logic lcmd   -> str_tabs ^ str_i ^ (LCmd.str lcmd)
 
 let vars (cmd : t) : SS.t = 

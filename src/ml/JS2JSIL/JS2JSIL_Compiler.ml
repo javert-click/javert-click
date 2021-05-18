@@ -3576,11 +3576,13 @@ and translate_statement tr_ctx e  =
     let cmds = annotate_first_cmd cmds in
     cmds, PVar x, errs, [], [], []
 
-
-  | JSParserSyntax.Skip (** Section 12.3 - Empty Statement *)
-  | JSParserSyntax.Debugger -> (** Section 12.15 - Debugger Statement **)
-     [], Lit Empty, [], [], [], []
-
+  (** Section 12.3 - Empty Statement *)
+  | JSParserSyntax.Skip -> [], Lit Empty, [], [], [], [] 
+  (** Section 12.15 - Debugger Statement **)
+  | JSParserSyntax.Debugger -> 
+    let call_main_cmd = (None, LDebug) in
+    let cmds = annotate_first_cmd (annotate_cmds [call_main_cmd]) in
+    cmds, Lit Empty, [], [], [], [] 
 
   | JSParserSyntax.Num _
   | JSParserSyntax.String _

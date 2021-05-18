@@ -665,6 +665,8 @@ let evaluate_cmd
           [ ConfCont (state'', cs', prev', j, b_counter, None), None ]
       | _ -> raise (Failure "Malformed callstack"))
 
+  | Debug -> raise (Failure "We have a debugger instruction!")
+
 
 let protected_evaluate_cmd
   (prog      : UP.prog)

@@ -89,6 +89,7 @@
       "throw",        JSIL_Parser.THROW;
       "extern",       JSIL_Parser.EXTERN;
       "printout",     JSIL_Parser.PRINTOUT;
+      "debugger",     JSIL_Parser.DEBUGGER;
       
       (* Logical expressions: most match with the program expressions *)
       "none", JSIL_Parser.LNONE;

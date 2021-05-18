@@ -17,6 +17,7 @@ type t =
   | LPrint          of Expr.t
   | LReturnNormal
   | LReturnError
+  | LDebug
 
 let str (lcmd : t) : string =
     let se = Expr.str in
@@ -68,5 +69,6 @@ let str (lcmd : t) : string =
           Printf.sprintf "PHI(%s)" (String.concat "; " strs)
       | LReturnNormal -> "return"
       | LReturnError  -> "throw"
-      | LPrint e -> (Printf.sprintf "printOut(%s)" (se e))) in 
+      | LPrint e -> (Printf.sprintf "printOut(%s)" (se e))
+      | LDebug -> "debugger") in 
     ret 

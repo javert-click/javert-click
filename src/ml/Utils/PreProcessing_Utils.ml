@@ -48,7 +48,8 @@ let get_succ_pred cmds =
             update_pred_table u (u+1)
 
       | ReturnNormal
-      | ReturnError -> ())
+      | ReturnError
+      | Debug -> ())
   done;
 
   for k = 0 to (number_of_cmds - 1) do

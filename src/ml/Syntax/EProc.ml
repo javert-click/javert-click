@@ -102,6 +102,7 @@ let to_proc (lproc : t) : Proc.t =
             | LReturnNormal -> ReturnNormal
             | LReturnError  -> ReturnError 
             | LPrint e -> Print e
+            | LDebug -> Debug
             | LLogic lcmd   -> Logic lcmd  in
         (spec, x)
       ) cmds_nolab in

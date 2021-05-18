@@ -182,6 +182,7 @@ let copy_and_clear_globals () =
 %token THROW
 %token EXTERN
 %token PRINTOUT
+%token DEBUGGER
 (* Logic variables *)
 %token <string> LVAR
 (* Logical expressions *)
@@ -521,6 +522,9 @@ cmd_target:
 (* print *) 
   | PRINTOUT; LBRACE; expr_target; RBRACE
       { LPrint $3 }
+(* debugger *)
+  | DEBUGGER;
+      { LDebug }
 (* Logic command *)
   | lcmd = logic_cmd_target 
     { LLogic lcmd }
