@@ -160,22 +160,22 @@ let make_eval_expr state   =
    fun e -> (try State.eval_expr state e
              with State.Internal_State_Error(errs, s) -> raise (State_error(errs, s)))
 
-let cconf_str (cmd : (Annot.t * Cmd.t)) (state : State.t)  (cs : CallStack.t) (i : int) (b_counter : int) : string =
+let cconf_str (cmd : (Annot.t * Cmd.t)) (state : State.t)  (cs : CallStack.t) (i : int) (b_counter : int) (print_by_need: bool) : string =
   let annot, cmd = cmd in
   let msg = (match SS.inter (SS.of_list (CallStack.procs cs)) (SS.of_list CCommon.forbidden_prints) = SS.empty with
   | false -> ""
   | true ->
-    let which_store = if (!CCommon.print_by_need) then Some (Cmd.vars cmd) else (
+    let which_store = if (print_by_need) then Some (Cmd.vars cmd) else (
       let store_dom, _ = Store.partition (State.get_store state) (fun _ -> true) in
       Some store_dom) in
-    let which_heap = if (!CCommon.print_by_need) then Some SS.empty else None in
+    let which_heap = if (print_by_need) then Some SS.empty else None in
     Printf.sprintf
       "-----------------------------------\nJSIL Configuration:\n-----------------------------------\nCMD: %s\n%s: %i--\nTIME: %f\nCS: %s\nBRANCHING: %d\n\n%s\n------------------------------------------------------\n"
       (Cmd.str "" 0 cmd) (CallStack.get_cur_proc_id cs) i (Sys.time()) (CallStack.str cs) b_counter (State.str ~which_store ~which_heap state))  in
       msg
 
 let print_configuration (cmd : (Annot.t * Cmd.t)) (state : State.t)  (cs : CallStack.t) (i : int) (b_counter : int) : unit =
-  L.log L.Normal (lazy (cconf_str cmd state cs i b_counter))
+  L.log L.Normal (lazy (cconf_str cmd state cs i b_counter !CCommon.print_by_need))
 
 
 let print_lconfiguration (lcmd : LCmd.t) (state : State.t) : unit =
@@ -466,6 +466,17 @@ let evaluate_procedure_call (state : State.t) (old_store : Store.t option) (cs: 
 
     )
 
+let rec read_debug_input (cmd: Annot.t * Cmd.t) (state: state_t) (cs: CallStack.t) (i: int) (b_counter: int) : state_t =
+  Printf.printf "Type:\n'play' to go to the next breakpoint\n'print' to print the current state\n";
+  match read_line () with
+  | "play" -> state
+  | "print" -> 
+    Printf.printf "%s" (cconf_str cmd state cs i b_counter false);
+    read_debug_input cmd state cs i b_counter
+  | _ -> raise (Failure "Invalid debugger input!")
+  
+  
+
 (**
   Evaluation of commands
 
@@ -665,7 +676,10 @@ let evaluate_cmd
           [ ConfCont (state'', cs', prev', j, b_counter, None), None ]
       | _ -> raise (Failure "Malformed callstack"))
 
-  | Debug -> raise (Failure "We have a debugger instruction!")
+  | Debug ->
+    Printf.printf "----Starting JaVerT Debugger----\n";
+    let state' = read_debug_input annot_cmd state cs i b_counter in
+    [ ConfCont (state', cs, i, i+1, b_counter, None), None ]
 
 
 let protected_evaluate_cmd
@@ -970,7 +984,7 @@ let print_cconf (econf: econf_t) : string =
   match cconf with
   | ConfCont (state, cs, prev, i, b_counter, _) ->
     let proc_name, annot_cmd = get_cmd prog cs i in
-    cconf_str annot_cmd state cs i b_counter
+    cconf_str annot_cmd state cs i b_counter !CCommon.print_by_need
   | _ -> "\n"
 
 let copy_conf (cconf: cconf_t) : cconf_t =
