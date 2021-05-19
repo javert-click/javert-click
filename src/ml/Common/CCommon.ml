@@ -57,6 +57,8 @@ let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoadin
 let html_parser_path = "HTMLParser.js"
 let html_json_path   = "htmlfile.json"
 
+let debugger_eval_re = Str.regexp "eval(\(.*\))"
+
 let get_string_hashtbl_keys ht =
   Hashtbl.fold
     (fun key _ ac -> key :: ac)

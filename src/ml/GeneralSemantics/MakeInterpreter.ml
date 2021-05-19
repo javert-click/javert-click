@@ -467,13 +467,25 @@ let evaluate_procedure_call (state : State.t) (old_store : Store.t option) (cs: 
     )
 
 let rec read_debug_input (cmd: Annot.t * Cmd.t) (state: state_t) (cs: CallStack.t) (i: int) (b_counter: int) : state_t =
-  Printf.printf "Type:\n'play' to go to the next breakpoint\n'print' to print the current state\n";
+  Printf.printf "\nType:\n'play' to go to the next breakpoint\n'print' to print the current state\n'eval(exp)' to evaluate a JSIL expression exp\n";
   match read_line () with
   | "play" -> state
   | "print" -> 
     Printf.printf "%s" (cconf_str cmd state cs i b_counter false);
     read_debug_input cmd state cs i b_counter
-  | _ -> raise (Failure "Invalid debugger input!")
+  | arg -> 
+    if (Str.string_match debugger_eval_re arg 0) then
+    (
+      let expr_str = Str.matched_group 1 arg in
+      let exp = Parsing_Utils.parse_expr_from_string expr_str in
+      let v = make_eval_expr state exp in
+      Printf.printf "\n%s evaluates to %s" (Expr.str exp) (Val.str v);
+      read_debug_input cmd state cs i b_counter
+    ) else (
+      Printf.printf "\nInvalid debugger input.\n";
+      read_debug_input cmd state cs i b_counter
+    )
+    
   
   
 
