@@ -193,21 +193,3 @@ proc ThrowTypeError (xsc, vthis) {
 		ret := "TypeError_call" (undefined, undefined, "Attempt to access function `caller` or `arguments`");
 		throw
 };
-
-(* *** DATA CLONE ERROR *** *)
-
-proc DataCloneError_call (xsc, vthis, v) {
-			ret := "create_default_object" ($ldcerr_proto, "Error", true);
-
-			ret := "Error_construct" (undefined, ret, v) with elab;
-
-	rlab: return;
-	elab: throw
-};
-
-proc DataCloneError (v) {
-	ret := "DataCloneError_call" (undefined, undefined, v) with elab;
-
-	rlab: return;
-	elab: throw
-};

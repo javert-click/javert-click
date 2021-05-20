@@ -120,7 +120,7 @@ proc SerializeObjectWithPrimVal (xsc, vthis, value){
                   return
 };
 
-proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory){
+proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory, datacloneerr){
                   (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
                   serialized := {{ }};
                   keys := "i__getEnumerableFields" (value);
@@ -135,7 +135,7 @@ proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory){
                   (* 26.4.1.1 Let inputValue be ? value.[[Get]](key, value). *)
     propfound:    inputVal := "get" (value, key);
                   (* 26.4.1.2 Let outputValue be ? StructuredSerializeInternal(inputValue, forStorage, memory). *)
-                  outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory);
+                  outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory, datacloneerr) with elab;
                   (* 26.4.1.3 Append { [[Key]]: key, [[Value]]: outputValue } to serialized.[[Properties]]. *)
                   properties := "JSILMap_add" (properties, key, outputValue);
                   propslist := {{ "Properties", properties }};
@@ -145,10 +145,12 @@ proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory){
     propnf:       i := i+1;
                   goto loop;  
     succ:         ret := serialized;
-                  return                 
+                  return;
+    elab:         ret := outputValue;
+                  throw                 
 };
 
-proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory){
+proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory, datacloneerr){
                   (* 2. If memory[value] exists, then return memory[value].*)
                   cache := "JSILMap_find" (memory, value);
                   goto [cache = null] nullcache nonnullcache;
@@ -174,8 +176,8 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* 20. (NOT SUPPORTED) Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException. *)
                   (* 21. Otherwise, if IsCallable(value) is true, then throw a "DataCloneError" DOMException. *)
                   is_callable := "i__isCallable" (value);
-                  goto [is_callable = true] datacloneerr nodataclone;
-    datacloneerr: ret := "DataCloneError" ();
+                  goto [is_callable = true] dataclon nodataclone;
+    dataclon:     ret := datacloneerr;
                   throw;
     nodataclone:  (* 22. Otherwise, if value has any internal slot other than [[Prototype]] or [[Extensible]], then throw a "DataCloneError" DOMException. *)
                   (* TODOMP *)
@@ -198,21 +200,19 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* 26.3 (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object, ... *)
                   (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
                   (* Step 26.4 is implemented in SerializeObject (defined above) *)
-                  serialized := "SerializeObject"(xsc, vthis, value, type, properties, forStorage, memory);
+                  ret := "SerializeObject"(xsc, vthis, value, type, properties, forStorage, memory, datacloneerr) with elab;
                   goto succ;     
     succ:         (* 27. Return serialized. *)
-                  ret := serialized;
                   return;
-    elab:         ret := serialized;
-                  throw
+    elab:         throw
 };
 
 (* Serializes msg. Function follows PostMessage web standard *)
 (*TODO: do we need 'forStorage'? it is only used for array buffers and we currently do not support*)
-proc StructuredSerializeInternal(xsc, vthis, value, forStorage){
+proc StructuredSerializeInternal(xsc, vthis, value, forStorage, datacloneerr){
                   (* 1. If memory was not supplied, let memory be an empty map. *)
                   memory := "JSILMap_create" ();
-                  ret := "StructuredSerializeInternalWithMemory" (xsc, vthis, value, forStorage, memory) with elab;
+                  ret := "StructuredSerializeInternalWithMemory" (xsc, vthis, value, forStorage, memory, datacloneerr) with elab;
                   goto succ;
     succ:         return;
     elab:         throw

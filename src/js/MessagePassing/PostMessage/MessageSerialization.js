@@ -44,7 +44,8 @@ function StructuredSerializeWithTransfer(message, transfer){
       memory[transferable.__id] = {'Type': undefined};
     });
     // 3. Let serialized be ? StructuredSerializeInternal(value, false, memory).
-    var serialiazed = StructuredSerializeInternal(message, false);
+    var datacloneerr = new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
+    var serialiazed = StructuredSerializeInternal(message, false, datacloneerr);
     // 4. Let transferDataHolders be a new empty List.
     // 5. For each transferable of transferList:
     transfer.map(transferable => {
