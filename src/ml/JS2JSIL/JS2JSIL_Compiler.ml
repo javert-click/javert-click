@@ -1313,7 +1313,7 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
     let cmd_scope = LBasic (Lookup (x_fscope, PVar xfvm, Lit (String _scopePropName))) in
 
     (* Adding the new.target *)
-    let cmd_set_new_target = LBasic (Mutation (PVar x_this, Lit (String "__newTarget"), EList [ Lit (String "d"); PVar x_f_val; Lit (Bool true); Lit (Bool true); Lit (Bool true) ])) in
+    (*let cmd_set_new_target = LBasic (Mutation (PVar x_this, Lit (String "__newTarget"), EList [ Lit (String "d"); PVar x_f_val; Lit (Bool true); Lit (Bool true); Lit (Bool true) ])) in*)
 
     (* x_r1 := x_body (x_scope, x_this, x_arg0_val, ..., x_argn_val) with err  *)
     let x_r1 = fresh_var () in
@@ -1382,7 +1382,7 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
       (None,         cmd_cdo_call);            (*        x_cdo := create_default_object (x_this, x_prototype)                   *)
       (None,         cmd_body);                (*        x_body := [xfvm, "@construct"]                                         *)
       (None,         cmd_scope);               (*        x_fscope := [xfvm, "@scope"]                                           *)
-      (None,         cmd_set_new_target);
+      (*(None,         cmd_set_new_target);*)
       (None,         cmd_proc_call);           (*        x_r1 := x_body (x_scope, x_this, x_arg0_val, ..., x_argn_val) with err *)
       (None,         cmd_goto_test_type);      (*        goto [typeOf(x_r1) = Obj ] next4 next3;                                *)
       (Some next3,   cmd_ret_this);            (* next3: skip                                                                   *)
@@ -1733,11 +1733,11 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
 
     (* Adding the new.target *)
     (* goto [ x_r1 = empty ] next3 next4; *)
-    let snt_lab = fresh_next_label () in
-    let call_lab = fresh_next_label () in
-    let goto_guard_expr = BinOp (UnOp (TypeOf, PVar x_this), Equal, Lit (Type ObjectType)) in
-    let cmd_goto_test_type = LGuardedGoto (goto_guard_expr, snt_lab, call_lab) in
-    let cmd_set_new_target = LBasic (Mutation (PVar x_this, Lit (String "__newTarget"), EList [ Lit (String "d"); Lit Undefined; Lit (Bool true); Lit (Bool true); Lit (Bool true) ])) in
+    (*let snt_lab = fresh_next_label () in*)
+    (*let call_lab = fresh_next_label () in*)
+    (*let goto_guard_expr = BinOp (UnOp (TypeOf, PVar x_this), Equal, Lit (Type ObjectType)) in*)
+    (*let cmd_goto_test_type = LGuardedGoto (goto_guard_expr, snt_lab, call_lab) in*)
+    (*let cmd_set_new_target = LBasic (Mutation (PVar x_this, Lit (String "__newTarget"), EList [ Lit (String "d"); Lit Undefined; Lit (Bool true); Lit (Bool true); Lit (Bool true) ])) in*)
 
     (* x_r1 := x_body (x_scope, x_this, x_arg0_val, ..., x_argn_val) with err  *)
     let x_rcall = fresh_var () in
@@ -1806,9 +1806,9 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
       (None,            cmd_goto_end);         (*        goto end                                                                  *)
       (Some else_lab,   cmd_this_undefined);   (* else:  x_else_this := undefined                                                  *)
       (Some end_lab,    cmd_ass_xthis);        (* end:   x_this := PHI(x_then_this, x_else_this)                                   *)
-      (None,            cmd_goto_test_type);
-      (Some snt_lab,    cmd_set_new_target);
-      (Some call_lab,   cmd_proc_call);        (*        x_rcall := x_body (x_scope, x_this, x_arg0_val, ..., x_argn_val) with err *) ])
+      (*(None,            cmd_goto_test_type);*)
+      (*(Some snt_lab,    cmd_set_new_target);*)
+      (None,   cmd_proc_call);        (*        x_rcall := x_body (x_scope, x_this, x_arg0_val, ..., x_argn_val) with err *) ])
 
     @ (if_verification [] (annotate_cmds [
 

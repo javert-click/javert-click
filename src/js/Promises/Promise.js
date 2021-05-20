@@ -60,8 +60,8 @@ function SpeciesConstructor(O, defaultConstructor) {
 function Promise (executor) {
   if (this === undefined)
     throw new TypeError ();
-  if (this.__newTarget === undefined)
-    throw new TypeError ();
+  /*if (this.__newTarget === undefined)
+    throw new TypeError ();*/
   if (!IsCallable(executor))
     throw new TypeError ();
   var promise = this;

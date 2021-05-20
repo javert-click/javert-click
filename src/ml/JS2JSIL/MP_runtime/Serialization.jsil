@@ -123,7 +123,7 @@ proc SerializeObjectWithPrimVal (xsc, vthis, value){
 proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory){
                   (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
                   serialized := {{ }};
-                  keys := "i__getFields" (value);
+                  keys := "i__getEnumerableFields" (value);
                   keyvals := {{ }};
                   i := 0;
                   n := l-len (keys);
@@ -138,7 +138,8 @@ proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory){
                   outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory);
                   (* 26.4.1.3 Append { [[Key]]: key, [[Value]]: outputValue } to serialized.[[Properties]]. *)
                   properties := "JSILMap_add" (properties, key, outputValue);
-                  serialized := {{ type, properties }};
+                  propslist := {{ "Properties", properties }};
+                  serialized := {{ type, propslist }};
                   i := i+1;   
                   goto loop;
     propnf:       i := i+1;
@@ -183,7 +184,8 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* 24.1 Set serialized to { [[Type]]: "Object", [[Properties]]: a new empty List }. *)
                   type := {{ "Type", "Object" }};
                   properties := "JSILMap_create" ();
-                  serialized := {{ type, properties }};
+                  propslist := {{"Properties", properties }};
+                  serialized := {{ type, propslist }};
                   (* 24.2 Set deep to true. *)
                   deep := true;
                   goto updatemem;
@@ -360,12 +362,14 @@ proc DeserializeObjectProperty(propval){
 };
 
 proc DeserializeObject(xsc, vthis, value, props, memory){
-                goto [typeOf props = List] valok elab;
-    valok:      i := 0;
-                n := l-len (props);
+                typeprops := typeOf props;
+                goto [(typeprops = List) and ((l-len (props)) > 1)] valok elab;
+    valok:      propslist := l-nth (props, 1);
+                i := 0;
+                n := l-len (propslist);
                 (* 22.3.1 For each Record { [[Key]], [[Value]] } entry of serialized.[[Properties]]: *)
     loop:       goto [i < n] addprop end;
-    addprop:    kvserialized := l-nth (props, i);
+    addprop:    kvserialized := l-nth (propslist, i);
                 kv := "DeserializeObjectProperty"(kvserialized);
                 entrykey := l-nth (kv, 0);
                 entryvalue := l-nth (kv, 1);
@@ -399,7 +403,8 @@ proc StructuredDeserializeWithMemory(xsc, vthis, serialized, memory){
     prim:       value := v;
                 goto mem;
                 (* Steps 6 - 17 are implemented in DeserializeObjectWithPrimVal (defined above) *)
-    nprim:      value := "DeserializeObjectWithPrimVal" (xsc, vthis, type, v);
+    nprim:      v := l-nth (serialized, 0);
+                value := "DeserializeObjectWithPrimVal" (xsc, vthis, type, v);
                 (* 18. Otherwise, if serialized.[[Type]] is "Object", then: *)
                 goto [type = "Object"] obj nobj;
     obj:        (* 18.1 Set value to a new Object in targetRealm. *)
