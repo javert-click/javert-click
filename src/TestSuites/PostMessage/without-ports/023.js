@@ -19,7 +19,7 @@ var Child = function(a, b) {
   this.a = a;
   this.b = b;
 };
-//Child.prototype = new Parent;
+Child.prototype = new Parent;
 
 async_test(function() {
   var obj = new Child(1, 2);
