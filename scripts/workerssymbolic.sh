@@ -39,6 +39,6 @@ echo "Compiling resulting file to JSIL"
 ./js2jsil.native -file "webpack_"$name -mp -cosette
 #cp -R "$dir/$base.jsil" .
 echo -e "running webpack_$base.jsil"
-./cosette.native -file "webpack_$base.jsil" -mp -js -pbn
+./cosette.native -file "webpack_$base.jsil" -mp -js -pbn # -silent
 
 

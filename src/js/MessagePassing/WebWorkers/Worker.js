@@ -27,7 +27,7 @@ function Worker(scriptURL, options){
     // 6. Let worker be a new Worker object. 
     var worker = this;
     // 7. Create a new MessagePort object whose owner is outside settings. Let this be the outside port
-    var outsidePort = new MessagePort.MessagePort();
+    var outsidePort = new MessagePort.PublicMessagePort();
     // 8. Associate the outside port with worker
     worker.__port = outsidePort;
     // 9. Run this step in parallel: Run a worker given worker, worker URL, outside settings, outside port, and options.

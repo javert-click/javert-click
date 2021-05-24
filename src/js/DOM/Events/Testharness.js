@@ -1461,6 +1461,42 @@ function assert_throws(code, func, description)
 }
 expose(assert_throws, "assert_throws");
 
+ /**
+     * Assert the provided value is thrown.
+     *
+     * @param {value} exception The expected exception.
+     * @param {Function} func Function which should throw.
+     * @param {string} description Error description for the case that the error is not thrown.
+     */
+    function assert_throws_exactly(exception, func, description)
+    {
+        assert_throws_exactly_impl(exception, func, description,
+                                   "assert_throws_exactly");
+    }
+    //expose(assert_throws_exactly, "assert_throws_exactly");
+
+    /**
+     * Like assert_throws_exactly but allows specifying the assertion type
+     * (assert_throws_exactly or promise_rejects_exactly, in practice).
+     */
+    function assert_throws_exactly_impl(exception, func, description,
+                                        assertion_type)
+    {
+        try {
+            func.call(this);
+            assert(false, assertion_type, description,
+                   "${func} did not throw", {func:func});
+        } catch (e) {
+            if (e instanceof AssertionError) {
+                throw e;
+            }
+
+            assert(same_value(e, exception), assertion_type, description,
+                   "${func} threw ${e} but we expected it to throw ${exception}",
+                   {func:func, e:e, exception:exception});
+        }
+    }
+
 /**
      * Assert a JS Error with the expected constructor is thrown.
      *
@@ -3647,6 +3683,7 @@ export { test, assert_equals,
             assert_false, 
             assert_throws,
             assert_throws_js,
+            assert_throws_exactly,
             assert_throws_dom, 
             assert_unreached,
             assert_array_equals,

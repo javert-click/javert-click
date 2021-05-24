@@ -6,7 +6,7 @@ module.exports = env => {
     return {
       entry: env.entry,
       output: {
-        filename: 'webpack_'+path.basename(env.entry),
+        filename: env.out,
         path: path.resolve(__dirname, 'environment')
       },
       optimization: {

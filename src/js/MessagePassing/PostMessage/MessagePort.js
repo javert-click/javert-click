@@ -20,9 +20,16 @@ const Serialization     = require('./MessageSerialization');
 EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo);
 
 /*
+* MessagePort constructor should not be accessible
+*/
+function MessagePort(){
+    throw new TypeError("Illegal constructor");
+}
+
+/*
 * @id MessagePort
 */
-function MessagePort(id){
+function PublicMessagePort(id){
     EventTarget.EventTarget.call(this);
     this.__id                = id ? id : MPSem.newPort();
     this.__Enabled           = false;
@@ -35,6 +42,8 @@ function MessagePort(id){
 MessagePort.prototype = Object.create(EventTarget.EventTarget.prototype);
 
 MessagePort.prototype.ports = [];
+
+PublicMessagePort.prototype = MessagePort.prototype;
 
 Object.defineProperty(MessagePort.prototype, 'onmessage', {
     /*
@@ -217,7 +226,7 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
     targetWindow.dispatchEvent(event);
 }
 
-scopeMP.MessagePort  = MessagePort;
+scopeMP.MessagePort  = PublicMessagePort;
 scopeMP.MessageEvent = MessageEvent;
 scopeMP.JS2JSILList  = JS2JSILList;
 scopeMP.ArrayUtils   = ArrayUtils;
@@ -226,4 +235,5 @@ scopeMP.Serialization = Serialization;
 JSILSetGlobalObjProp("__scopeMP", scopeMP);
 
 exports.MessagePort = MessagePort;
+exports.PublicMessagePort = PublicMessagePort;
     

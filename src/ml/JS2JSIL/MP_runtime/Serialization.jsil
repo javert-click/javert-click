@@ -133,7 +133,7 @@ proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory, da
                   hasprop := "OP_hasOwnProperty" (undefined, value, key);
                   goto [hasprop = true] propfound propnf;
                   (* 26.4.1.1 Let inputValue be ? value.[[Get]](key, value). *)
-    propfound:    inputVal := "get" (value, key);
+    propfound:    inputVal := "get" (value, key) with eget;
                   (* 26.4.1.2 Let outputValue be ? StructuredSerializeInternal(inputValue, forStorage, memory). *)
                   outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory, datacloneerr) with elab;
                   (* 26.4.1.3 Append { [[Key]]: key, [[Value]]: outputValue } to serialized.[[Properties]]. *)
@@ -147,7 +147,9 @@ proc SerializeObject(xsc, vthis, value, type, properties, forStorage, memory, da
     succ:         ret := serialized;
                   return;
     elab:         ret := outputValue;
-                  throw                 
+                  throw; 
+    eget:         ret := inputVal;  
+                  throw              
 };
 
 proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory, datacloneerr){

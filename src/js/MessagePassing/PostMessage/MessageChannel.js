@@ -8,9 +8,9 @@ var MPSem = MPSemantics.getMPSemanticsInstance();
 */
 function MessageChannel(){
     // 1. Set this's port 1 to a new MessagePort in this's relevant Realm.
-    this.__port1 = new MessagePort.MessagePort();
+    this.__port1 = new MessagePort.PublicMessagePort();
     // 2. Set this's port 2 to a new MessagePort in this's relevant Realm.
-    this.__port2 = new MessagePort.MessagePort();
+    this.__port2 = new MessagePort.PublicMessagePort();
     // 3. Entangle this's port 1 and this's port 2.
     MPSem.pairPorts(this.__port1.__id, this.__port2.__id);
 }
