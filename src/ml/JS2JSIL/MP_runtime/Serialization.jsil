@@ -34,8 +34,8 @@ proc JSILMap_add_or_replace(map, key, value){
                   i := 0;
                   len := l-len (map);
                   res := {{ }};
-                  reskeyl := {{ "MapKey", key }};
-                  resvall := {{ "MapValue", value }};
+                  reskeyl := {{ "Key", key }};
+                  resvall := {{ "Value", value }};
                   keyval := {{ reskeyl, resvall }};
                   found := false;
     loop:         goto [i < len] search add;
@@ -149,7 +149,7 @@ proc SerializeObjectWithPrimVal (xsc, vthis, value){
                   return
 };
 
-proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, count){
+proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr){
                   type := {{ "Type", "Object" }};
                   properties := "JSILMap_create" ();
                   (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
@@ -166,13 +166,13 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, count)
                   (* 26.4.1.1 Let inputValue be ? value.[[Get]](key, value). *)
     propfound:    inputVal := "get" (value, key) with eget;
                   (* 26.4.1.2 Let outputValue be ? StructuredSerializeInternal(inputValue, forStorage, memory). *)
-                  count := count + 1;
-                  outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory, datacloneerr, count)with elab;
+                  outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory, datacloneerr)with elab;
                   outputSerialized := [outputValue, "serialized"];
                   outputMemory := [outputValue, "memory"];
                   (* 26.4.1.3 Append { [[Key]]: key, [[Value]]: outputValue } to serialized.[[Properties]]. *)
                   properties := "JSILMap_add" (properties, key, outputSerialized);
                   propslist := {{ "Properties", properties }};
+                  count := l-len(outputMemory);
                   countlist := {{ "Id", count }};
                   serialized := {{ type, propslist, countlist }};
                   outputMemory := "JSILMap_add_or_replace" (outputMemory, value, serialized);
@@ -192,7 +192,7 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, count)
                   throw              
 };
 
-proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory, datacloneerr, count){
+proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory, datacloneerr){
                   (* 2. If memory[value] exists, then return memory[value].*)
                   cache := "JSILMap_find" (memory, value);
                   goto [cache = null] nullcache nonnullcache;
@@ -243,8 +243,7 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* 26.3 (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object, ... *)
                   (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
                   (* Step 26.4 is implemented in SerializeObject (defined above) *)
-                  count := count + 1;
-                  serializedObj := "SerializeObject"(xsc, vthis, value, forStorage, memory, datacloneerr, count) with elab;
+                  serializedObj := "SerializeObject"(xsc, vthis, value, forStorage, memory, datacloneerr) with elab;
                   serialized := [serializedObj, "serialized"];
                   objmem := [serializedObj, "memory"];
                   memory := objmem;
