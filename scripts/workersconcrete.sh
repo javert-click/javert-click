@@ -31,7 +31,7 @@ echo "compiling setupConf file"
 npx webpack --config ../webpack.config.js --env entry=$setupconffilejs --env out=$setupconffilejs
 ./js2jsil.native -file $setupconffilejs #-noinitialheap
 #mv "webpack_ConfSetup.jsil" "ConfSetup.jsil"
-#cp $setupconffilejsil .
+cp $setupconffilejsil .
 
 #Copying files from dom implementation to environment
 #for filename in {$assertdir,$commondir,$eventsdir,$postmessagedir,$workersdir,$workersexamples,$mpcommon,$utilsdir,$promisesdir}/*.jsil; do

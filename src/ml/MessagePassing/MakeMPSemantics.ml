@@ -265,7 +265,7 @@ module M
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
   let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * (pc_map_t * Formula.t) list =
-    Printf.printf "\nProcessing message sent to port %s" (Val.str port);
+    Printf.printf "\nProcessing message sent to port %s\n" (Val.str port);
     let (vs, plist) = msg in
     (*Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));*)
     let cids_fs = SymbMap.find pc port Val.to_literal Val.to_expr in

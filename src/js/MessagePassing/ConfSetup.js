@@ -12,7 +12,7 @@ JSILSetGlobalObjProp("MPSemantics", MPSemantics);
 */
 function __setupConf(workerURL, outsidePortId, isShared, main_fid){
     // First thing to be executed in every worker. Script file needs to import this file. This function needs to be executed before the script.
-    executeJSILProc("mainwebpack_ConfSetup");
+    executeJSILProc("mainConfSetup");
     var global = executeJSILProc("JSILGetGlobal");  
     console.log('WORKER: setupInitialHeap executed successfully!');
     //global.__scopeMP = MP.MessagePort.MessagePort.__scopeMP;

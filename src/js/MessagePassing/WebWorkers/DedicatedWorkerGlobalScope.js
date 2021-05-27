@@ -2,6 +2,14 @@
 * @id DedicatedWorkerGlobalScope
 */
 function DedicatedWorkerGlobalScope (global, name) {
+    Object.defineProperty(global, 'addEventListener', {
+        /*
+        * @id DedicatedWorkerGlobalAddEventListener
+        */
+        get: function(){
+            return this.__port.addEventListener;
+        }
+    });
     Object.defineProperty(global, 'onmessage', {
         /*
         * @id DedicatedWorkerGlobalScopeOnMessage

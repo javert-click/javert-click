@@ -1,15 +1,19 @@
-import { ArrayIterator } from './ArrayUtils';
+const ArrayUtils = require('./ArrayUtils');
+const ArrayIterator = ArrayUtils.ArrayIterator;
 
 function Map(kvpairs){
     this.kvpairs = kvpairs ? kvpairs : [];
 }
 
-Object.defineProperty(Map.prototype, 'length', {
+Object.defineProperty(Map.prototype, 'size', {
     get: function(){
         return this.kvpairs.length;
     }
 });
 
+/*
+* @id MapGet
+*/
 Map.prototype.get = function(key){
     for(var i = 0; i < this.kvpairs.length; i++){
         var kvp = this.kvpairs[i];
@@ -17,6 +21,9 @@ Map.prototype.get = function(key){
     }
 }
 
+/*
+* @id MapSet
+*/
 Map.prototype.set = function(k, v){
     var found = false;
     var i = 0;
@@ -31,6 +38,9 @@ Map.prototype.set = function(k, v){
     if(!found) this.kvpairs.push([k, v]);
 }
 
+/*
+* @id MapValues
+*/
 Map.prototype.values = function(){
     var values = [];
     for(var i = 0; i < this.kvpairs.length; i++){
@@ -39,10 +49,22 @@ Map.prototype.values = function(){
     return new ArrayIterator(values);
 }
 
+/*
+* @id MapEntries
+*/
 Map.prototype.entries = function(){
     return new ArrayIterator(this.kvpairs);
 }
 
-export { Map }
+/*
+* @id MapDelete
+*/
+Map.prototype.delete = function(k){
+    var old = this.kvpairs.slice();
+    this.kvpairs = this.kvpairs.filter((kvp) => { return kvp[0] !== k });
+    return old.length > this.kvpairs.length;
+}
+
+exports.Map = Map;
 
 

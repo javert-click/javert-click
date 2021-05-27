@@ -427,8 +427,10 @@ function execCallBack(callback, opName, event, currentTarget){
                     callback.apply(currentTarget, [event]);
                 }
         }else{
-            if(typeof callback == 'function')
+            if(typeof callback == 'function'){
+                //console.log('Going to call callback '+callback);
                 callback.apply(currentTarget,[event]);
+            }
             else
                 callback['handleEvent'].apply(callback, [event]);
         }
