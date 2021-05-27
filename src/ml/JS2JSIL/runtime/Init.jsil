@@ -371,6 +371,7 @@ proc setupInitialHeap () {
 			[$larr_proto, "forEach"]        := {{ "d", $lap_forEach, true, false, true }};
 			[$larr_proto, "map"]            := {{ "d", $lap_map, true, false, true }};
 			[$larr_proto, "filter"]         := {{ "d", $lap_filter, true, false, true }};
+			[$larr_proto, "find"]           := {{ "d", $lap_find, true, false, true }};
 			[$larr_proto, "reduce"]         := {{ "d", $lap_reduce, true, false, true }};
 			[$larr_proto, "reduceRight"]    := {{ "d", $lap_reduceRight, true, false, true }};
 
@@ -395,6 +396,7 @@ proc setupInitialHeap () {
 			ret := "create_object_with_call_construct_concrete" ($lap_forEach, "AP_forEach", empty, 1);
 			ret := "create_object_with_call_construct_concrete" ($lap_map, "AP_map", empty, 1);
 			ret := "create_object_with_call_construct_concrete" ($lap_filter, "AP_filter", empty, 1);
+			ret := "create_object_with_call_construct_concrete" ($lap_find, "AP_find", empty, 1);
 			ret := "create_object_with_call_construct_concrete" ($lap_reduce, "AP_reduce", empty, 1);
 			ret := "create_object_with_call_construct_concrete" ($lap_reduceRight, "AP_reduceRight", empty, 1);
 

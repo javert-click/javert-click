@@ -1346,6 +1346,72 @@ proc AP_filter() {
 	elab: throw
 };
 
+(* *** FIND *** *)
+proc AP_find() {
+			arguments := args;
+			vthis  := l-nth (arguments, 1);
+			num := l-len (arguments);
+
+			cbf := undefined;
+	        goto [num <= 2] tobj cbf;
+	cbf:	cbf := l-nth (arguments, 2);
+
+	tobj:	ret := "i__toObject" (vthis) with elab;
+			vthis := ret;
+
+			ret := "get" ( vthis, "length") with elab;
+			ret := "i__toUint32" (ret) with elab;
+			len := ret;
+
+			ret := "i__isCallable" (cbf);
+			goto [ret] cont thrw;
+
+	cont:	goto [num <= 3] undef def;
+
+	def:	t := l-nth (arguments, 3);
+			goto seta;
+	undef:	t := undefined;
+
+	seta:	res := undefined;
+	        k := 0;
+	loop:	goto [k < len] next rlab;
+
+	next:	ret := "i__toString" (k) with elab;
+			pk := ret;
+			ret := "hasProperty" (vthis, pk) with elab;
+			kpres := ret;
+			goto [kpres] tt ff;
+
+	tt:		ret := "get" ( vthis, pk) with elab;
+			kval := ret;
+			m := metadata(cbf);
+			scp := [m, "@scope"];
+			fun := [m, "@call"];
+			ret := fun (scp, t, kval, k, vthis) with elab;
+			goto [ret = empty] udef sel;
+	udef:	ret := undefined;
+
+	sel:	sel := ret;
+			ret := "i__toBoolean" (sel) with elab;
+			goto [ret] rett ff;
+
+	rett:	res := kval;
+	        goto rlab;
+	        (*ret := "i__toString" (to) with elab;
+			strt := ret;
+			ret := "a__defineOwnProperty" (A, strt, {{ "d", kval, true, true, true }}, false) with elab;
+			to := to + 1;*)
+
+	ff:		k := k + 1;
+			goto loop;
+
+	rlab:   ret := res;
+	        return;
+
+	thrw:	ret := "TypeError" ();
+	elab: throw
+};
+
 (* *** REDUCE *** *)
 proc AP_reduce() {
 			arguments := args;
