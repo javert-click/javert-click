@@ -466,10 +466,10 @@ let evaluate_procedure_call (state : State.t) (old_store : Store.t option) (cs: 
 
     )
 
-let rec read_debug_input (cmd: Annot.t * Cmd.t) (state: state_t) (cs: CallStack.t) (i: int) (b_counter: int) : state_t =
+let rec read_debug_input (cmd: Annot.t * Cmd.t) (state: state_t) (cs: CallStack.t) (i: int) (b_counter: int) : unit =
   Printf.printf "\nType:\n'play' to go to the next breakpoint\n'print' to print the current state\n'eval(exp)' to evaluate a JSIL expression exp\n";
   match read_line () with
-  | "play" -> state
+  | "play" -> ()
   | "print" -> 
     Printf.printf "%s" (cconf_str cmd state cs i b_counter false);
     read_debug_input cmd state cs i b_counter
@@ -690,8 +690,8 @@ let evaluate_cmd
 
   | Debug ->
     Printf.printf "----Starting JaVerT Debugger----\n--Proc: %s, line %d--\n" proc_name i;
-    let state' = read_debug_input annot_cmd state cs i b_counter in
-    [ ConfCont (state', cs, i, i+1, b_counter, None), None ]
+    read_debug_input annot_cmd state cs i b_counter;
+    [ ConfCont (state, cs, i, i+1, b_counter, None), None ]
 
 
 let protected_evaluate_cmd
