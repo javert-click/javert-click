@@ -784,14 +784,10 @@ proc i__getValue(v) {
 			goto rlab;
 
 	dflt:	ret := v;
-	rlab: return;
+	rlab:   return;
 
-	thrw:  x_scope := {{ $lg }};
-		   as_array := "i__jsillist_to_array"(v) with elab;
-		   ret := "javert__no_such_value"(x_scope, undefined, as_array) with elab;
-		   return;
-   	elab: ret := ReferenceError;
-	   	  throw
+	thrw: ret := "ReferenceError" ();
+   	elab: throw
 };
 
 
