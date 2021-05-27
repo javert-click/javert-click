@@ -31,13 +31,15 @@ WebworkerPromise.prototype.terminate = function() {
 }
 
 /**
-* return true if there is no unresolved jobs
-* @returns {boolean}
+* @id WebworkerPromiseoIsFree
 */
 WebworkerPromise.prototype.isFree = function() {
   return this._messages.size === 0;
 }
 
+/**
+* @id WebworkerPromisejobsLength
+*/
 WebworkerPromise.prototype.jobsLength = function() {
   return this._messages.size;
 }
