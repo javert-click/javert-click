@@ -50,12 +50,14 @@ function create(opts) {
 /*
 * @id WorkerPoolExec
 */
-WorkerPool.prototype.exec = function(xargs) {
+WorkerPool.prototype.exec = function() {
+  var xargs = arguments;
   const worker = this.getFreeWorkerOrCreate();
   if(worker)
     return this._exec(worker, 'exec', xargs);
 
-  return new Promise(res => this._queue.push(['exec', xargs, res]));
+  var vthis = this;
+  return new Promise(res => vthis._queue.push(['exec', xargs, res]));
 }
 
 /*
@@ -67,8 +69,8 @@ WorkerPool.prototype.postMessage = function() {
   if(worker){
     return this._exec(worker, 'postMessage', xargs);
   }
-
-  return new Promise(res => this._queue.push(['postMessage', args, res]));
+  var vthis = this;
+  return new Promise(res => vthis._queue.push(['postMessage', xargs, res] ));
 }
 
 /*
@@ -97,7 +99,7 @@ WorkerPool.prototype._exec = function(worker, method, xargs) {
 */
 WorkerPool.prototype._onWorkDone = function() {
   if(this._queue.length) {
-    let worker;
+    var worker;
     while(this._queue.length && (worker = this.getFreeWorkerOrCreate())) {
       var elem = this._queue.shift();
       var method = elem[0];
@@ -132,7 +134,8 @@ WorkerPool.prototype._waitAndRemoveWorkers = function(workers) {
 */
 WorkerPool.prototype._removeWorker = function(worker) {
   this._workers = this._workers.filter(w => { return w._id !== worker._id });
-  worker.terminate();
+  //TODOMP: give priority to message processing than to setTimeout!
+  //worker.terminate();
 }
 
 /*

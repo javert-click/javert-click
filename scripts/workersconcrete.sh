@@ -43,4 +43,7 @@ echo "Compiling resulting file to JSIL"
 echo -e "running $base.jsil"
 ./jsil.native -file "$base.jsil" -pbn -mp
 
+echo -e "removing log_verboser.log"
+rm "log_verboser.log"
+
 

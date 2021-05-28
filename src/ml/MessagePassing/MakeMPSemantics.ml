@@ -140,7 +140,7 @@ module M
   let compute_cid_from_val (v: vt) : cid_t =
     let lit = Val.to_literal v in
     match lit with
-    | Some Num n -> int_of_float nan
+    | Some Num n -> int_of_float n
     | _ -> raise (Failure ("Invalid Configuration Identifier."))
 
   let rec break_cq_on_cid (cq: cq_t) (cid: cid_t) (cq_pre: cq_t) : cq_t * event_conf_t option * cq_t =
@@ -200,12 +200,17 @@ module M
 
   (* Removes all info related to configuration with identifier cid, including the ports belonging to it *)
   let terminate (plist: port_t list) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : (mq_t * pc_map_t * pp_map_t * Formula.t) list =
+    Printf.printf "\nExecuting terminate of %d ports:" (List.length plist);
+    Printf.printf "%s\n" (String.concat "," (List.map Val.str plist));
     (* 1. Removing ports from pc map *)
     let pcs_fs = SymbMap.remove_seq pc plist Val.to_literal Val.to_expr in 
+    Printf.printf "\nPorts removed from pc_map\n";
     (* 2. Removing ports from pp map*)
     let pps_fs = List.concat (List.map (fun p -> unpair_port p pp) plist) in
+    Printf.printf "\nPorts removed from pp map\n";
     (* 3. Removing messages sent to ports in the given port list *)
     let mq' = List.filter (fun (_,p) -> not (List.mem p plist)) mq in
+    Printf.printf "\nMessages removed from mq!\n";
     List.concat (List.map (
       fun (pc, f_pc) -> List.map (
           fun (pp, f_pp) -> mq', pc, pp, Formula.And (f_pc, f_pp)
@@ -259,8 +264,6 @@ module M
         let f_ps_diff = Formula.Not (Formula.Eq (Val.to_expr port, Val.to_expr port')) in
         (cid, EventSemantics.set_var xvar port' conf), Formula.And(f, f_ps_diff)) ps_fs 
     )
-    
-    
 
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
@@ -297,9 +300,12 @@ module M
         let conf'', new_conf = new_execution xvar url setup_fid args  cids (cid, conf) in
         [conf'', mq, pc, pp, Some (AddConf new_conf), Formula.True] 
       | Terminate (xvar, cid') -> 
+        Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');
         let cid' = compute_cid_from_val cid' in
+        Printf.printf "\nComputed cid: %d\n" cid'; 
         let plist = SymbMap.filter pc cid' Val.from_literal in
         let pc_pp_mq_l = terminate plist mq pc pp in
+        Printf.printf "Terminate returned %d states" (List.length pc_pp_mq_l);
         List.map (fun (mq', pc', pp', f) -> (cid, conf), mq', pc', pp', Some (RemConf (cid')), f) pc_pp_mq_l
       | NewPort (xvar) -> 
         let conf'', pc_fs, label = new_port xvar (cid, conf) pc in
