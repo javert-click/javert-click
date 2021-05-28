@@ -52,7 +52,7 @@ let output_verification = ref false
 let debug        = ref false
 let sanity       = ref true
 
-let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoading"] (*"loadDocument"; "i__getValue" ]*)
+let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoading"; "i__getValue" ]
 
 let html_parser_path = "HTMLParser.js"
 let html_json_path   = "htmlfile.json"
