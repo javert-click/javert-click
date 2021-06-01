@@ -14,7 +14,7 @@ module M
   type vt = Val.t
 
   (* Message Ports *)
-  type port_t = vt
+  type port_t = Literal.t
 
   (* Configuration Identifiers *)
   type cid_t = int
@@ -29,10 +29,10 @@ module M
   type cq_t = event_conf_t list
 
   (* Port Confs Map *)
-  type pc_map_t = (port_t, cid_t) SymbMap.t
+  type pc_map_t = (port_t, cid_t) Hashtbl.t
 
   (* Paired Ports Map *)
-  type pp_map_t = (port_t, port_t) SymbMap.t
+  type pp_map_t = (port_t, port_t) Hashtbl.t
 
   (* Message Queue *)
   type mq_t = (message_t * port_t) list
@@ -58,7 +58,7 @@ module M
                            | AddSpecVar of string list
 
   (* Most of the operations will manipulate a single configuration. There is then a function to update the mp_conf based on the new reduced conf and the optional action *)
-  type reduced_mp_conf_t = event_conf_t * mq_t * pc_map_t * pp_map_t * optional_action_t option * Formula.t
+  type reduced_mp_conf_t = event_conf_t * mq_t * pc_map_t * pp_map_t * optional_action_t option * Formula.t option
   
   (* Message Passing Result *)
   (* 1. Respective results of event configurations, each with the assciated cid *)
@@ -74,8 +74,9 @@ module M
     mq @ [(msg, plist), port]
 
   (* Redirects ports in the port list to the configuration with identifier cid *)
-  let redirect (plist: port_t list) (cid: cid_t) (pc: pc_map_t) : (pc_map_t * Formula.t) list = 
-    SymbMap.replace_seq pc plist cid Val.to_literal Val.to_expr (fun _ cid' -> cid')
+  let redirect (plist: port_t list) (cid: cid_t) (pc: pc_map_t) : pc_map_t = 
+    List.iter (fun port -> Hashtbl.replace pc port cid) plist;
+    pc
 
   (* Returns Some conf if conf is in the list cs and None otherwise *)
   let get_conf (cid: cid_t) (cq: cq_t) : event_conf_t option = 
@@ -99,19 +100,22 @@ module M
   (* Generates port id randomly making sure that port does not exist yet *)
   let rec generate_new_port_id (pc: pc_map_t) : port_t =
     Random.self_init ();
-    let port_id = float_of_int (Random.int 1000) in
-    (Val.from_literal (Num port_id))
+    let port_id = Num (float_of_int (Random.int 1000)) in
+    if (Hashtbl.mem pc port_id) then (generate_new_port_id pc) else port_id
 
   (* Adds a constraint f to the path condition of each configuration in cq *)
   let assume (cq: cq_t) (f: Formula.t) : cq_t =
-    (*L.log L.Normal (lazy (Printf.sprintf "\nASSUME: Going to assume formula %s" (Formula.str f)));*)
-    List.fold_left (fun acc (cid, conf) -> 
+    L.log L.Normal (lazy (Printf.sprintf "\nASSUME: Going to assume formula %s" (Formula.str f)));
+    L.log L.Normal (lazy (Printf.sprintf "\nASSUME: cq length: %d" (List.length cq)));
+    let cq' = List.fold_left (fun acc (cid, conf) -> 
       match EventSemantics.assume conf f with
       | Some conf' -> acc @ [(cid, conf')] 
-      | None -> acc ) [] cq
+      | None -> acc ) [] cq in
+    L.log L.Normal (lazy (Printf.sprintf "\nASSUME: new cq length: %d" (List.length cq')));
+    cq'
 
   (* Updates the configuration queue based on the result of running a single configuration *)
-  let update_full_conf_from_reduced_conf (cq_pre: cq_t) (cq_pos: cq_t) (mq: mq_t) (pc: pc_map_t) (pp:pp_map_t) (lead_conf: cid_t option) (new_reduced_conf: reduced_mp_conf_t) : mp_conf_t =
+  let update_full_conf_from_reduced_conf (cq_pre: cq_t) (cq_pos: cq_t) (mq: mq_t) (pc: pc_map_t) (pp:pp_map_t) (lead_conf: cid_t option) (new_reduced_conf: reduced_mp_conf_t) : mp_conf_t option =
     let (econf, mq', pc', pp', o_action, f) = new_reduced_conf in
     let cq' = cq_pre @ [econf] @ cq_pos in
     let cq'', lead_conf' =
@@ -129,19 +133,28 @@ module M
         cid, EventSemantics.add_spec_var x conf) cq'), lead_conf
     | None -> cq', lead_conf) in
     (*L.log L.Normal (lazy (Printf.sprintf "\nBefore assuming that %s: %d confs\n" (Formula.str f) (List.length cq'')));*)
-    let new_cq = assume cq'' f in 
+    let new_cq = 
+    match f with
+    | None -> cq''
+    | Some f -> assume cq'' f in 
     (*L.log L.Normal (lazy (Printf.sprintf "\nAfter assuming that %s: %d confs\n" (Formula.str f) (List.length new_cq)));*)
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
     (*List.iter (fun (cid, econf) -> L.log L.Normal (lazy (Printf.sprintf "\nCID: %d, CONF: \n%s\n" cid (EventSemantics.state_str econf)))) new_cq;*)
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
-    new_cq, mq', pc', pp', lead_conf'
+    Some (new_cq, mq', pc', pp', lead_conf')
 
 
-  let compute_cid_from_val (v: vt) : cid_t =
+  let compute_int_from_val (v: vt) : int =
     let lit = Val.to_literal v in
     match lit with
     | Some Num n -> int_of_float n
-    | _ -> raise (Failure ("Invalid Configuration Identifier."))
+    | _ -> raise (Failure ("Val could not be converted to int."))
+
+  let compute_num_from_val (v:vt) : Literal.t =
+    let lit = Val.to_literal v in
+    match lit with
+    | Some Num n -> Num n
+    | _ -> raise (Failure ("Val could not be converted to literal."))
 
   let rec break_cq_on_cid (cq: cq_t) (cid: cid_t) (cq_pre: cq_t) : cq_t * event_conf_t option * cq_t =
     match cq with
@@ -154,25 +167,14 @@ module M
   (***** MAIN FUNCTIONS *****)
 
 
-  (* TODO: check if sat before enqueuing!!! *)
   (* Updates mp conf based on new message msg sent to the specified port *)
-  let send (cid: cid_t) (msg: vt list) (plist: port_t list) (port_1: port_t) (port_2: port_t) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : (mq_t * Formula.t) list =
-    (*Printf.printf "\nFound msg: %s\n" (String.concat "," (List.map Val.str msg));*)
-    (*Printf.printf "\nDest port: %s\n" (Val.str port_2);*)
-    let dest_ports = SymbMap.find pp port_1 Val.to_literal Val.to_expr in
-    let ports_curr_conf = List.map Val.to_expr (SymbMap.filter pc cid Val.from_literal) in
+  let send (cid: cid_t) (msg: vt list) (plist: port_t list) (port_1: port_t) (port_2: port_t) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : mq_t =
+    Printf.printf "\nFound msg: %s\n" (String.concat "," (List.map Val.str msg));
+    Printf.printf "\nDest port: %s\n" (Literal.str port_2);
+    (*let port_2 = Hashtbl.find pp port_1 in*)
     (* We need to guarantee that the sender belongs to the current configuration *)
-    let port_1_expr = Val.to_expr port_1 in
-    let f_port_1_curr_conf = List.fold_left (fun f port -> Formula.Or (f, Formula.Eq (port_1_expr, port))) Formula.False ports_curr_conf in
-    (*let f_port_1_curr_conf = Formula.SetMem (Val.to_expr port_1, Expr.ESet ports_curr_conf) in*)
-    List.map (
-      fun (p, f) -> 
-        let f_p_not_p1 = Formula.Not (Formula.Eq (Val.to_expr p, Val.to_expr port_1)) in
-        let f_p_eq_p2 = Formula.Eq (Val.to_expr p, Val.to_expr port_2) in
-        let cond = (Formula.And (f_p_not_p1, Formula.And (f_p_eq_p2, Formula.And (f_port_1_curr_conf ,f)))) in
-        L.log L.Normal (lazy (Printf.sprintf "\nSEND: Generating formula %s" (Formula.str cond)));
-        enqueue msg plist p mq, cond) dest_ports
-
+    let port_belongs_to_curr_conf = Hashtbl.fold (fun port' cid' acc -> if (cid = cid' && port_1 = port') then acc || true else acc) pc false in 
+    if (port_belongs_to_curr_conf) then enqueue msg plist port_2 mq else mq
 
   (* Creates new configuration and also sets return variable to new configuration identifier *)
   let new_execution (xvar: string) (url: string) (setup_fid: string) (args: vt list) (cids: cid_t list) (conf: event_conf_t) : event_conf_t * event_conf_t =
@@ -183,152 +185,121 @@ module M
     (cid, conf'), (new_cid, new_conf)
 
   (* Unpairs a port. Unpair means removing both p and port paired with p in pp map. We assume that the map is bi-directional *)
-  let unpair_port (port: port_t) (pp: pp_map_t) : (pp_map_t * Formula.t) list =
-    (* 1st step: finding the port(s) paired with the given port *)
-    let paired = SymbMap.find pp port Val.to_literal Val.to_expr in
-    let pp_fs = List.concat (List.map (
-      fun (port', f) -> (* 2nd step: removing each paired port from the map *)
-                        let rem_paired_fs = SymbMap.remove pp port' Val.to_literal Val.to_expr in
-                        List.concat (List.map (
-                          fun (pp', f') -> 
-                            (* 3rd step: removing the given port from the map *)
-                            let rem_port_fs = SymbMap.remove pp' port Val.to_literal Val.to_expr in
-                            List.map (fun (pp', f'') -> pp', Formula.And (Formula.And (f, f'), f'')) rem_port_fs
-                        ) rem_paired_fs)
-    ) paired) in
-    if ((List.length pp_fs) = 0) then ([pp, Formula.True]) else pp_fs
+  let unpair_port (port: port_t) (pp: pp_map_t) : pp_map_t =
+    (* 1st step: finding the port(s) paired with the given port *) 
+    match Hashtbl.find_opt pp port with
+    | Some paired -> 
+      Hashtbl.remove pp port;
+      Hashtbl.remove pp paired;
+      pp
+    | None -> pp
 
   (* Removes all info related to configuration with identifier cid, including the ports belonging to it *)
-  let terminate (plist: port_t list) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : (mq_t * pc_map_t * pp_map_t * Formula.t) list =
-    Printf.printf "\nExecuting terminate of %d ports:" (List.length plist);
-    Printf.printf "%s\n" (String.concat "," (List.map Val.str plist));
+  let terminate (plist: port_t list) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : mq_t * pc_map_t * pp_map_t =
     (* 1. Removing ports from pc map *)
-    let pcs_fs = SymbMap.remove_seq pc plist Val.to_literal Val.to_expr in 
-    Printf.printf "\nPorts removed from pc_map\n";
+    List.iter (fun port -> Hashtbl.remove pc port) plist;
     (* 2. Removing ports from pp map*)
-    let pps_fs = List.concat (List.map (fun p -> unpair_port p pp) plist) in
-    Printf.printf "\nPorts removed from pp map\n";
+    let pp' = List.fold_left (fun pp' port -> unpair_port port pp') pp plist in
     (* 3. Removing messages sent to ports in the given port list *)
     let mq' = List.filter (fun (_,p) -> not (List.mem p plist)) mq in
-    Printf.printf "\nMessages removed from mq!\n";
-    List.concat (List.map (
-      fun (pc, f_pc) -> List.map (
-          fun (pp, f_pp) -> mq', pc, pp, Formula.And (f_pc, f_pp)
-    ) pps_fs ) pcs_fs)
+    mq', pc, pp'
 
   (* Creates new port, adds to current configuration and sets return variable to new port id *)
-  let new_port (xvar: string) (conf: event_conf_t) (pc: pc_map_t) : event_conf_t * (pc_map_t * Formula.t) list * optional_action_t option = 
+  let new_port (xvar: string) (conf: event_conf_t) (pc: pc_map_t) : event_conf_t * pc_map_t * optional_action_t option = 
     let port_id = generate_new_port_id pc in
     let (cid, conf) = conf in
     let (conf', port), label, f_lvar_num = 
-      if (!cosette) then (
-          let lvar = MPConstants.portvarsuffix ^ (Val.str port_id) in
-          let f_lvar_num = Formula.Eq (UnOp (TypeOf, (LVar lvar)), Lit (Type NumberType)) in
-          (EventSemantics.fresh_lvar xvar lvar conf NumberType), Some (AddSpecVar [lvar]), f_lvar_num
-      ) else ((EventSemantics.set_var xvar port_id conf, port_id), None, Formula.True) in
-    let pp_list = SymbMap.add pc port cid (Val.to_literal) (Val.to_expr) in
-    let pp_list = List.map (fun (pc', f) -> pc', Formula.And(f, f_lvar_num)) pp_list in
-    (cid, conf'), pp_list, label
+      (EventSemantics.set_var xvar (Val.from_literal port_id) conf, port_id), None, Formula.True in
+    Hashtbl.add pc port cid;
+    (cid, conf'), pc, label
 
   (* Adds both entries to pp map. Note that we assume pre-existing values of p1 and p2 to have been removed. The map is bi-directional *)
-  let pair_ports (p1: port_t) (p2: port_t) (plist: port_t list) (pp: pp_map_t) : (pp_map_t * Formula.t) list =
+  let pair_ports (p1: port_t) (p2: port_t) (plist: port_t list) (pp: pp_map_t) : pp_map_t =
     (* Pair p1 and p2 by adding both (p1, p2) and (p2, p1) to the map *)
     (* 1: Adding (p1, p2) to pp *)
     (* I have to assume that both ports belong to the port configuration map *)
-    match plist with
-    | [] -> []
-    | ps ->
-        let pp_paired_1 = SymbMap.add pp p1 p2 Val.to_literal Val.to_expr in
-        let f_port_1_curr_conf = List.fold_left (fun f port -> Formula.Or (f, Formula.Eq (Val.to_expr p1, Val.to_expr port))) Formula.False ps in
-        let f_port_2_curr_conf = List.fold_left (fun f port -> Formula.Or (f, Formula.Eq (Val.to_expr p2, Val.to_expr port))) Formula.False ps in
-        List.concat (List.map (
-              fun (pp', f) -> 
-                (* 2: Adding (p2, p1) to pp *)
-                (*Printf.printf "\n Going to add (%s, %s) to pp" (Val.str p') (Val.str p);*)
-                let pp_paired_2 = SymbMap.add pp' p2 p1 Val.to_literal Val.to_expr in
-                (* f and f' and {p1, p2} \in dom(pc) and p1 != p2 *)
-                List.map (fun (pp'', f') -> pp'', Formula.And (Formula.And (f, f'), Formula.And (f_port_1_curr_conf, f_port_2_curr_conf))) pp_paired_2
-            ) pp_paired_1)
+    if (List.mem p1 plist && List.mem p2 plist) then (
+      Hashtbl.add pp p1 p2;
+      Hashtbl.add pp p2 p1;
+      pp
+    ) else pp
+        
 
   (* Returns the port paired with the given port *)
-  let get_paired (xvar: string) (port: port_t) (conf: event_conf_t) (pp: pp_map_t) : (event_conf_t * Formula.t) list =
+  let get_paired (xvar: string) (port: port_t) (conf: event_conf_t) (pp: pp_map_t) : event_conf_t =
     let (cid, conf) = conf in 
     (*Printf.printf "\nGetPaired: searching for paired port of %s" (Val.str port);*)
-    let ps_fs = SymbMap.find pp port Val.to_literal Val.to_expr in
-    if ((List.length ps_fs) = 0) then
-    (
+    match Hashtbl.find_opt pp port with
+    | None ->
       (* return null if no paired port is found *)
-      [(cid, EventSemantics.set_var xvar (Val.from_literal Null) conf), Formula.True]
-    ) else (
-      List.map (fun (port', f) -> 
-        let f_ps_diff = Formula.Not (Formula.Eq (Val.to_expr port, Val.to_expr port')) in
-        (cid, EventSemantics.set_var xvar port' conf), Formula.And(f, f_ps_diff)) ps_fs 
-    )
+      cid, EventSemantics.set_var xvar (Val.from_literal Null) conf
+    | Some port' -> 
+      cid, EventSemantics.set_var xvar (Val.from_literal port') conf
 
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
-  let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * (pc_map_t * Formula.t) list =
-    Printf.printf "\nProcessing message sent to port %s\n" (Val.str port);
+  let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * pc_map_t =
+    Printf.printf "\nProcessing message sent to port %s\n" (Literal.str port);
     let (vs, plist) = msg in
     (*Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));*)
-    let cids_fs = SymbMap.find pc port Val.to_literal Val.to_expr in
+    let cid = Hashtbl.find pc port in
     (*Printf.printf "\nFound %d confs for port %s" (List.length cids_fs) (Val.str port);*)
-    let cq_l_l, pcs_l_l = (List.split (List.map (
-        fun (cid, f) ->
-          (*Printf.printf "\nGoing to process message in configuration %d\n" cid; *)
-          let redirects = redirect plist cid pc in
-          let pcs_fs' = List.map  (fun (pc', f') -> pc', Formula.And (f, f')) redirects in
-          (match get_conf cid cq with
-            | None -> raise (Failure ("Invalid Configuration Identifier."))
-            | Some (cid, econf) -> 
-            let event = Val.from_literal (String MPConstants.mevent) in
-            let econfs' = EventSemantics.fire_event event (vs @ [Val.from_list plist]) econf in
-            let cq_list = List.map (fun econf' -> set_conf (cid, econf') cq) econfs' in
-            cq_list, pcs_fs')  
-    ) cids_fs)) in
-    List.concat cq_l_l, List.concat pcs_l_l
+    let pc' = redirect plist cid pc in
+    (match get_conf cid cq with
+    | None -> raise (Failure ("Invalid Configuration Identifier."))
+    | Some (cid, econf) -> 
+      let event = Val.from_literal (String MPConstants.mevent) in
+      let econfs' = EventSemantics.fire_event event (vs @ [Val.from_list (List.map (fun p -> (Val.from_literal p)) plist)]) econf in
+      let cq_list = List.map (fun econf' -> set_conf (cid, econf') cq) econfs' in
+            cq_list, pc') 
 
   let rec process_mp_label (label: mp_label_t) (cids: cid_t list) (cid: cid_t) (conf: EventSemantics.state_t) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : reduced_mp_conf_t list = 
       match label with
       | Send (msg, plist, port_orig, port_dest) -> 
         L.log L.Normal (lazy (Printf.sprintf "Found send. Port orig:%s, Port dest:%s" (Val.str port_orig) (Val.str port_dest)));
         (*Printf.printf "\nProcessing send label";*)
-        let mqs_fs = send cid msg plist port_orig port_dest mq pc pp in
-        List.map (fun (mq, f) -> (cid, conf), mq, pc, pp, None, f) mqs_fs
+        let plist = List.map (fun p -> compute_num_from_val p) plist in
+        let mq' = send cid msg plist (compute_num_from_val port_orig) (compute_num_from_val port_dest) mq pc pp in
+        [(cid, conf), mq', pc, pp, None, None]
       | Create (xvar, url, setup_fid, args) -> 
         (*Printf.printf "\nMP-Semantics: Processing create label, setup_fid: %s" (setup_fid);*)
         let conf'', new_conf = new_execution xvar url setup_fid args  cids (cid, conf) in
-        [conf'', mq, pc, pp, Some (AddConf new_conf), Formula.True] 
+        [conf'', mq, pc, pp, Some (AddConf new_conf), None] 
       | Terminate (xvar, cid') -> 
         Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');
-        let cid' = compute_cid_from_val cid' in
+        let cid' = compute_int_from_val cid' in
         Printf.printf "\nComputed cid: %d\n" cid'; 
-        let plist = SymbMap.filter pc cid' Val.from_literal in
-        let pc_pp_mq_l = terminate plist mq pc pp in
-        Printf.printf "Terminate returned %d states" (List.length pc_pp_mq_l);
-        List.map (fun (mq', pc', pp', f) -> (cid, conf), mq', pc', pp', Some (RemConf (cid')), f) pc_pp_mq_l
+        let plist = Hashtbl.fold (fun port' cid' acc -> if (cid = cid') then acc @ [port'] else acc) pc [] in
+        let mq', pc', pp' = terminate plist mq pc pp in
+        [(cid, conf), mq', pc', pp', Some (RemConf (cid')), None]
       | NewPort (xvar) -> 
-        let conf'', pc_fs, label = new_port xvar (cid, conf) pc in
-        List.map (fun (pc', f) -> conf'', mq, pc', pp, label, f) pc_fs
+        let conf'', pc', label = new_port xvar (cid, conf) pc in
+        [conf'', mq, pc', pp, label, None]
       | PairPorts (p1, p2) -> 
-        let pp_fs = pair_ports p1 p2 (SymbMap.get_keys pc Val.from_literal) pp in
-        List.map (fun (pp', f) -> (cid, conf), mq, pc, pp', None, f) pp_fs
+        let p1 = compute_num_from_val p1 in
+        let p2 = compute_num_from_val p2 in
+        let pp' = pair_ports p1 p2 (Hashtbl.fold (fun p' _ acc -> acc @ [p']) pc []) pp in
+        [(cid, conf), mq, pc, pp', None, None]
       | UnpairPort (port) -> 
-        let pp_fs = unpair_port port pp in
-        List.map (fun (pp', f) -> (cid, conf), mq, pc, pp', None, f) pp_fs
-      | GetPaired (xvar, port) -> List.map (fun (conf'', f) -> conf'', mq, pc, pp, None, f) (get_paired xvar port (cid, conf) pp)
+        let port = compute_num_from_val port in
+        let pp' = unpair_port port pp in
+        [(cid, conf), mq, pc, pp', None, None]
+      | GetPaired (xvar, port) -> 
+        let port = compute_num_from_val port in
+        let conf'' = get_paired xvar port (cid, conf) pp in 
+        [conf'', mq, pc, pp, None, None]
       | BeginAtomic -> L.log L.Normal (lazy "\nFound beginAtomic\n");
-        [(cid, conf), mq, pc, pp, Some (HoldConf cid), Formula.True] 
+        [(cid, conf), mq, pc, pp, Some (HoldConf cid), None] 
       | EndAtomic -> L.log L.Normal (lazy "\nFound endAtomic\n");
-        [(cid, conf), mq, pc, pp, Some (FreeConf cid), Formula.True]
-      | Assume (f) -> [(cid, conf), mq, pc, pp, None, f]
+        [(cid, conf), mq, pc, pp, Some (FreeConf cid), None]
+      | Assume (f) -> [(cid, conf), mq, pc, pp, None, Some f]
       | AssumeType (x, t) -> 
         let f = Formula.Eq (UnOp (TypeOf, (LVar x)), Lit (Type t)) in
-        [(cid, conf), mq, pc, pp, None, f]
-      | SpecVar x -> [(cid, conf), mq, pc, pp, Some (AddSpecVar x), Formula.True]
+        [(cid, conf), mq, pc, pp, None, Some f]
+      | SpecVar x -> [(cid, conf), mq, pc, pp, Some (AddSpecVar x), None]
       | GroupLabel (ls) ->
         (match ls with
-        | [] -> [(cid, conf), mq, pc, pp, None, Formula.True]
+        | [] -> [(cid, conf), mq, pc, pp, None, None]
         | labels -> List.concat (List.map (fun l -> process_mp_label l cids cid conf mq pc pp) labels))
 
   (* Runs a step of the current e-configuration *)
@@ -336,13 +307,13 @@ module M
     let (cid, conf) = econf in
     L.log L.Normal (lazy (Printf.sprintf "\nCurrent conf: %d\n" cid));
     match EventSemantics.make_step conf (Some (MPInterceptor.intercept)) with
-    | [], Some fconf -> [], Some ((cid, fconf), mq, pc, pp, None, Formula.True) 
+    | [], Some fconf -> [], Some ((cid, fconf), mq, pc, pp, None, None) 
     | confs, _ ->
       let res = List.concat (List.map (fun (conf', (label : event_label_t option)) ->
         match label with
         | Some MLabel label -> 
            process_mp_label label cids cid conf' mq pc pp 
-        | _ -> [(cid, conf'), mq, pc, pp, None, Formula.True]
+        | _ -> [(cid, conf'), mq, pc, pp, None, None]
       ) confs) in
       L.log L.Normal (lazy (Printf.sprintf "\nResult of running current mp-conf: %d resulting mp-confs\n" (List.length res)));
       res, None
@@ -352,12 +323,14 @@ module M
       let (data, transfer) = msg in
       Printf.sprintf "Data: %s" (String.concat ", " (List.map Val.str data))
   ) mq)
+
+  let map_str map (v_to_string : 'b -> string) = ("" ^ (Hashtbl.fold (fun k v acc -> acc ^ Printf.sprintf "\n\t Key: %s, \n\t Val: %s " (Literal.str k) (v_to_string v)) map " "))
       
   let pc_str pc = 
-    Printf.sprintf "\nPort-Confs map: %s" (SymbMap.str pc Val.str string_of_int)
+    Printf.sprintf "\nPort-Confs map: %s" (map_str pc string_of_int)
   
   let pp_str pp =
-      Printf.sprintf "\nPort-Port map: %s\n" (SymbMap.str pp Val.str Val.str)
+      Printf.sprintf "\nPort-Port map: %s\n" (map_str pp Literal.str)
 
   let print_mpconf (mpconf: mp_conf_t) : unit =
     let (econfs, mq, pc, pp, lead_conf) = mpconf in
@@ -393,10 +366,13 @@ module M
       | cq_pre, Some c, cq_post -> 
         let cids, _ = List.split cq in
         (match run_conf cids c mq pc pp with
-        | [], Some fconf -> [], Some (update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf fconf)
+        | [], Some fconf -> [], update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf fconf
         | new_reduced_confs, _ ->
-        let res = List.map (fun new_reduced_conf -> update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf) new_reduced_confs, None in
-        res)
+          List.fold_left (fun confs_so_far new_reduced_conf -> 
+           match update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf with
+           | Some new_full_conf -> confs_so_far @ [new_full_conf]
+           | None -> confs_so_far
+           ) [] new_reduced_confs, None)
       | _, None, _ -> [], None) (*raise (Failure "Configuration not found")*) 
     | None ->
       (* Scheduler decides if a configuration or a message is scheduled *)
@@ -407,13 +383,17 @@ module M
       | Some (Conf (cq_pre, c, cq_post)) -> 
         let cids, _ = List.split cq in
         (match run_conf cids c mq pc pp with
-        | [], Some fconf -> [], Some (update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf fconf)
-        | new_reduced_confs, _ -> List.map (fun new_reduced_conf -> update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf) new_reduced_confs, None)
+        | [], Some fconf -> [], update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf fconf
+        | new_reduced_confs, _ -> List.fold_left (fun confs_so_far new_reduced_conf -> 
+           match update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf with
+           | Some new_full_conf -> confs_so_far @ [new_full_conf]
+           | None -> confs_so_far
+           ) [] new_reduced_confs, None)
       (* Message is scheduled from message queue *)
       | Some (Message (mq, mq')) -> 
         let (msg, port) = mq in
-        let cqs, pcs_fs = process_message msg port cq pc in
-        List.concat (List.map (fun (pc, _) -> List.map (fun cq -> cq, mq', pc, pp, lead_conf) cqs) pcs_fs), None)
+        let cqs, pc' = process_message msg port cq pc in
+        List.map (fun cq -> cq, mq', pc', pp, lead_conf) cqs, None)
       
 
   let rec make_steps (mpconfs: mp_conf_t list) : mp_conf_t list = 
@@ -431,7 +411,7 @@ module M
   let evaluate_prog (prog: UP.prog) : result_t list =
     let initial_econf = EventSemantics.create_initial_state prog in
     let first_cid = generate_new_conf_id [] in
-    let initial_mpconf = [first_cid, initial_econf], [], SymbMap.init (), SymbMap.init (), None in
+    let initial_mpconf = [first_cid, initial_econf], [], Hashtbl.create CCommon.medium_tbl_size, Hashtbl.create CCommon.medium_tbl_size, None in
     let final_confs = make_steps [initial_mpconf] in
     Printf.printf "\nMP-Semantics: Finished execution with %d MP-configurations.\n" (List.length final_confs);
     List.map (fun (cq, mq, pc, pp, _) -> 

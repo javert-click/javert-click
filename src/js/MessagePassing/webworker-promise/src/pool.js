@@ -133,6 +133,7 @@ WorkerPool.prototype._waitAndRemoveWorkers = function(workers) {
 * @id WorkerPoolRemoveWorker
 */
 WorkerPool.prototype._removeWorker = function(worker) {
+  //console.log('Removing worker');
   this._workers = this._workers.filter(w => { return w._id !== worker._id });
   //TODOMP: give priority to message processing than to setTimeout!
   //worker.terminate();
