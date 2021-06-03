@@ -10,6 +10,7 @@ declare workersexamples="$dir/workers"
 declare promisesdir="js/Promises"
 
 npx webpack --config ../webpack.config.js --env entry=$testfile --env out=$testfile
+cp $testfile .
 
 # PostMessage and WebWorkers reference implementations
 #echo "compiling DOM, postMessage and WebWorkers files"

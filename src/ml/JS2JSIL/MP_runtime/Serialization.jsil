@@ -195,6 +195,7 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, typest
 
 proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory, datacloneerr){
                   (* 2. If memory[value] exists, then return memory[value].*)
+                  (*debugger;*)
                   cache := "JSILMap_find" (memory, value);
                   goto [cache = null] nullcache nonnullcache;
     nonnullcache: res := new ();
@@ -216,14 +217,14 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   ret := res;
                   return;
     notbasic:     (* 5. (NOT SUPPORTED) If Type(value) is Symbol, then throw a "DataCloneError" DOMException.*)
-                  goto [(tv = Obj)] obj elab;
+                  goto [(tv = Obj)] tvobj elab;
                   (* Steps 6 - 11 are implemented in SerializeObjectWithPrimVal *)
-    obj:          serialized := "SerializeObjectWithPrimVal" (xsc, vthis, value);
+    tvobj:        serialized := "SerializeObjectWithPrimVal" (xsc, vthis, value);
                   goto [serialized = undefined] nonerrorobj updatemem;
     nonerrorobj:  (* 18. Otherwise, if value is an Array exotic object, then:*)
                   m := metadata(value);
 			      clazz := [m, "@class"];
-                  goto [clazz = "Array"] arrobj updatemem;
+                  goto [clazz = "Array"] arrobj nodataclone;
     arrobj:       (* 18.1. Let valueLenDescriptor be ? OrdinaryGetOwnProperty(value, "length"). *)
                   valueLenDescriptor := "getOwnProperty" (value, "length");
                   (* 18.2. Let valueLen be valueLenDescriptor.[[Value]]. *)
@@ -247,7 +248,8 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* TODOMP *)
                   (* 23. (NOT SUPPORTED) Otherwise, if value is an exotic object ... *)
                   (* 24. Otherwise: *)
-                  (* 24.1 Set serialized to { [[Type]]: "Object", [[Properties]]: a new empty List }. *)
+                  goto [clazz = "Object"] obj updatemem;
+    obj:          (* 24.1 Set serialized to { [[Type]]: "Object", [[Properties]]: a new empty List }. *)
                   (* 24.2 Set deep to true. *)
                   deep := true;
                   goto updatemem;
@@ -265,6 +267,7 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   memory := objmem;
                   goto succ;     
     succ:         (* 27. Return serialized. *)
+                  (*debugger;*)
                   res := new ();
                   [res, "serialized"] := serialized;
                   [res, "memory"] := memory;

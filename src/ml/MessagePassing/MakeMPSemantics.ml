@@ -169,11 +169,11 @@ module M
 
   (* Updates mp conf based on new message msg sent to the specified port *)
   let send (cid: cid_t) (msg: vt list) (plist: port_t list) (port_1: port_t) (port_2: port_t) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : mq_t =
-    Printf.printf "\nFound msg: %s\n" (String.concat "," (List.map Val.str msg));
+    (*Printf.printf "\nFound msg: %s\n" (String.concat "," (List.map Val.str msg));*)
     Printf.printf "\nDest port: %s\n" (Literal.str port_2);
     (*let port_2 = Hashtbl.find pp port_1 in*)
     (* We need to guarantee that the sender belongs to the current configuration *)
-    let port_belongs_to_curr_conf = Hashtbl.fold (fun port' cid' acc -> if (cid = cid' && port_1 = port') then acc || true else acc) pc false in 
+    let port_belongs_to_curr_conf = Hashtbl.fold (fun port' cid' acc -> if (cid = cid' && port_1 = port') then true else acc) pc false in 
     if (port_belongs_to_curr_conf) then enqueue msg plist port_2 mq else mq
 
   (* Creates new configuration and also sets return variable to new configuration identifier *)

@@ -8,6 +8,9 @@ const RESULT_SUCCESS = 1;
 
 const DEFAULT_HANDLER = 'main';
 
+/*
+* @id RegisterPromiseIsPromise
+*/
 const isPromise = o => typeof o === 'object' && typeof o.then === 'function' && typeof o.catch === 'function';
 
 /*
@@ -53,6 +56,9 @@ function RegisterPromise(fn) {
     const payload = xargs[1]; 
     const handlerName = xargs[2];
 
+    /*
+    * @id WorkerRegisterOnSucess
+    */
     const onSuccess = (result) => {
       if(result && result instanceof TransferableResponse) {
         sendResult(messageId, RESULT_SUCCESS, result.payload, result.transferable);
@@ -62,6 +68,9 @@ function RegisterPromise(fn) {
       }
     };
 
+    /*
+    * @id WorkerRegisterOnError
+    */
     const onError = (e) => {
       sendResult(messageId, RESULT_ERROR, {
         message: e.message,
@@ -71,6 +80,7 @@ function RegisterPromise(fn) {
 
     try {
       const result = runFn(messageId, payload, handlerName);
+      console.log('RESULT: '+result);
       if(isPromise(result)) {
         result.then(onSuccess).catch(onError);
       } else {
@@ -93,6 +103,9 @@ function RegisterPromise(fn) {
     //return handler(payload, sendEvent.bind(null, messageId))
   };
 
+  /*
+  * @id WorkerRegisterSendResult
+  */
   const sendResult = (messageId, success, payload, transferable) => {
     transferable = transferable || [];
     sendPostMessage([MESSAGE_RESULT, messageId, success, payload], transferable);
@@ -113,8 +126,12 @@ function RegisterPromise(fn) {
   }};
 
   //TODOMP: addEventListener was being used here, but according to standard seems correct to use onmessage!
+  /*
+  * @id WorkerRegisterOnMessage
+  */
   self.onmessage = (e) => {
     var data = e.data;
+    console.log('self on message data: '+e.data+', isArray: '+Array.isArray(data));
     if(Array.isArray(data)) {
       run(data);
     } else if(data && data.eventName) {
