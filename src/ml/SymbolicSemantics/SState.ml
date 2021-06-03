@@ -442,20 +442,21 @@ module M = struct
     | None -> raise (Failure "delete_obj. Unknown Location")
 
 
-  let assume (state : t) (v : Expr.t) : t list =
+  let assume (state : t) (v : Expr.t) : t list * Formula.t option =
     (* let t = time() in *)
     L.log L.Verboser (lazy (Printf.sprintf "Assuming expression: %s" (Expr.str v)));
     let _, _, pfs, gamma, _ = state in
     let result =
-      if (v = Lit (Bool true))  then [ state ] else
-      if (v = Lit (Bool false)) then [ ] else (
+      if (v = Lit (Bool true))  then [ state ], None else
+      if (v = Lit (Bool false)) then [ ], None else (
         (* let t = time() in *)
-        let v_asrt = match Formula.lift_logic_expr v with
-          | Some (v_asrt, _) -> Simplifications.reduce_formula ~gamma ~pfs v_asrt
-          | _  -> False in
-        if (v_asrt = False) then [ ] else (
+        let v_asrt, new_pfs = match Formula.lift_logic_expr v with
+          | Some (v_asrt, _) -> Simplifications.reduce_formula ~gamma ~pfs v_asrt, None
+          | _  -> False, None in
+        if (v_asrt = False) then [ ], None else (
+          L.log L.Normal (lazy (Printf.sprintf "Extending pfs with %s" (Formula.str v_asrt)));
           PFS.extend pfs v_asrt;
-          [ state ]
+          [ state ],  Some v_asrt
         )
       ) in
     (* update_statistics "Assume" (time() -. t); *)

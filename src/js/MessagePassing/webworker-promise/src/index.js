@@ -48,7 +48,7 @@ WebworkerPromise.prototype.jobsLength = function() {
 * @id WebworkerPromiseExec
 */
 WebworkerPromise.prototype.exec = function(operationName, data, transferable, onEvent) {
-  data = data || null;
+  data = (data !== undefined) ? data : null;
   transferable = transferable || [];
   return new Promise.Promise((res, rej) => {
     const messageId = this._messageId++;
@@ -61,7 +61,7 @@ WebworkerPromise.prototype.exec = function(operationName, data, transferable, on
 * @id WebworkerPromisePostMessage
 */
 WebworkerPromise.prototype.postMessage = function(data, transferable, onEvent) {
-  data = data || null;
+  data = (data !== undefined) ? data : null;
   transferable = transferable || [];
   var vthis = this;
   return new Promise.Promise((res, rej) => {

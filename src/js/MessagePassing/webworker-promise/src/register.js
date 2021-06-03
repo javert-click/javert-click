@@ -131,7 +131,7 @@ function RegisterPromise(fn) {
   */
   self.onmessage = (e) => {
     var data = e.data;
-    console.log('self on message data: '+e.data+', isArray: '+Array.isArray(data));
+    //console.log('self on message data: '+e.data+', isArray: '+Array.isArray(data));
     if(Array.isArray(data)) {
       run(data);
     } else if(data && data.eventName) {

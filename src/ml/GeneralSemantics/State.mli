@@ -82,7 +82,7 @@ module type M = sig
       val delete_object : t -> Expr.t -> t 
 
       (** Assume expression *)
-      val assume : t -> vt -> t list
+      val assume : t -> vt -> t list * Formula.t option
 
       (** Assume assertion *)
       val assume_a : t -> Formula.t list -> t option 

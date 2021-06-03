@@ -177,10 +177,10 @@ let delete_object (state : t) (e_loc : Expr.t) : t =
      (heap, store, locs') 
 
 
-let assume (state : t) (l : Literal.t) : t list =  
+let assume (state : t) (l : Literal.t) : t list * Formula.t option =  
   match l with 
-    | Bool true  -> [ state ]
-    | Bool false -> [ ]
+    | Bool true  -> [ state ], None
+    | Bool false -> [ ], None
     | _          -> raise (Failure "assume. illegal argument to assume")
 
 let assume_a (state : t) (ps : Formula.t list) : t option = 

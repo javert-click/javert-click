@@ -288,8 +288,10 @@ let assume_formula (formulas: Formula.t list) (state: state_t) : state_t option 
           let state' = State.copy state in
           let f_true = Formula.Eq (Val.to_expr ve, Expr.Lit (Bool true)) in
           let f_false = Formula.Eq (Val.to_expr ve, Expr.Lit (Bool false)) in
-          let state  = List.map (fun s -> s, [MPInterceptor.Assume (f_true)]) (State.assume state ve) in
-          let state' = List.map (fun s -> s, [MPInterceptor.Assume (f_false)]) (State.assume state' nve) in
+          let vestates, _ = State.assume state ve in
+          let nvestates, _ = State.assume state' nve in
+          let state  = List.map (fun s -> s, [MPInterceptor.Assume (f_true)]) vestates in
+          let state' = List.map (fun s -> s, [MPInterceptor.Assume (f_false)]) nvestates in
           let states = state @ state' in
             branch := Val.branch_friendly ve && List.length states > 1;
             (*if !branch then print_to_all (Printf.sprintf "BranchTrue: %d : %s" (Unix.getpid()) (Val.str ve));*)
@@ -583,22 +585,32 @@ let evaluate_cmd
         | _ -> State.sat_check state vt, State.sat_check state vf) in
       let sp_t, sp_f = (match can_put_t, can_put_f with
         | false, false -> [], []
-        | true,  false -> List.map (fun x -> x, j) (State.assume state vt), []
-        | false, true -> [], List.map (fun x -> x, k) (State.assume state vf)
+        | true,  false -> 
+          let states, new_pfs = State.assume state vt in
+          List.map (fun x -> x, j, new_pfs) states, []
+        | false, true -> 
+          let states, new_pfs = State.assume state vf in
+          [], List.map (fun x -> x, k, new_pfs) states
         | true,  true ->
           let state' = State.copy state in
-          List.map (fun x -> x, j) (State.assume state vt), List.map (fun x -> x, k) (State.assume state' vf)
+          let states, new_pfs = State.assume state vt in
+          let states', new_pfs' = State.assume state' vf in
+          List.map (fun x -> x, j, new_pfs) states, List.map (fun x -> x, k, new_pfs') states'
       ) in
       let sp = sp_t @ sp_f in
       if List.length sp = 2 then (
-        List.iter (fun (st, _) -> let _ = State.simplify st in ()) sp
+        List.iter (fun (st, _, _) -> let _ = State.simplify st in ()) sp
       );
 
       let b_counter = if (List.length sp > 1) then (
           (* print_to_all (Printf.sprintf "GBranching: %d: %s" (b_counter + 1) (Val.str vt)); *)
           b_counter + 1
       ) else b_counter in
-      let result = List.mapi (fun j (state, next) -> ConfCont (state, (if j = 0 then cs else CallStack.copy cs), i, next, b_counter, None), None) sp in
+      let result = List.mapi (fun j (state, next, new_pfs) -> 
+        let label = (match new_pfs with
+        | None -> None
+        | Some new_pfs -> Some (EventInterceptor.MLabel (MPInterceptor.Assume (new_pfs)))) in
+        ConfCont (state, (if j = 0 then cs else CallStack.copy cs), i, next, b_counter, None), label) sp in
       if ((List.length result) = 2) then (L.log L.Verboser (lazy (Printf.sprintf "BRANCHING ON CONDITIONAL GOTO.")));
         branch := (List.length result > 1) && (Val.branch_friendly vt);
         result
@@ -903,7 +915,7 @@ let conf_to_result (confs: cconf_t ) : result_t =
   | _ -> raise (Failure "Invalid Final Configuration")
 
 let assume (conf: cconf_t) (formulas: Formula.t list) : cconf_t option =
-  let state = get_state conf in
+  let state = State.copy (get_state conf) in
   match assume_formula formulas state with
   | Some new_state ->
       (match conf with

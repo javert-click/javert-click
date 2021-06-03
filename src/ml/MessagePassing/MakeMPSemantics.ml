@@ -105,13 +105,11 @@ module M
 
   (* Adds a constraint f to the path condition of each configuration in cq *)
   let assume (cq: cq_t) (f: Formula.t) : cq_t =
-    L.log L.Normal (lazy (Printf.sprintf "\nASSUME: Going to assume formula %s" (Formula.str f)));
-    L.log L.Normal (lazy (Printf.sprintf "\nASSUME: cq length: %d" (List.length cq)));
     let cq' = List.fold_left (fun acc (cid, conf) -> 
+      (*L.log L.Normal (lazy (Printf.sprintf "\nASSUME: conf: %s" (EventSemantics.state_str conf)));*)
       match EventSemantics.assume conf f with
       | Some conf' -> acc @ [(cid, conf')] 
       | None -> acc ) [] cq in
-    L.log L.Normal (lazy (Printf.sprintf "\nASSUME: new cq length: %d" (List.length cq')));
     cq'
 
   (* Updates the configuration queue based on the result of running a single configuration *)
@@ -129,15 +127,14 @@ module M
       | _ -> cq', lead_conf)
     | Some AddSpecVar x -> 
       (List.map (fun (cid, conf) -> 
-        Printf.printf "\nAdding specvar %s to conf %d\n" (String.concat "," (List.map (fun v -> v) x)) cid;
+        (*Printf.printf "\nAdding specvar %s to conf %d\n" (String.concat "," (List.map (fun v -> v) x)) cid;*)
         cid, EventSemantics.add_spec_var x conf) cq'), lead_conf
     | None -> cq', lead_conf) in
-    (*L.log L.Normal (lazy (Printf.sprintf "\nBefore assuming that %s: %d confs\n" (Formula.str f) (List.length cq'')));*)
     let new_cq = 
     match f with
     | None -> cq''
-    | Some f -> assume cq'' f in 
-    (*L.log L.Normal (lazy (Printf.sprintf "\nAfter assuming that %s: %d confs\n" (Formula.str f) (List.length new_cq)));*)
+    | Some f -> 
+      assume cq'' f in 
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
     (*List.iter (fun (cid, econf) -> L.log L.Normal (lazy (Printf.sprintf "\nCID: %d, CONF: \n%s\n" cid (EventSemantics.state_str econf)))) new_cq;*)
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
@@ -170,7 +167,7 @@ module M
   (* Updates mp conf based on new message msg sent to the specified port *)
   let send (cid: cid_t) (msg: vt list) (plist: port_t list) (port_1: port_t) (port_2: port_t) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : mq_t =
     (*Printf.printf "\nFound msg: %s\n" (String.concat "," (List.map Val.str msg));*)
-    Printf.printf "\nDest port: %s\n" (Literal.str port_2);
+    (*Printf.printf "\nDest port: %s\n" (Literal.str port_2);*)
     (*let port_2 = Hashtbl.find pp port_1 in*)
     (* We need to guarantee that the sender belongs to the current configuration *)
     let port_belongs_to_curr_conf = Hashtbl.fold (fun port' cid' acc -> if (cid = cid' && port_1 = port') then true else acc) pc false in 
@@ -311,11 +308,9 @@ module M
     | confs, _ ->
       let res = List.concat (List.map (fun (conf', (label : event_label_t option)) ->
         match label with
-        | Some MLabel label -> 
-           process_mp_label label cids cid conf' mq pc pp 
+        | Some MLabel label -> process_mp_label label cids cid conf' mq pc pp 
         | _ -> [(cid, conf'), mq, pc, pp, None, None]
       ) confs) in
-      L.log L.Normal (lazy (Printf.sprintf "\nResult of running current mp-conf: %d resulting mp-confs\n" (List.length res)));
       res, None
 
   let mq_str mq = "Messages: " ^ String.concat ", " (List.map (
@@ -330,7 +325,7 @@ module M
     Printf.sprintf "\nPort-Confs map: %s" (map_str pc string_of_int)
   
   let pp_str pp =
-      Printf.sprintf "\nPort-Port map: %s\n" (map_str pp Literal.str)
+    Printf.sprintf "\nPort-Port map: %s\n" (map_str pp Literal.str)
 
   let print_mpconf (mpconf: mp_conf_t) : unit =
     let (econfs, mq, pc, pp, lead_conf) = mpconf in

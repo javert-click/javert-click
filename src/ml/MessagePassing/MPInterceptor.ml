@@ -13,6 +13,24 @@ type('v) t =
   | SpecVar of string list
   | GroupLabel of ('v) t list
 
+let rec str (label: ('v) t) (v_to_str: 'v -> string) : string =
+
+  let v_list_to_str vlist = "(" ^ String.concat "," (List.map (fun v -> v_to_str v) vlist) in
+
+  match label with 
+  | Send (msg, plist, porig, pdest) -> Printf.sprintf "Send<%s, %s, %s, %s>" (v_list_to_str msg) (v_list_to_str plist) (v_to_str porig) (v_to_str pdest)
+  | Create (xvar, url, fid, args) -> Printf.sprintf "%s = Create<%s, %s, %s>" xvar url fid (v_list_to_str args) 
+  | Terminate (xvar, cid) -> Printf.sprintf "%s = Terminate<%s>" xvar (v_to_str cid)
+  | NewPort (xvar) ->  Printf.sprintf "%s = NewPort<>" xvar
+  | PairPorts (p1, p2) -> Printf.sprintf "PairPorts<%s, %s>" (v_to_str p1) (v_to_str p2)
+  | UnpairPort (p) -> Printf.sprintf "UnpairPorts<%s>" (v_to_str p)
+  | GetPaired (xvar, p) -> Printf.sprintf "%s = GetPaired<%s>" xvar (v_to_str p)
+  | BeginAtomic -> Printf.sprintf "BeginAtomic<>"
+  | EndAtomic -> Printf.sprintf "EndAtomic<>"
+  | Assume (f) -> Printf.sprintf "Assume<%s>" (Formula.str f)
+  | AssumeType (xvar, typ) -> Printf.sprintf "%s = AssumeType<%s>" xvar (Type.str typ)
+  | SpecVar (vars) -> Printf.sprintf "SpecVar<%s>" (String.concat "," vars)
+  | GroupLabel (labels) -> String.concat ", " (List.map (fun label' -> str label' v_to_str) labels)
 
 (* Generates the appropriate M-Label given the command. Both the procedure name and number of arguments need to match. Only intercepts commands not intercepted by ES *)
 let intercept 
