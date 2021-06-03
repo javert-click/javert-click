@@ -113,7 +113,7 @@ module M
     cq'
 
   (* Updates the configuration queue based on the result of running a single configuration *)
-  let update_full_conf_from_reduced_conf (cq_pre: cq_t) (cq_pos: cq_t) (mq: mq_t) (pc: pc_map_t) (pp:pp_map_t) (lead_conf: cid_t option) (new_reduced_conf: reduced_mp_conf_t) : mp_conf_t option =
+  let update_full_conf_from_reduced_conf (cq_pre: cq_t) (cq_pos: cq_t) (mq: mq_t) (pc: pc_map_t) (pp:pp_map_t) (lead_conf: cid_t option) (new_reduced_conf: reduced_mp_conf_t) : mp_conf_t =
     let (econf, mq', pc', pp', o_action, f) = new_reduced_conf in
     let cq' = cq_pre @ [econf] @ cq_pos in
     let cq'', lead_conf' =
@@ -138,7 +138,7 @@ module M
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
     (*List.iter (fun (cid, econf) -> L.log L.Normal (lazy (Printf.sprintf "\nCID: %d, CONF: \n%s\n" cid (EventSemantics.state_str econf)))) new_cq;*)
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
-    Some (new_cq, mq', pc', pp', lead_conf')
+    new_cq, mq', pc', pp', lead_conf'
 
 
   let compute_int_from_val (v: vt) : int =
@@ -359,15 +359,12 @@ module M
       L.log L.Normal (lazy (Printf.sprintf "\nRunning lead conf %d\n" cid));
       (match break_cq_on_cid cq cid [] with
       | cq_pre, Some c, cq_post -> 
+        let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
         let cids, _ = List.split cq in
         (match run_conf cids c mq pc pp with
-        | [], Some fconf -> [], update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf fconf
+        | [], Some fconf -> [], Some (update fconf)
         | new_reduced_confs, _ ->
-          List.fold_left (fun confs_so_far new_reduced_conf -> 
-           match update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf with
-           | Some new_full_conf -> confs_so_far @ [new_full_conf]
-           | None -> confs_so_far
-           ) [] new_reduced_confs, None)
+          List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs, None)
       | _, None, _ -> [], None) (*raise (Failure "Configuration not found")*) 
     | None ->
       (* Scheduler decides if a configuration or a message is scheduled *)
@@ -376,14 +373,11 @@ module M
       | None -> [], Some conf
       (* Configuration is scheduled *)
       | Some (Conf (cq_pre, c, cq_post)) -> 
+        let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
         let cids, _ = List.split cq in
         (match run_conf cids c mq pc pp with
-        | [], Some fconf -> [], update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf fconf
-        | new_reduced_confs, _ -> List.fold_left (fun confs_so_far new_reduced_conf -> 
-           match update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf new_reduced_conf with
-           | Some new_full_conf -> confs_so_far @ [new_full_conf]
-           | None -> confs_so_far
-           ) [] new_reduced_confs, None)
+        | [], Some fconf -> [], Some (update fconf)
+        | new_reduced_confs, _ -> List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs, None)
       (* Message is scheduled from message queue *)
       | Some (Message (mq, mq')) -> 
         let (msg, port) = mq in
