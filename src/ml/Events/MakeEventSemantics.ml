@@ -1,6 +1,7 @@
 open CCommon
 open SCommon
 open Literal 
+open Events
 
 module L = Logging
 
@@ -12,7 +13,7 @@ module M
 
   type vt = Val.t 
 
-  type event_t = vt
+  type event_t = (vt) Events.t
 
   type err_t = Error.t 
 
@@ -26,9 +27,7 @@ module M
 
   type event_label_t = (Interpreter.cconf_t, Interpreter.conf_info_t, vt, message_label_t) EventInterceptor.t
 
-  type event_queue_t = (string * event_t * vt list) list (** xvar, event, args **)
-
-  type event_handlers_t = (vt, (fid_t * vt list) list) SymbMap.t 
+  type event_handlers_t = (event_t, (fid_t * vt list) list) SymbMap.t 
 
   type hq_element = | Handler  of string * fid_t * event_t * (vt list) (** xvar, funname, event, arguments **) 
                     | Conf     of Interpreter.econf_t
@@ -52,7 +51,7 @@ module M
           Option.map 
             (fun conf' -> ((conf', prog), ehs', hq))
             (Interpreter.assume conf [f]))
-        (SymbMap.replace ehs event [(fid,args)] Val.to_literal Val.to_expr
+        (SymbMap.replace ehs event [(fid,args)] (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr)
           (fun handlers_old handlers_new -> 
             let fids, _ = List.split handlers_old in
             let handlers_new = List.filter (fun (fid, _) -> not (List.mem fid fids)) handlers_new in
@@ -68,7 +67,7 @@ module M
           Option.map 
             (fun conf' -> ((conf', prog), ehs', hq))
             (Interpreter.assume conf [f]))
-        (SymbMap.replace ehs event [(fid, [])] Val.to_literal Val.to_expr
+        (SymbMap.replace ehs event [(fid, [])] (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr)
           (fun handlers handlers_rem -> 
               let fids, _ = List.split handlers_rem in
               List.filter (fun (fid, _) -> not (List.mem fid fids)) handlers)) in 
@@ -135,21 +134,21 @@ module M
     match x with
     | Conf (c, _) -> Interpreter.string_of_cconf c
     | CondConf _ -> ""
-    | Handler (_, fid, event, args) -> Printf.sprintf "\t Fid: %s, Event: %s, Args: %s \n" (Val.str fid) (Val.str event) (args_string args)
+    | Handler (_, fid, event, args) -> Printf.sprintf "\t Fid: %s, Event: %s, Args: %s \n" (Val.str fid) (Events.str Val.str event) (args_string args)
   
   let hq_string (hq: handler_queue_t) : string = (String.concat "\n" (List.map hq_elem_string hq))
 
   let state_str (state : state_t) : string =
     let (_, ehs, hq) = state in
     (*"\n--JSIL Conf--" ^ Interpreter.print_cconf econf ^*)
-    "\n--Event Handlers--" ^ (SymbMap.str ehs Val.str handlers_str) ^ "\n--Handlers Queue--\n" ^ hq_string hq ^ "\n"
+    "\n--Event Handlers--" ^ (SymbMap.str ehs (Events.str Val.str) handlers_str) ^ "\n--Handlers Queue--\n" ^ hq_string hq ^ "\n"
   
   let string_of_result (rets: result_t list) : string =
     String.concat "Event Semantics Result: \n" (List.map 
       (fun ret -> 
         let (lret, ehs, hq) = ret in
           Interpreter.string_of_result [lret] ^ 
-          "\n--Event Handlers--" ^ (SymbMap.str ehs Val.str handlers_str) ^
+          "\n--Event Handlers--" ^ (SymbMap.str ehs (Events.str Val.str) handlers_str) ^
           "\n--Handlers Queue--\n" ^ hq_string hq ^ "\n"
       ) rets) 
     
@@ -164,7 +163,7 @@ module M
       (xvar                : Var.t)
       (argsv               : Val.t list)
       (sync                : bool) : state_t list =
-    L.log L.Normal (lazy (Printf.sprintf "Dispatching event %s" (Val.str ev_name)));
+    L.log L.Normal (lazy (Printf.sprintf "Dispatching event %s" (Events.str Val.str ev_name)));
     let (conf, ehs, hq) = state in
     let (cconf, prog) = conf in
     (* Configurations in which a listener applies *)
@@ -202,17 +201,21 @@ module M
     let (cconf, prog) = conf in
 
     match label with
-    | SyncDispatch (xvar, event, args) -> 
+    | SyncDispatch (xvar, event_type, event, args) -> 
+        (* TODO: check how events will be created! *)
+        let event = Events.create Val.to_literal event_type event in
         (** Synchronous event dispatch*)           
-        let listeners = SymbMap.find ehs event Val.to_literal Val.to_expr in 
+        let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
         dispatch event (conf', ehs, hq) listeners xvar args true 
 
-    | AsyncDispatch (xvar, event, args) ->
+    | AsyncDispatch (xvar, event_type, event, args) ->
+        let event = Events.create Val.to_literal event_type event in
         (** Asynchronous event dispatch*)
-        let listeners = SymbMap.find ehs event Val.to_literal Val.to_expr in 
+        let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
         dispatch event (conf', ehs, hq) listeners xvar args false
 
-    | AddHandler (event, handler, args) -> 
+    | AddHandler (event_type, event, handler, args) ->
+        let event = Events.create Val.to_literal event_type event in
         (** Add Event Handler *)
         let states = add_event_handler state event handler args in 
         List.map 
@@ -220,8 +223,9 @@ module M
             conf', ehs, hq
           ) states
 
-    | RemoveHandler (event, handler) ->
+    | RemoveHandler (event_type, event, handler) ->
         (** Remove Event Handler *)
+        let event = Events.create Val.to_literal event_type event in
         let states = remove_event_handler state event handler in
         List.map 
           (fun (conf, ehs, hq) -> 
@@ -233,9 +237,16 @@ module M
         let hq' = hq @ [ (CondConf (conf_info, pred, args)) ] in
           [ (conf, prog), ehs, hq' ]
       
-    | Schedule (xvar, fid, args) -> 
+    | Schedule (xvar, fid, args, time) -> 
         let (conf, ehs, hq) = state in
         let (cconf, prog) = conf' in
+        let gen_event = GeneralEvent (Val.from_literal (String EventsConstants.schedule_event)) in
+        let event = match time with
+        | Some time -> 
+          (match Val.to_literal time with
+          | Some (Num time) -> TimingEvent (time)
+          | _ -> gen_event)
+        | None -> gen_event in
         (* Dispatch *)
         List.fold_left
           (fun confs_so_far (new_conf, hdlrs) ->
@@ -244,7 +255,7 @@ module M
               | [] -> confs_so_far @ [ (new_conf, prog), ehs, hq ]
               (* At least one handler *)
               | _ -> 
-                let new_hq = hq @ (List.map (fun fid -> Handler (xvar, fid, Val.from_literal (String "__schedule__"), args)) hdlrs) in
+                let new_hq = hq @ (List.map (fun fid -> Handler (xvar, fid, event, args)) hdlrs) in
                     confs_so_far @ [((new_conf, prog), ehs, new_hq)]
               )
           ) [] [ cconf, [ fid ] ]
@@ -326,7 +337,7 @@ module M
   (* Environment event dispatch. Adds handlers at the back of the continuation queue *) 
   let fire_event (event: event_t) (args: vt list) (state: state_t) : state_t list =
     let (c, ehs, hq) = state in 
-    let listeners = SymbMap.find ehs event Val.to_literal Val.to_expr in 
+    let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
     (* How to obtain xvar? The ideal thing to do would be allow calls without ret vars... *) 
     dispatch event state listeners "" args false
 

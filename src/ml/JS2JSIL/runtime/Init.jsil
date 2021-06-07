@@ -838,7 +838,7 @@ proc setImmediate(_scope, _this, fname){
 };
 
 proc setTimeout(_scope, _this, fname, time){
-    ret := "__ES__schedule"(_scope, _this, fname) with elab;
+    ret := "__ES__schedule_with_time"(_scope, _this, time, fname) with elab;
 	return;
 	
     elab: throw

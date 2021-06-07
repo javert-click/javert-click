@@ -44,7 +44,7 @@ function __setupConf(workerURL, outsidePortId, isShared, main_fid){
 }
 
 function __postScript(workerGlobalObj, EventsSemantics, MP){
-    EventsSemantics.addHandler("ProcessMessage", "processMessageSteps");
+    EventsSemantics.addHandler("Message", "ProcessMessage", "processMessageSteps");
     // 26. If is shared is true, then queue a global task on DOM manipulation task source given worker global scope to 
     // fire an event named connect at worker global scope, using MessageEvent, 
     // with the data attribute initialized to the empty string, 

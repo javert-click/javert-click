@@ -102,7 +102,7 @@ EventTarget.prototype.dispatchEvent = function (event, flags){
     //3. Return the result of dispatching event to the context object.
     var event_str = jsilEvent(event.type);
     event.target = this;
-    eventsSemantics.syncDispatch(event_str, event, this, flags);
+    eventsSemantics.syncDispatch("General", event_str, event, this, flags);
     return !event.canceled;
 };
 
@@ -129,7 +129,7 @@ EventTarget.prototype.addEventListener = function (type, callback, options){
         return l.type === type && l.callback === callback && l.capture === options.capture;
     }) === null){
         var event_str = jsilEvent(type);
-        eventsSemantics.addHandler(event_str, "dispatch");
+        eventsSemantics.addHandler("General", event_str, "dispatch");
         var listener = new EventListener.EventListener(type, options, callback);
         this.listeners.push(listener);
     }

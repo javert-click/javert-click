@@ -7,7 +7,7 @@ module type M = sig
 
   type fid_t = vt
 
-  type event_t = vt
+  type event_t = (vt) Events.t
 
   type state_t
 

@@ -6,7 +6,7 @@ const EventsSemantics = require('../../DOM/Events/EventsSemantics');
 */
 function MPSemantics(){
     this.ESem = new EventsSemantics.EventsSemantics();
-    this.ESem.addHandler("ProcessMessage", "processMessageSteps");
+    this.ESem.addHandler("Message", "ProcessMessage", "processMessageSteps");
 }
 
 var MPSem;
