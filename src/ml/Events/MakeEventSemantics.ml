@@ -9,6 +9,7 @@ module M
   (Val           : Val.M) 
   (Error         : Error.M with type vt = Val.t and type event_t = string)
   (Interpreter   : Interpreter.M with type vt = Val.t and type err_t = Error.t) 
+  (Scheduler     : EventScheduler.M)
     : EventSemantics.M with type vt = Val.t and type await_conf_t = Interpreter.cconf_t and type conf_info_t = Interpreter.conf_info_t = struct
 
   type vt = Val.t 
@@ -29,9 +30,7 @@ module M
 
   type event_handlers_t = (event_t, (fid_t * vt list) list) SymbMap.t 
 
-  type hq_element = | Handler  of string * fid_t * event_t * (vt list) (** xvar, funname, event, arguments **) 
-                    | Conf     of Interpreter.econf_t
-                    | CondConf of conf_info_t * vt * (vt list)
+  type hq_element = (Interpreter.econf_t, vt, conf_info_t) Scheduler.scheduled_unit_t
 
   type handler_queue_t = hq_element list 
 
@@ -95,13 +94,14 @@ module M
     let (conf : Interpreter.econf_t), ehs, hq = state in
     Interpreter.check_handler_continue conf; 
     (** Exec Handler *)
-      match hq with
+      match Scheduler.schedule hq with
       (** No more handlers to execute *)
-      | [] -> [] 
+      | None, _ -> [] 
       (** Execute next handler *)
-      | (x :: hs) ->
+      | Some x, hs ->
         match x with
-        | Handler (xvar, fid, _, args) -> 
+        | Handler (xvar, fid, event, args) -> 
+            (*Printf.printf "\nConsuming handler %s of event %s from hq!\n" (Val.str fid) (Events.str Val.str event);*)
             List.map (fun conf -> (conf, ehs, hs)) (Interpreter.continue_with_h conf xvar fid args) 
         
         | Conf conf' -> 
@@ -186,11 +186,11 @@ module M
           | (fid_0, args0) :: next_handlers -> 
             L.log L.Normal (lazy (Printf.sprintf "Found handler %s" (Val.str fid_0)));
             if (sync) then (
-              let new_hq = (List.map (fun (fid, args') -> Handler (xvar, fid, ev_name, argsv @ args')) next_handlers) @ [Conf (new_conf, prog)] @ hq in
+              let new_hq = (List.map (fun (fid, args') -> Scheduler.Handler (xvar, fid, ev_name, argsv @ args')) next_handlers) @ [Scheduler.Conf (new_conf, prog)] @ hq in
               let new_confs = Interpreter.continue_with_h (new_conf, prog) xvar fid_0 (argsv @ args0) in 
                   confs_so_far @ (List.map (fun new_conf -> new_conf, ehs, new_hq) new_confs)
             ) else (
-              let new_hq = hq @ (List.map (fun (fid, args') -> Handler (xvar, fid, ev_name, argsv @ args')) hdlrs) in
+              let new_hq = hq @ (List.map (fun (fid, args') -> Scheduler.Handler (xvar, fid, ev_name, argsv @ args')) hdlrs) in
                 confs_so_far @ [((new_conf, prog), ehs, new_hq) ]
             )
           )
@@ -243,8 +243,10 @@ module M
         let gen_event = GeneralEvent (Val.from_literal (String EventsConstants.schedule_event)) in
         let event = match time with
         | Some time -> 
+          (*Printf.printf "\nFound schedule! time: %s" (Val.str time); *)
           (match Val.to_literal time with
-          | Some (Num time) -> TimingEvent (time)
+          | Some (Num time) -> (*Printf.printf "\nAdding timing event with time %f\n" time;*)
+            TimingEvent (time)
           | _ -> gen_event)
         | None -> gen_event in
         (* Dispatch *)
@@ -255,7 +257,7 @@ module M
               | [] -> confs_so_far @ [ (new_conf, prog), ehs, hq ]
               (* At least one handler *)
               | _ -> 
-                let new_hq = hq @ (List.map (fun fid -> Handler (xvar, fid, event, args)) hdlrs) in
+                let new_hq = hq @ (List.map (fun fid -> Scheduler.Handler (xvar, fid, event, args)) hdlrs) in
                     confs_so_far @ [((new_conf, prog), ehs, new_hq)]
               )
           ) [] [ cconf, [ fid ] ]
@@ -338,6 +340,7 @@ module M
   let fire_event (event: event_t) (args: vt list) (state: state_t) : state_t list =
     let (c, ehs, hq) = state in 
     let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
+    (*Printf.printf "\nFiring message event, listeners: %d" (List.length listeners);*)
     (* How to obtain xvar? The ideal thing to do would be allow calls without ret vars... *) 
     dispatch event state listeners "" args false
 

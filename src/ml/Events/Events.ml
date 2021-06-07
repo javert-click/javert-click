@@ -27,6 +27,12 @@ let str (v_to_str: 'v -> string) (event: ('v) t) : string =
   | GeneralEvent (v)   -> "GeneralEvent:" ^ v_to_str v
   | MessageEvent       -> "MessageEvent"
   | TimingEvent (time) -> Printf.sprintf "TimingEvent(%f)" time
+
+let is_timing_event (event :('v) t): bool =
+  match event with
+  | GeneralEvent _ -> false
+  | MessageEvent   -> false
+  | TimingEvent (time)   -> true
   
 
         

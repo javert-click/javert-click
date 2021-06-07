@@ -1,1 +1,1 @@
-module M = MakeMPSemantics.M(CVal.M)(CError.M)(MakeEventSemantics.M(CVal.M)(CError.M)(CInterpreter.M))(MakeScheduler.M)
+module M = MakeMPSemantics.M(CVal.M)(CError.M)(MakeEventSemantics.M(CVal.M)(CError.M)(CInterpreter.M)(SimpleEventScheduler.M))(SimpleMPScheduler.M)

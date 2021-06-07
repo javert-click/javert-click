@@ -5,7 +5,7 @@ open Literal
 module L = Logging
 
 module M 
-    : Scheduler.M = struct
+    : MPScheduler.M = struct
 
       (* The configuration queue is a list of tuples, each containing an identifier and an event configuration *)
       type ('conf) conf_q_t = 'conf list

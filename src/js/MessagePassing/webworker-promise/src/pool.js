@@ -122,6 +122,7 @@ WorkerPool.prototype._onWorkDone = function() {
 */
 WorkerPool.prototype._waitAndRemoveWorkers = function(workers) {
   var vthis = this;
+  console.log('Calling setTimeout with time '+vthis._terminateAfterDelay);
   setTimeout(() => {
     // only one worker should be alive always
     workers = workers.filter(w => { return w.isFree() }).slice(0, vthis._workers.length - 1);
@@ -135,8 +136,8 @@ WorkerPool.prototype._waitAndRemoveWorkers = function(workers) {
 WorkerPool.prototype._removeWorker = function(worker) {
   //console.log('Removing worker');
   this._workers = this._workers.filter(w => { return w._id !== worker._id });
-  //TODOMP: give priority to message processing than to setTimeout!
-  //worker.terminate();
+  console.log('Going to terminate worker');
+  worker.terminate();
 }
 
 /*

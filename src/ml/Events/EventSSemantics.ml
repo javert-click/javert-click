@@ -1,1 +1,1 @@
-module M = MakeEventSemantics.M(SVal.M)(SError.M)(SInterpreter.M)
+module M = MakeEventSemantics.M(SVal.M)(SError.M)(SInterpreter.M)(SimpleEventScheduler.M)

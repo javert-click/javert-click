@@ -838,7 +838,7 @@ proc setImmediate(_scope, _this, fname){
 };
 
 proc setTimeout(_scope, _this, fname, time){
-    ret := "__ES__schedule_with_time"(_scope, _this, time, fname) with elab;
+    ret := "__ES__schedule"(_scope, _this, fname, time) with elab;
 	return;
 	
     elab: throw
@@ -861,20 +861,22 @@ proc setupEvents(){
 };
 
 (* Event Scheduler *)
-proc __ES__schedule (vscope, vthis, fid) {
-      call := "i__isCallable" (fid);
-	  goto [call] cont thrw;
+proc __ES__schedule (vscope, vthis, fid, time) {
+         call := "i__isCallable" (fid);
+	     goto [call] cont thrw;
 
-cont:  m := metadata(fid);
-      x_scope := [m, "@scope"];
-      x_body  := [m, "@call"];
+cont:     m := metadata(fid);
+          x_scope := [m, "@scope"];
+          x_body  := [m, "@call"];
 
-      (* NOTE: THERE IS NO ERROR LABEL AND NO ARGUMENTS CAN BE PASSED *)
-      ret := "__ES__wrapper__schedule" (vscope, vthis, x_body, x_scope, undefined);
-      return;
-
-thrw: ret := "EVENTS SEMANTICS ERROR: Scheduler called with non-callable object";
-      throw
+          (* NOTE: THERE IS NO ERROR LABEL AND NO ARGUMENTS CAN BE PASSED *)
+          goto [time = undefined] notime withtime;
+notime:   ret := "__ES__wrapper__schedule" (vscope, vthis, x_body, x_scope, undefined);
+          return;
+withtime: ret := "__ES__wrapper__schedule_with_time" (vscope, vthis, time, x_body, x_scope, undefined);
+          return;
+thrw:     ret := "EVENTS SEMANTICS ERROR: Scheduler called with non-callable object";
+          throw
 };
 
 (* Event AddHandler *)

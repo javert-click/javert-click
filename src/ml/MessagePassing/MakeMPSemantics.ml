@@ -8,7 +8,7 @@ module M
   (Val              : Val.M) 
   (Error            : Error.M with type vt = Val.t)
   (EventSemantics   : EventSemantics.M with type vt = Val.t)
-  (Scheduler        : Scheduler.M) = struct 
+  (Scheduler        : MPScheduler.M) = struct 
 
   (* Values come from UL. Can be either concrete or symbolic *)
   type vt = Val.t
