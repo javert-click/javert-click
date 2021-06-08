@@ -28,9 +28,9 @@ MPSemantics.prototype.newPort = function(){
 /*
 * @id MPSemanticsSend
 */
-MPSemantics.prototype.send = function(message, plist, orig_port, dest_port){
+MPSemantics.prototype.send = function(message, plist, orig_port, dest_port, isWindow){
     //console.log('MPSem: send');
-    var mplist = JS2JSILList.JS2JSILList([message, dest_port]); 
+    var mplist = JS2JSILList.JS2JSILList([message, dest_port, isWindow]); 
     var plistJSIL = JS2JSILList.JS2JSILList(plist);
     __MP__wrapper__send(mplist, plistJSIL, orig_port, dest_port);
 }

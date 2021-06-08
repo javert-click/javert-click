@@ -4,7 +4,7 @@
 
 const EventTarget = require('./EventTarget');
 
-    /*
+/*
 * @id Window
 */
 var Window = function(){
@@ -18,6 +18,7 @@ var Window = function(){
     this.opener = null;
 
     this.outerHeight = 820;
+    this.iframes = [];
 };
 
 Window.prototype = Object.create(EventTarget.EventTarget.prototype);

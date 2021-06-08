@@ -2,6 +2,14 @@
 * @id DedicatedWorkerGlobalScope
 */
 function DedicatedWorkerGlobalScope (global, name) {
+    Object.defineProperty(global, 'parent', {
+        /*
+        * @id DedicatedWorkerGlobalGetParent
+        */
+        get: function(){
+            return global;
+        }
+    });
     Object.defineProperty(global, 'addEventListener', {
         /*
         * @id DedicatedWorkerGlobalAddEventListener
@@ -35,6 +43,15 @@ function DedicatedWorkerGlobalScope (global, name) {
         get: function(){
             var port = this.__port;
             return function(message, options) { port.postMessage(message, options)};
+        }
+    });
+    Object.defineProperty(global, 'postMessageWindow', {
+        /*
+        * @id DedicatedWorkerGlobalScopePostMessageWindow
+        */
+        get: function(){
+            var port = this.__port;
+            return function(message, options) { port.postMessageWindow(message, options)};
         }
     });
 }

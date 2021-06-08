@@ -73,9 +73,23 @@ MessagePort.prototype.postMessage = function(message, options){
     var targetPort = MPSem.getPaired(this.__id);
     console.log('Sending message from port '+this.__id+' to port '+targetPort);
     // 2. Run the message port post message steps providing targetPort, message and options.
-    postMessageSteps(this, targetPort, message, options);
+    postMessageSteps(this, targetPort, false, message, options);
     MPSem.endAtomic();
-}   
+}  
+
+/*
+* @id MessagePortPostWindow
+*/
+MessagePort.prototype.postMessageWindow = function(message, targetOrigin, transfer){
+    //For the moment let's ignore targetOrigin
+    MPSem.beginAtomic();
+    // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.
+    var targetPort = MPSem.getPaired(this.__id);
+    console.log('Sending message from port '+this.__id+' to port '+targetPort);
+    // 2. Run the message port post message steps providing targetPort, message and options.
+    postMessageSteps(this, targetPort, true, message, transfer);
+    MPSem.endAtomic();
+}
 
 /*
 * @id MessagePortStart
@@ -98,7 +112,7 @@ MessagePort.prototype.close = function(){
 /*
 * @id postMessageSteps
 */
-function postMessageSteps(origPort, targetPort, message, options){
+function postMessageSteps(origPort, targetPort, isWindow, message, options){
     // 1. Let transfer be options["transfer"].
     var transfer = options ? ((options instanceof Array) ? options : options['transfer']) : [];
     var transferIds = transfer.map(function(p) {return p.__id});
@@ -118,7 +132,7 @@ function postMessageSteps(origPort, targetPort, message, options){
     if(targetPort === null || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
     // Note: This call to 'send' will enable our MessagePassing semantics, which will then  trigger the processMessageSteps function.
-    MPSem.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort);
+    MPSem.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort, isWindow);
 }
 
 var scopeMP = {};
@@ -127,7 +141,7 @@ var scopeMP = {};
 * @JSIL
 * @id processMessageSteps
 */
-function processMessageSteps(global, message, targetPortId, transferIds){
+function processMessageSteps(global, message, targetPortId, isWindow, transferIds){
     // Initial setup
     var scopeMP = global.__scopeMP;
     transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
@@ -135,12 +149,14 @@ function processMessageSteps(global, message, targetPortId, transferIds){
     var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
     // 2. (NOT SUPPORTED) Let targetRealm be finalTargetPort's relevant Realm.
     // As we model the message queue via MP Semantics, we add this step here to make sure the target port is enabled
+    //console.log('Found target port: '+finalTargetPort.__Enabled);
     if(!finalTargetPort || !finalTargetPort.__Enabled) return;
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(message, transferIds, scopeMP.MessagePort);
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
     //var messageClone = deserializeRecord.Deserialized;
     var messageClone = deserializeRecord.Deserialized;
+    //console.log('Message: '+messageClone);
     // 5. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
     // TODOMP: WHAT IS A FROZEN ARRAY??? SHOULD THE OBJECTS BE FROZEN?
     //var newPorts = deserializeRecord.TransferredValues.map(p => { return Object.freeze(p) });
@@ -149,7 +165,10 @@ function processMessageSteps(global, message, targetPortId, transferIds){
     var event = new scopeMP.MessageEvent.MessageEvent();
     event.data = messageClone; 
     event.ports = newPorts;
-    finalTargetPort.dispatchEvent(event);
+    //console.log('Going to dispatch event, isWindow: '+isWindow);
+    //console.log('finalTargetPort.targetWindow: '+finalTargetPort.targetWindow);
+    if(isWindow && finalTargetPort.targetWindow) finalTargetPort.targetWindow.dispatchEvent(event);
+    else finalTargetPort.dispatchEvent(event);
 }
 
 //TODOMP: think of a better solution for this. 
@@ -179,8 +198,6 @@ Window.prototype.postMessage = function(message, options, transfer){
     // 2. Run the window post message steps providing targetWindow, message, and options.
     windowPostMessageSteps(targetWindow, message, options);
 }
-
-
 
 /*
 * @id WindowPostMessageSteps
