@@ -31,9 +31,9 @@ function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element
 }
 
 /*
-    * @JSIL
-    * @id dispatch
-    */
+* @JSIL
+* @id dispatch
+*/
 function dispatch(scopeEvents, event, target, flags){
     var legacyTargetOverrideFlag;
     if(flags && flags.legacyTargetOverrideFlag){
