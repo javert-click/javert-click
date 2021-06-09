@@ -154,13 +154,16 @@ function processMessageSteps(global, message, targetPortId, isWindow, transferId
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(message, transferIds, scopeMP.MessagePort);
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
-    //var messageClone = deserializeRecord.Deserialized;
     var messageClone = deserializeRecord.Deserialized;
     //console.log('Message: '+messageClone);
     // 5. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
     // TODOMP: WHAT IS A FROZEN ARRAY??? SHOULD THE OBJECTS BE FROZEN?
     //var newPorts = deserializeRecord.TransferredValues.map(p => { return Object.freeze(p) });
     var newPorts = deserializeRecord.TransferredValues;
+    newPorts.forEach(np => {
+        scopeMP.MessagePort.prototype.ports = scopeMP.MessagePort.prototype.ports.filter(p => {return p.__id !== np.__id});
+        scopeMP.MessagePort.prototype.ports.push(np);
+    });
     // 6. Fire an event named message at finalTargetPort, using MessageEvent, with the data attribute initialized to messageClone and the ports attribute initialized to newPorts.
     var event = new scopeMP.MessageEvent.MessageEvent();
     event.data = messageClone; 
