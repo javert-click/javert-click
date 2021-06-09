@@ -15,6 +15,19 @@ function MessageEvent(){
 
 MessageEvent.prototype = Object.create(Event.Event.prototype);
 
+MessageEvent.prototype.initMessageEvent = function(type, bubbles, cancelable, data, origin, lastEventId, source, ports){
+    var args = arguments;
+    if(args.length === 0) throw new TypeError("Failed to execute 'initMessageEvent' on 'MessageEvent': 1 argument required, but 0 provided");
+    this.type = type;
+    this.bubbles = bubbles || false;
+    this.cancelable = cancelable || false;
+    this.data = data || null;
+    this.origin = origin || "";
+    this.lastEventId = lastEventId || "";
+    this.source = source || null;
+    this.ports = ports || [];
+}
+
 Object.defineProperty(Window.Window.prototype, 'MessageEvent', {
     get: function(){
         return MessageEvent;
