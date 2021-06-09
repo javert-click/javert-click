@@ -56,7 +56,7 @@ async_test(t => {
       e => {
         console.log('Received message '+e.data);
         if (e.data == 'DONE'){
-          console.log('e.data == done: '+(e.data === "done"));
+          console.log('e.data == DONE: '+(e.data === "DONE"));
           t.done();
           return;
         } 
