@@ -117,7 +117,7 @@ function postMessageSteps(origPort, targetPort, isWindow, message, options){
     var transfer = options ? ((options instanceof Array) ? options : options['transfer']) : [];
     var transferIds = transfer.map(function(p) {return p.__id});
     // 2. If transfer contains this MessagePort, then throw a "DataCloneError" DOMException.
-    if(transfer && transferIds.indexOf(origPort.__id) !== -1) throw new DOMException.DOMException(DOMException.DataCloneError);
+    if(transfer && transferIds.indexOf(origPort.__id) !== -1) throw new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
     // 3. Let doomed be false.
     var doomed = false;
     // 4. If targetPort is not null and transfer contains targetPort, then set doomed to true
