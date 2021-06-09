@@ -37,18 +37,19 @@ module M
 
       (* Schedules the next message to be processed. It chooses the first message given that the configurations are final *)
       (* If the configurations are not final or the queue is empty, returns None *)
-      let schedule_msg  (cq: ('conf) conf_q_t) (mq: ('msg) message_queue_t) (final: ('conf) conf_q_t -> bool) : ('msg * ('msg) message_queue_t) option = 
-        match mq with
+      let schedule_msg  (cq: ('conf) conf_q_t) (mq: ('msg) message_queue_t) (final: ('conf) conf_q_t -> bool) (has_transfer: 'msg -> bool) : ('msg * ('msg) message_queue_t) option = 
+        let mq' = (List.filter has_transfer mq) @ (List.filter (fun msg -> not (has_transfer msg)) mq) in
+        match mq' with
         | [] -> None
         | (msg :: mq') -> if (final cq) then (Some (msg, mq'))
                          else None
 
       (* Main function. Tries to schedule a configuration first. If not possible, tries to schedule message. Otherwise returns None *)
-      let schedule (cq: ('conf) conf_q_t) (mq: ('msg) message_queue_t) (final: ('conf) conf_q_t -> bool) : ('conf, 'msg) scheduled_unit_t option =
+      let schedule (cq: ('conf) conf_q_t) (mq: ('msg) message_queue_t) (final: ('conf) conf_q_t -> bool) (has_transfer: 'msg -> bool) : ('conf, 'msg) scheduled_unit_t option =
         match schedule_conf cq final with
         | None -> 
           (* There is no conf to run. In this case, we process messages *)
-          (match schedule_msg cq mq final with
+          (match schedule_msg cq mq final has_transfer with
           (* We have nothing else to do *)
           | None -> None
           (* There are still messages to be processed *)

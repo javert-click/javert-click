@@ -69,6 +69,12 @@ module M
   
   (***** AUXILIARY FUNCTIONS *****)
 
+  let has_transfer (msg: message_t * port_t) : bool =
+    let ((_, plist), _) = msg in
+    match plist with
+    | [] -> false
+    | _ -> true
+
   (* Enqueues message in message queue by adding message to the back of the queue *)
   let enqueue (msg: vt list) (plist: port_t list) (port: port_t) (mq: mq_t) : mq_t = 
     mq @ [(msg, plist), port]
@@ -368,7 +374,7 @@ module M
       | _, None, _ -> [], None) (*raise (Failure "Configuration not found")*) 
     | None ->
       (* Scheduler decides if a configuration or a message is scheduled *)
-      (match Scheduler.schedule cq mq final with
+      (match Scheduler.schedule cq mq final has_transfer with
       (* There is nothing left to do *)
       | None -> [], Some conf
       (* Configuration is scheduled *)
