@@ -157,9 +157,7 @@ function processMessageSteps(global, message, targetPortId, isWindow, transferId
     var messageClone = deserializeRecord.Deserialized;
     //console.log('Message: '+messageClone);
     // 5. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
-    // TODOMP: WHAT IS A FROZEN ARRAY??? SHOULD THE OBJECTS BE FROZEN?
-    //var newPorts = deserializeRecord.TransferredValues.map(p => { return Object.freeze(p) });
-    var newPorts = deserializeRecord.TransferredValues;
+    var newPorts = Object.freeze(deserializeRecord.TransferredValues);
     newPorts.forEach(np => {
         scopeMP.MessagePort.prototype.ports = scopeMP.MessagePort.prototype.ports.filter(p => {return p.__id !== np.__id});
         scopeMP.MessagePort.prototype.ports.push(np);
@@ -168,6 +166,7 @@ function processMessageSteps(global, message, targetPortId, isWindow, transferId
     var event = new scopeMP.MessageEvent.MessageEvent();
     event.data = messageClone; 
     event.ports = newPorts;
+
     //console.log('Going to dispatch event, isWindow: '+isWindow);
     //console.log('finalTargetPort.targetWindow: '+finalTargetPort.targetWindow);
     if(isWindow && finalTargetPort.targetWindow) finalTargetPort.targetWindow.dispatchEvent(event);
