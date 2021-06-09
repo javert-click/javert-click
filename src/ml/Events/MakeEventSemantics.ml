@@ -34,7 +34,8 @@ module M
 
   type handler_queue_t = hq_element list 
 
-  type state_t = Interpreter.econf_t * event_handlers_t * handler_queue_t
+  (* JSIL conf, event-handlers map, handlers queue and number of events dispatched *)
+  type state_t = Interpreter.econf_t * event_handlers_t * handler_queue_t * int
 
   type result_t = Interpreter.result_t * event_handlers_t * handler_queue_t
 
@@ -43,12 +44,12 @@ module M
   let lines_executed : (string * int, unit) Hashtbl.t = Hashtbl.create 1
 
   let add_event_handler (state: state_t) (event : event_t) (fid : fid_t) (args : vt list) : state_t list =  
-    let ((conf, prog), ehs, hq) = state in
+    let ((conf, prog), ehs, hq, n) = state in
     let rets = 
       List.map 
         (fun (ehs', f) -> 
           Option.map 
-            (fun conf' -> ((conf', prog), ehs', hq))
+            (fun conf' -> ((conf', prog), ehs', hq, n))
             (Interpreter.assume conf [f]))
         (SymbMap.replace ehs event [(fid,args)] (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr)
           (fun handlers_old handlers_new -> 
@@ -59,22 +60,39 @@ module M
 
 
   let remove_event_handler (state: state_t) (event : event_t) (fid : fid_t) : state_t list = 
-    let ((conf, prog), ehs, hq) = state in
+    let ((conf, prog), ehs, hq, n) = state in
     let rets = 
       List.map 
         (fun (ehs', f) -> 
           Option.map 
-            (fun conf' -> ((conf', prog), ehs', hq))
+            (fun conf' -> ((conf', prog), ehs', hq, n))
             (Interpreter.assume conf [f]))
         (SymbMap.replace ehs event [(fid, [])] (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr)
           (fun handlers handlers_rem -> 
               let fids, _ = List.split handlers_rem in
               List.filter (fun (fid, _) -> not (List.mem fid fids)) handlers)) in 
         CCommon.get_list_somes rets
-    
+
+  let rec only_timing_events_left (hq: handler_queue_t) : bool =
+    match hq with
+    | [] -> true
+    | (x::xs) -> (
+      match x with
+      | Handler (_, _, event, _) -> (Events.is_timing_event event) && only_timing_events_left xs;
+      | CondConf _ -> false
+      | Conf _ -> false 
+    )
+  
+  let final_with_timing_events (state: state_t) : bool =
+    let (conf, _, hq, _) = state in
+    if (Interpreter.final conf) then (
+      match hq with
+      | [] -> true
+      | hq -> only_timing_events_left hq
+    ) else ( false )
 
   let final (state : state_t) : bool =
-    let (conf, _, hq) = state in
+    let (conf, _, hq, _) = state in
     if (Interpreter.final conf) then (
       match hq with
       | [] -> true
@@ -82,19 +100,19 @@ module M
     ) else ( false )
 
   let assume (state: state_t) (f: Formula.t) : state_t option =
-    let (conf, prog), ehs, hq = state in
-    Option.map (fun conf' -> (conf', prog), ehs, hq) (Interpreter.assume conf [f])
+    let (conf, prog), ehs, hq, n = state in
+    Option.map (fun conf' -> (conf', prog), ehs, hq, n) (Interpreter.assume conf [f])
 
   let eval_expr (estate: state_t) (expr: Expr.t) : vt = 
-    let ((cconf,_), _, _) = estate in
+    let ((cconf,_), _, _, _) = estate in
     Interpreter.eval_expr cconf expr
 
   (** Continuation **)
   let exec_handler (state : state_t) : state_t list =
-    let (conf : Interpreter.econf_t), ehs, hq = state in
+    let (conf : Interpreter.econf_t), ehs, hq, n = state in
     Interpreter.check_handler_continue conf; 
     (** Exec Handler *)
-      match Scheduler.schedule hq with
+      match Scheduler.schedule hq n with
       (** No more handlers to execute *)
       | None, _ -> [] 
       (** Execute next handler *)
@@ -102,11 +120,11 @@ module M
         match x with
         | Handler (xvar, fid, event, args) -> 
             (*Printf.printf "\nConsuming handler %s of event %s from hq!\n" (Val.str fid) (Events.str Val.str event);*)
-            List.map (fun conf -> (conf, ehs, hs)) (Interpreter.continue_with_h conf xvar fid args) 
+            List.map (fun conf -> (conf, ehs, hs, n)) (Interpreter.continue_with_h conf xvar fid args) 
         
         | Conf conf' -> 
             let merged_conf = Interpreter.continue_with_conf conf conf' in
-            [(merged_conf, ehs, hs)] 
+            [(merged_conf, ehs, hs, n)] 
         
         | CondConf (conf_info, pred, vs) -> 
             (* Printf.printf "I am checking if a condconf can continue its work\n"; *)
@@ -120,11 +138,11 @@ module M
             if pred_b then (
               (* Printf.printf "It can continue!!!\n"; *)
               let merged_conf = Interpreter.continue_with_conf_info conf conf_info in 
-              [(merged_conf, ehs, hs)]
+              [(merged_conf, ehs, hs, n)]
             ) else (
                (* Printf.printf "It cannot continue!!\n"; *)
                let hq' = hs @ [ (CondConf (conf_info, pred, vs)) ] in 
-               [ (conf, ehs, hq') ]
+               [ (conf, ehs, hq', n) ]
             )
 
   let handlers_str handlers = (String.concat " " (List.map (fun (fid, _) -> Printf.sprintf "\n\t\t\t Fid: %s" (Val.str fid)) handlers))
@@ -139,7 +157,7 @@ module M
   let hq_string (hq: handler_queue_t) : string = (String.concat "\n" (List.map hq_elem_string hq))
 
   let state_str (state : state_t) : string =
-    let (_, ehs, hq) = state in
+    let (_, ehs, hq, _) = state in
     (*"\n--JSIL Conf--" ^ Interpreter.print_cconf econf ^*)
     "\n--Event Handlers--" ^ (SymbMap.str ehs (Events.str Val.str) handlers_str) ^ "\n--Handlers Queue--\n" ^ hq_string hq ^ "\n"
   
@@ -164,7 +182,7 @@ module M
       (argsv               : Val.t list)
       (sync                : bool) : state_t list =
     L.log L.Normal (lazy (Printf.sprintf "Dispatching event %s" (Events.str Val.str ev_name)));
-    let (conf, ehs, hq) = state in
+    let (conf, ehs, hq, n) = state in
     let (cconf, prog) = conf in
     (* Configurations in which a listener applies *)
     let listener_confs = List.map (fun (hdlrs, f) -> 
@@ -181,23 +199,23 @@ module M
       (fun confs_so_far (new_conf, hdlrs) ->
         (match hdlrs with
           (* No handlers *)
-          | [] -> confs_so_far @ [ (new_conf, prog), ehs, hq ]
+          | [] -> confs_so_far @ [ (new_conf, prog), ehs, hq, n+1 ]
           (* At least one handler *)
           | (fid_0, args0) :: next_handlers -> 
             L.log L.Normal (lazy (Printf.sprintf "Found handler %s" (Val.str fid_0)));
             if (sync) then (
               let new_hq = (List.map (fun (fid, args') -> Scheduler.Handler (xvar, fid, ev_name, argsv @ args')) next_handlers) @ [Scheduler.Conf (new_conf, prog)] @ hq in
               let new_confs = Interpreter.continue_with_h (new_conf, prog) xvar fid_0 (argsv @ args0) in 
-                  confs_so_far @ (List.map (fun new_conf -> new_conf, ehs, new_hq) new_confs)
+                  confs_so_far @ (List.map (fun new_conf -> new_conf, ehs, new_hq, n+1) new_confs)
             ) else (
               let new_hq = hq @ (List.map (fun (fid, args') -> Scheduler.Handler (xvar, fid, ev_name, argsv @ args')) hdlrs) in
-                confs_so_far @ [((new_conf, prog), ehs, new_hq) ]
+                confs_so_far @ [((new_conf, prog), ehs, new_hq, n+1) ]
             )
           )
       ) [] confs
     
   let process_event_label (conf': Interpreter.econf_t)(label : event_label_t) (state: state_t) : state_t list =
-    let (conf, ehs, hq) = state in 
+    let (conf, ehs, hq, n) = state in 
     let (cconf, prog) = conf in
 
     match label with
@@ -206,21 +224,21 @@ module M
         let event = Events.create Val.to_literal event_type event in
         (** Synchronous event dispatch*)           
         let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
-        dispatch event (conf', ehs, hq) listeners xvar args true 
+        dispatch event (conf', ehs, hq, n) listeners xvar args true 
 
     | AsyncDispatch (xvar, event_type, event, args) ->
         let event = Events.create Val.to_literal event_type event in
         (** Asynchronous event dispatch*)
         let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
-        dispatch event (conf', ehs, hq) listeners xvar args false
+        dispatch event (conf', ehs, hq, n) listeners xvar args false
 
     | AddHandler (event_type, event, handler, args) ->
         let event = Events.create Val.to_literal event_type event in
         (** Add Event Handler *)
         let states = add_event_handler state event handler args in 
         List.map 
-          (fun (conf, ehs, hq) -> 
-            conf', ehs, hq
+          (fun (conf, ehs, hq, n) -> 
+            conf', ehs, hq, n
           ) states
 
     | RemoveHandler (event_type, event, handler) ->
@@ -228,17 +246,17 @@ module M
         let event = Events.create Val.to_literal event_type event in
         let states = remove_event_handler state event handler in
         List.map 
-          (fun (conf, ehs, hq) -> 
-            conf', ehs, hq
+          (fun (conf, ehs, hq, n) -> 
+            conf', ehs, hq, n
           ) states
     
     | Await (conf, conf_info, (pred, args)) ->  
         (* Await *)
         let hq' = hq @ [ (CondConf (conf_info, pred, args)) ] in
-          [ (conf, prog), ehs, hq' ]
+          [ (conf, prog), ehs, hq', n ]
       
     | Schedule (xvar, fid, args, time) -> 
-        let (conf, ehs, hq) = state in
+        let (conf, ehs, hq, n) = state in
         let (cconf, prog) = conf' in
         let gen_event = GeneralEvent (Val.from_literal (String EventsConstants.schedule_event)) in
         let event = match time with
@@ -254,11 +272,11 @@ module M
           (fun confs_so_far (new_conf, hdlrs) ->
             (match hdlrs with
               (* No handlers *)
-              | [] -> confs_so_far @ [ (new_conf, prog), ehs, hq ]
+              | [] -> confs_so_far @ [ (new_conf, prog), ehs, hq, n ]
               (* At least one handler *)
               | _ -> 
                 let new_hq = hq @ (List.map (fun fid -> Scheduler.Handler (xvar, fid, event, args)) hdlrs) in
-                    confs_so_far @ [((new_conf, prog), ehs, new_hq)]
+                    confs_so_far @ [((new_conf, prog), ehs, new_hq, n)]
               )
           ) [] [ cconf, [ fid ] ]
 
@@ -266,7 +284,7 @@ module M
 
   let process_label (conflab : (Interpreter.econf_t * event_label_t option)) (state: state_t) : (state_t * event_label_t option) list =
     let (conf', lab) = conflab in
-    let (conf, ehs, hq) = state in 
+    let (conf, ehs, hq, n) = state in 
     let (cconf', _) = conf' in 
     
     let lab' = 
@@ -274,8 +292,8 @@ module M
         | Some lab -> Some lab
         | None ->  Interpreter.synthetic_lab cconf' in 
     match lab' with 
-        | None -> [ (conf', ehs, hq), None ]
-        | Some MLabel other_label -> [ (conf', ehs, hq), Some (MLabel other_label) ]
+        | None -> [ (conf', ehs, hq, n), None ]
+        | Some MLabel other_label -> [ (conf', ehs, hq, n), Some (MLabel other_label) ]
         | Some label -> List.map (fun r -> r, None) (process_event_label conf' label state)
          
 
@@ -286,7 +304,7 @@ module M
         close_out out
 
   let make_step (state : state_t) (ext_intercept : ((vt -> (vt list) option) -> (vt -> Literal.t option) -> (Literal.t -> vt) -> string -> string -> vt list -> message_label_t option) option) : (state_t * event_label_t option) list * state_t option = 
-    let (conf : Interpreter.econf_t), ehs, hq = state in
+    let (conf : Interpreter.econf_t), ehs, hq, _ = state in
     (*if (Interpreter.printing_allowed cconf) then 
       print_state state;*)
     if (Interpreter.final conf) then (
@@ -316,10 +334,10 @@ module M
 
   let create_initial_state (prog: UP.prog) : state_t = 
     let initial_conf = (Interpreter.create_initial_conf prog None, prog) in
-    initial_conf, SymbMap.init (), []
+    initial_conf, SymbMap.init (), [], 0
 
   let econf_to_result (state: state_t) : result_t =
-    let (econf, eh, hq) = state in let (conf, _) = econf in (Interpreter.conf_to_result conf, eh, hq)
+    let (econf, eh, hq, _) = state in let (conf, _) = econf in (Interpreter.conf_to_result conf, eh, hq)
 
   let evaluate_prog (prog: UP.prog) : result_t list =
     let initial_state = create_initial_state prog in
@@ -328,37 +346,37 @@ module M
     List.map econf_to_result states
 
   let new_conf (url: string) (setup_fid: string) (args: vt list) (state: state_t) : state_t = 
-    let (econf, _, _) = state in
+    let (econf, _, _, _) = state in
     let econf' = Interpreter.new_conf url setup_fid args econf in
-    econf', SymbMap.init (), []
+    econf', SymbMap.init (), [], 0
   
   let set_var (xvar: Var.t) (v: vt) (state: state_t) : state_t = 
-    let ((c, prog), h, q) = state in
-    ((Interpreter.set_var xvar v c, prog), h, q)
+    let ((c, prog), h, q, n) = state in
+    ((Interpreter.set_var xvar v c, prog), h, q, n)
 
   (* Environment event dispatch. Adds handlers at the back of the continuation queue *) 
   let fire_event (event: event_t) (args: vt list) (state: state_t) : state_t list =
-    let (c, ehs, hq) = state in 
+    let (c, ehs, hq, _) = state in 
     let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
     (*Printf.printf "\nFiring message event, listeners: %d" (List.length listeners);*)
     (* How to obtain xvar? The ideal thing to do would be allow calls without ret vars... *) 
     dispatch event state listeners "" args false
 
   let fresh_lvar (x: string) (v: string) (state: state_t) (vart: Type.t) : state_t * vt =
-    let ((conf, prog), ehs, hq) = state in
+    let ((conf, prog), ehs, hq, n) = state in
     let conf', v = Interpreter.fresh_lvar x v conf vart in
-    ((conf', prog), ehs, hq), v
+    ((conf', prog), ehs, hq, n), v
 
   let valid_result (rets: result_t list) : bool =
     let lrets = List.map (fun (lret, _, _) -> lret) rets in
     Interpreter.valid_result lrets
 
   let add_spec_var (x:string list) (state: state_t) : state_t =
-    let ((conf, prog), ehs, hq) = state in
-    ((Interpreter.add_spec_var x conf), prog), ehs, hq
+    let ((conf, prog), ehs, hq, n) = state in
+    ((Interpreter.add_spec_var x conf), prog), ehs, hq, n
   
   let assume_type (x: string) (t: Type.t) (state: state_t) : state_t =
-    let ((conf, prog), ehs, hq) = state in
-    ((Interpreter.assume_type x t conf), prog), ehs, hq
+    let ((conf, prog), ehs, hq, n) = state in
+    ((Interpreter.assume_type x t conf), prog), ehs, hq, n
 
 end 

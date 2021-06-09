@@ -25,7 +25,7 @@ module type M = sig
 
   val fire_event : event_t -> vt list -> state_t -> state_t list
 
-  val final : state_t -> bool
+  val final_with_timing_events : state_t -> bool
 
   val new_conf : string -> string -> vt list -> state_t -> state_t
 
