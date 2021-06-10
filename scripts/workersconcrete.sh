@@ -20,12 +20,17 @@ cp $testfile .
 
 # We assume the workers are previously compiled to JSIL
 echo "compiling workers"
-for filename in $workersexamples/*.js; do
+if [ -d $workersexamples ] 
+then
+  for filename in $workersexamples/*.js; do
     npx webpack --config ../webpack.config.js --env entry=$filename --env out=$filename
     cp $filename .
     declare workername=$(basename $filename)
     ./js2jsil.native -file $workername -noinitialheap -mp
-done
+  done
+else
+  echo "No worker found in this directory"
+fi
 
 echo "compiling setupConf file"
 npx webpack --config ../webpack.config.js --env entry=$setupconffilejs --env out=$setupconffilejs

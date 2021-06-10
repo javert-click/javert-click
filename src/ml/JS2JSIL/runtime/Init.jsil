@@ -103,6 +103,28 @@ proc create_object_with_call_construct_concrete (l, call, construct, len) {
         return
 };
 
+proc create_object_with_call_construct_concrete_with_proto (l, call, construct, len, pr) {
+
+        ret := "create_default_object_concrete" (l, pr, "Function", true);
+
+        [ret, "length"] := {{ "d", len, false, false, true }};
+        [ret, "name"] := {{ "d", "", false, false, true }};
+
+        (* Get the metadata *)
+        m := metadata(ret);
+
+        (* Set the internal scope, call and construct properties *)
+        [m, "@scope"] := empty;
+        [m, "@call"] := call;
+
+        goto [construct = empty] rlab cstr;
+
+  cstr: [m, "@construct"] := construct;
+
+  rlab: ret := l;
+        return
+};
+
 proc create_object_with_call_construct_concrete_xsc (xsc, l, call, construct, len) {
   ret := "create_object_with_call_construct_concrete" (l, call, construct, len);
   m := metadata(ret);
@@ -746,7 +768,8 @@ proc setupInitialHeap () {
 			ret := "create_object_with_call_construct_concrete" ($lrgerr, "RangeError_call",     "Error_construct", 1);
 			ret := "create_object_with_call_construct_concrete" ($lrferr, "ReferenceError_call", "Error_construct", 1);
 			ret := "create_object_with_call_construct_concrete" ($lserr,  "SyntaxError_call",    "Error_construct", 1);
-			ret := "create_object_with_call_construct_concrete" ($lterr,  "TypeError_call",      "Error_construct", 1);
+		    (*ret := "create_object_with_call_construct_concrete" ($lterr,  "TypeError_call",      "Error_construct", 1);*)
+			ret := "create_object_with_call_construct_concrete_with_proto" ($lterr,  "TypeError_call",      "Error_construct", 1, $lerr);
 			ret := "create_object_with_call_construct_concrete" ($luerr,  "URIError_call",       "Error_construct", 1);
 
 			[$leerr,  "prototype"] := {{ "d", $leerr_proto, false, false, false }};
@@ -756,6 +779,7 @@ proc setupInitialHeap () {
 			[$lterr,  "prototype"] := {{ "d", $lterr_proto, false, false, false }};
 			[$luerr,  "prototype"] := {{ "d", $luerr_proto, false, false, false }};
 
+            [$lerr,  "name"]  := {{ "d", "Error", true, false, true }};
 			[$leerr,  "name"] := {{ "d", "EvalError", true, false, true }};
 			[$lrgerr, "name"] := {{ "d", "RangeError", true, false, true }};
 			[$lrferr, "name"] := {{ "d", "ReferenceError", true, false, true }};
@@ -779,6 +803,7 @@ proc setupInitialHeap () {
 			[$lterr_proto,  "constructor"]    := {{ "d", $lterr, true, false, true }};
 			[$luerr_proto,  "constructor"]    := {{ "d", $luerr, true, false, true }};
 
+            [$lerr_proto,  "name"]    := {{ "d", "Error", true, false, true }};
 			[$leerr_proto,  "name"]    := {{ "d", "EvalError", true, false, true }};
 			[$lrgerr_proto, "name"]    := {{ "d", "RangeError", true, false, true }};
 			[$lrferr_proto, "name"]    := {{ "d", "ReferenceError", true, false, true }};
