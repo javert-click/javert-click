@@ -1086,7 +1086,7 @@ let new_conf (url: string) (setup_fid: string) (args: vt list) ((conf, _): econf
   let prog = UP.init_prog prog in
   match prog with 
   | Ok prog -> 
-    let initial_conf = create_initial_conf prog (Some (setup_fid, args @ [Val.from_literal (String main_fid)])) in
+    let initial_conf = create_initial_conf prog (Some (setup_fid, args)) in
     let state = get_state conf in
     let new_initial_state = get_state initial_conf in
     let new_state = State.transfer_path_condition state new_initial_state in

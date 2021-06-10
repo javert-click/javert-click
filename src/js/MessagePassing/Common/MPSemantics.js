@@ -40,7 +40,8 @@ MPSemantics.prototype.send = function(message, plist, orig_port, dest_port, isWi
 */
 MPSemantics.prototype.create = function(url, setup_fid, outsidePortId, isShared){
     //console.log('MPSem: create, outsideportid: '+outsidePortId);
-    var argslist = JS2JSILList.JS2JSILList([url, outsidePortId, isShared]); 
+    var main_fid = "main"+url.substring(0, url.length - 3);
+    var argslist = JS2JSILList.JS2JSILList([url, outsidePortId, isShared, main_fid]); 
     return __MP__wrapper__create(url, setup_fid, argslist);
 }
 
