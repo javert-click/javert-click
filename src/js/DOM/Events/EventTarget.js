@@ -20,7 +20,7 @@ var scopeEvents = {};
 * This function aims to avoid circular dependencies. Adding any of the dependencies below as a 'require' 
 * in this file would cause a circular dependency.
 */
-function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, Window){
+function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, Window, Event){
     scopeEvents.Node             = Node;
     scopeEvents.ShadowRoot       = ShadowRoot;
     scopeEvents.DocumentFragment = DocumentFragment;
@@ -28,6 +28,7 @@ function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element
     scopeEvents.Element          = Element;
     scopeEvents.Text             = Text;
     scopeEvents.window           = Window.getInstance();
+    scopeEvents.Event            = Event;
 }
 
 /*
@@ -421,8 +422,9 @@ function execCallBack(callback, opName, event, currentTarget){
     if(!isInShadowTree(event)) window.event = event;
     try{
         if(event.type === "error"){
+                //console.log('Error event, window.onerror: '+window.onerror);
                 if(window.onerror){
-                    callback.apply(currentTarget,[event.error.message]);
+                    callback.apply(currentTarget,[event.error.message, event.error.fileName, event.error.lineNumber, event.error.columnNumber]);
                 }else{
                     callback.apply(currentTarget, [event]);
                 }
@@ -443,7 +445,7 @@ function execCallBack(callback, opName, event, currentTarget){
             function execListenersFindListener(l){
                 l.type === "error"
             })){
-            var errorEvent = window.document.createEvent("error");
+            var errorEvent = new scopeEvents.Event.Event("error");//window.document.createEvent("error");
             errorEvent.initEvent("error", true, true);
             errorEvent.error = e;
             window.dispatchEvent(errorEvent);

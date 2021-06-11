@@ -24,6 +24,7 @@ proc Error_construct (xsc, vthis, v) {
 
 	mess:	xerr := "i__toString" (v) with elab;
 			[ret, "message"] := {{ "d", xerr, true, false, true }};
+			[ret, "columnNumber"] := {{ "d", -1, true, false, true }};
 
 	rlab: return;
 	elab: throw

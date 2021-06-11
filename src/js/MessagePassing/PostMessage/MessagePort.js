@@ -15,9 +15,10 @@ const MouseEvent        = require('../../DOM/Events/MouseEvent');
 const Element           = require('../../DOM/Events/Element');
 const Text              = require('../../DOM/Events/Text');
 const WindowInfo        = require('../../DOM/Events/Window');
+const Event             = require('../../DOM/Events/Event');
 const Serialization     = require('./MessageSerialization');
 
-EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo);
+EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo, Event);
 
 /*
 * MessagePort constructor should not be accessible

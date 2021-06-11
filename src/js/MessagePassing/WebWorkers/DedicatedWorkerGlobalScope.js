@@ -1,3 +1,4 @@
+const WindowInfo = require('../../DOM/Events/Window');
 /*
 * @id DedicatedWorkerGlobalScope
 */
@@ -7,7 +8,7 @@ function DedicatedWorkerGlobalScope (global, name) {
         * @id DedicatedWorkerGlobalGetParent
         */
         get: function(){
-            return global;
+            return WindowInfo.getInstance();
         }
     });
     Object.defineProperty(global, 'addEventListener', {
@@ -25,6 +26,15 @@ function DedicatedWorkerGlobalScope (global, name) {
         set: function(f){
             this.__port.__Enabled = true;
             this.__port.addEventListener('message', f);
+        }
+    });
+    Object.defineProperty(global, 'onerror', {
+        /*
+        * @id DedicatedWorkerGlobalScopeOnError
+        */
+        set: function(f){
+            var window = WindowInfo.getInstance();
+            window.onerror = f;
         }
     });
     Object.defineProperty(global, 'onmessageerror', {
