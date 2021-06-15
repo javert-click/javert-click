@@ -69,6 +69,8 @@ Object.defineProperty(MessagePort.prototype, 'onmessageerror', {
 * @id MessagePortPostMessage
 */
 MessagePort.prototype.postMessage = function(message, options){
+    console.log('Sending msg, args len: '+arguments.length);
+    if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     MPSem.beginAtomic();
     // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.
     var targetPort = MPSem.getPaired(this.__id);
@@ -110,13 +112,17 @@ MessagePort.prototype.close = function(){
     MPSem.unpairPort(this.__id);
 }
 
+MessagePort.prototype.toString = function(){
+    return "[object MessagePort]";
+}
+
 /*
 * @id postMessageSteps
 */
 function postMessageSteps(origPort, targetPort, isWindow, message, options){
     // 1. Let transfer be options["transfer"].
     var transfer = options ? ((options instanceof Array) ? options : options['transfer']) : [];
-    var transferIds = transfer.map(function(p) {return p.__id});
+    var transferIds = transfer.map(function(p) { return p.__id });
     // 2. If transfer contains this MessagePort, then throw a "DataCloneError" DOMException.
     if(transfer && transferIds.indexOf(origPort.__id) !== -1) throw new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
     // 3. Let doomed be false.
@@ -150,7 +156,7 @@ function processMessageSteps(global, message, targetPortId, isWindow, transferId
     var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
     // 2. (NOT SUPPORTED) Let targetRealm be finalTargetPort's relevant Realm.
     // As we model the message queue via MP Semantics, we add this step here to make sure the target port is enabled
-    //console.log('Found target port: '+finalTargetPort.__Enabled);
+    //console.log('Found target port: '+finalTargetPort);
     if(!finalTargetPort || !finalTargetPort.__Enabled) return;
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(message, transferIds, scopeMP.MessagePort);

@@ -52,7 +52,7 @@ function DedicatedWorkerGlobalScope (global, name) {
         */
         get: function(){
             var port = this.__port;
-            return function(message, options) { port.postMessage(message, options)};
+            return port.postMessage.bind(port);
         }
     });
     Object.defineProperty(global, 'postMessageWindow', {
@@ -64,6 +64,7 @@ function DedicatedWorkerGlobalScope (global, name) {
             return function(message, options) { port.postMessageWindow(message, options)};
         }
     });
+    return global;
 }
 
 exports.DedicatedWorkerGlobalScope = DedicatedWorkerGlobalScope;

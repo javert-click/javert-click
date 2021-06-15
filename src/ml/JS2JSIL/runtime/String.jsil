@@ -449,3 +449,22 @@ proc SP_substring (xsc, vthis, start, end) {
 
 	elab: throw
 };
+
+proc SP_startsWith(xsc, vthis, searchval, start){
+   (* If start index is provided, get substring starting from given index and compare with searchvalue *)
+   (* Otherwise, get substring starting from index 0 and compare with searchvalue *)
+             startIndex := 0;
+			 vallen := s-len(searchval);
+			 goto[not (start = undefined)] starti getlen;
+   starti:   startIndex := start;
+             goto compare;
+   getlen:   goto [(s-len(vthis) < vallen)] endf compare;
+   compare:  endIndex := startIndex + vallen;
+             ret := "SP_substring" (xsc, vthis, startIndex, endIndex) with elab;
+			 goto [ret = searchval] endt endf;
+   endt:     ret := true;
+             return;
+   endf:     ret := false;
+             return;
+   elab:     throw
+};

@@ -457,6 +457,7 @@ proc setupInitialHeap () {
 			[$lstr_proto, "slice"]             := {{ "d", $lsp_slice, true, false, true }};
 			[$lstr_proto, "split"]             := {{ "d", $lsp_split, true, false, true }};
 			[$lstr_proto, "substring"]         := {{ "d", $lsp_substring, true, false, true }};
+			[$lstr_proto, "startsWith"]        := {{ "d", $lsp_startswith, true, false, true }};
 			[$lstr_proto, "toLowerCase"]       := {{ "d", $lsp_toLowerCase, true, false, true }};
 			[$lstr_proto, "toLocaleLowerCase"] := {{ "d", $lso_toLocaleLowerCase, true, false, true }};
 			[$lstr_proto, "toUpperCase"]       := {{ "d", $lsp_toUpperCase, true, false, true }};
@@ -477,6 +478,7 @@ proc setupInitialHeap () {
 			ret := "create_object_with_call_construct_concrete" ($lsp_slice, "SP_slice", empty, 2);
 			ret := "create_object_with_call_construct_concrete" ($lsp_split, "SP_split", empty, 2);
 			ret := "create_object_with_call_construct_concrete" ($lsp_substring, "SP_substring", empty, 2);
+			ret := "create_object_with_call_construct_concrete" ($lsp_startswith, "SP_startsWith", empty, 2);
 			ret := "create_object_with_call_construct_concrete" ($lsp_toLowerCase, "SP_toLowerCase", empty, 0);
 			ret := "create_object_with_call_construct_concrete" ($lso_toLocaleLowerCase, "lso_toLocaleLowerCase", empty, 0);
 			ret := "create_object_with_call_construct_concrete" ($lsp_toUpperCase, "SP_toUpperCase", empty, 0);

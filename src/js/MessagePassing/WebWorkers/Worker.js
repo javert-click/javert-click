@@ -60,8 +60,8 @@ Object.defineProperty(Worker.prototype, 'onmessageerror', {
 /*
 * @id WorkerPostMessage
 */
-Worker.prototype.postMessage = function(message, options){
-    this.__port.postMessage(message, options);
+Worker.prototype.postMessage = function(){
+    this.__port.postMessage.apply(this.__port, arguments);
 }
 
 Worker.prototype.terminate = function(){

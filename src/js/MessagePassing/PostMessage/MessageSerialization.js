@@ -36,7 +36,8 @@ function StructuredSerializeWithTransfer(message, transfer){
     var memory = {};
     // 2. For each transferable of transferList: 
     transfer.map(transferable => {
-      // 2.1 (NOT SUPPORTED) If transferable has neither an [[ArrayBufferData]] internal slot ...
+      // 2.1 (ArrayBuffer NOT SUPPORTED) If transferable has neither an [[ArrayBufferData]] internal slot nor a [[Detached]] internal slot, then throw a "DataCloneError" DOMException.
+      if(transferable.__Detached === undefined) throw new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
       // 2.2 (NOT SUPPORTED) If transferable has an [[ArrayBufferData]] internal slot and ... 
       // 2.3  If memory[transferable] exists, then throw a "DataCloneError" DOMException. 
       if(memory[transferable.__id]) throw new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
