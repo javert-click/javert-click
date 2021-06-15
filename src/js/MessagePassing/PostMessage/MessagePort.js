@@ -69,7 +69,6 @@ Object.defineProperty(MessagePort.prototype, 'onmessageerror', {
 * @id MessagePortPostMessage
 */
 MessagePort.prototype.postMessage = function(message, options){
-    console.log('Sending msg, args len: '+arguments.length);
     if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     MPSem.beginAtomic();
     // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.

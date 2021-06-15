@@ -3,6 +3,14 @@ const WindowInfo = require('../../DOM/Events/Window');
 * @id DedicatedWorkerGlobalScope
 */
 function DedicatedWorkerGlobalScope (global, name) {
+    Object.defineProperty(global, 'self', {
+        /*
+        * @id DedicatedWorkerSelf
+        */
+        get: function(){
+            return global;
+        }
+    });
     Object.defineProperty(global, 'parent', {
         /*
         * @id DedicatedWorkerGlobalGetParent
