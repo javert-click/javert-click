@@ -244,6 +244,8 @@ proc setupInitialHeap () {
 	  [$lg, "__MP__wrapper__beginAtomic"]			  := {{ "d", $lsmpbeginatomic, true, false, true }};
 	  [$lg, "__MP__wrapper__endAtomic"]			      := {{ "d", $lsmpendatomic, true, false, true }};
 
+	  [$lg, "Worker_construct"]              		  := {{ "d", $lworkerconstruct, true, false, true }};
+
 	  (* JS2JSIL List *)
 	  [$lg, "initJS2JSILList"]                        := {{ "d", $linitjsillist, true, false, true }};
 	  [$lg, "JSILList_create"]                        := {{ "d", $lcreatejsillist, true, false, true }};
@@ -940,6 +942,8 @@ proc setupInitialMP(){
 	ret := "create_object_with_call_construct_concrete"($lsmpterminate, "__MP__wrapper__terminate", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lsmpbeginatomic, "__MP__wrapper__beginAtomic", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lsmpendatomic, "__MP__wrapper__endAtomic", empty, 1);
+
+	ret := "create_object_with_call_construct_concrete"($lworkerconstruct, "Worker_construct", empty, 1);
 
 	ret := empty;
 	return

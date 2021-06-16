@@ -10,7 +10,7 @@ var MPSem = MPSemantics.getMPSemanticsInstance();
 * @id Worker
 */
 function Worker(scriptURL, options){
-    EventTarget.EventTarget.call(this);
+    EventTarget.EventTarget.call(worker);
     // 1. The user agent may throw a "SecurityError" DOMException if the request violates a policy decision.
     // 2. Let outside settings be the current settings object.
     var outsideSettings = null;
@@ -25,7 +25,7 @@ function Worker(scriptURL, options){
     //var workerURL = url.urlRecord;
     var workerURL = scriptURL;
     // 6. Let worker be a new Worker object. 
-    var worker = this;
+    var worker = Worker_construct(this);
     // 7. Create a new MessagePort object whose owner is outside settings. Let this be the outside port
     var outsidePort = new MessagePort.PublicMessagePort();
     // 8. Associate the outside port with worker
@@ -45,6 +45,15 @@ Object.defineProperty(Worker.prototype, 'onmessage', {
     set: function(f){
         this.__port.__Enabled = true;
         this.__port.addEventListener('message', f);
+    }
+});
+
+Object.defineProperty(Worker.prototype, 'onerror', {
+    /*
+    * @id WorkerOnError
+    */
+    set: function(f){
+        this.__port.addEventListener('error', f);
     }
 });
 
