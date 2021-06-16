@@ -33,6 +33,11 @@ let is_timing_event (event :('v) t): bool =
   | GeneralEvent _ -> false
   | MessageEvent   -> false
   | TimingEvent (time)   -> true
+
+let lt (e1: ('v) t) (e2: ('v) t): bool =
+  match e1, e2 with
+  | TimingEvent t1, TimingEvent t2 -> t1 < t2
+  | _, _ -> raise (Failure "less than operator not defined for non-timing events")
   
 
         

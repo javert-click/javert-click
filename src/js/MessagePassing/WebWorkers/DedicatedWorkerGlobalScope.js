@@ -24,7 +24,8 @@ function DedicatedWorkerGlobalScope (global, name) {
         * @id DedicatedWorkerGlobalAddEventListener
         */
         get: function(){
-            return this.__port.addEventListener;
+            console.log('Obtaining event listener!');
+            return this.__port.addEventListener.bind(this.__port);
         }
     });
     Object.defineProperty(global, 'onmessage', {

@@ -155,7 +155,7 @@ function processMessageSteps(global, message, targetPortId, isWindow, transferId
     var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
     // 2. (NOT SUPPORTED) Let targetRealm be finalTargetPort's relevant Realm.
     // As we model the message queue via MP Semantics, we add this step here to make sure the target port is enabled
-    //console.log('Found target port: '+finalTargetPort);
+    //console.log('Found target port: '+finalTargetPort.__Enabled);
     if(!finalTargetPort || !finalTargetPort.__Enabled) return;
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(message, transferIds, scopeMP.MessagePort);
