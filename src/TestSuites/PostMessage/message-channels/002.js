@@ -3,7 +3,6 @@
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
 import { assert_equals, async_test } from '../../../js/DOM/Events/Testharness';
 
-//TODOMP: This test is ok, but the right thing to do here is to prioritise messages instead of setTimeout handler! Fix this in the semantics.
 async_test(function(t) {
   var channel = new MessageChannel();
   channel.port1.postMessage(1);

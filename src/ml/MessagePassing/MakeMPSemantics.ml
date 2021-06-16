@@ -95,6 +95,9 @@ module M
 
   (* Returns true if all configurations in the list cs are final, false otherwise *)
   let final (cq: cq_t) : bool = 
+    List.fold_left (fun final_so_far (cid, e_conf) -> final_so_far && EventSemantics.final e_conf) true cq
+
+  let ready_to_process_msg (cq: cq_t) : bool = 
     List.fold_left (fun final_so_far (cid, e_conf) -> final_so_far && EventSemantics.final_with_timing_events e_conf) true cq
 
   (* Generates port id randomly making sure that port does not exist yet *)
@@ -374,7 +377,7 @@ module M
       | _, None, _ -> [], None) (*raise (Failure "Configuration not found")*) 
     | None ->
       (* Scheduler decides if a configuration or a message is scheduled *)
-      (match Scheduler.schedule cq mq final has_transfer with
+      (match Scheduler.schedule cq mq final ready_to_process_msg has_transfer with
       (* There is nothing left to do *)
       | None -> [], Some conf
       (* Configuration is scheduled *)
