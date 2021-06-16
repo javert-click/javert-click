@@ -1,0 +1,16 @@
+proc setClassAttr(obj, clazz){
+    m := metadata(obj);
+    [m, "@class"] := clazz;
+    ret := obj;
+    return
+};
+
+proc Worker_construct(xsc, vthis, obj){
+    ret := "setClassAttr"(obj, "Worker");
+    return
+};
+
+proc MessageEvent_construct(xsc, vthis, obj){
+    ret := "setClassAttr"(obj, "MessageEvent");
+    return
+};

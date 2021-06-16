@@ -9,7 +9,8 @@ async_test(function(t) {
     targetPort.start();
     targetPort.addEventListener("message", t.step_func_done(function (evt) {
       // TODOMP: check how to set class attr for message event
-      //assert_class_string(evt, "MessageEvent");
+      console.log('MessageEvent class: '+({}.toString.call(evt)));
+      assert_class_string(evt, "MessageEvent");
       console.log('Evt.type: '+evt.type);
       assert_equals(evt.type, "message");
       console.log('Evt.bubbles: '+evt.bubbles);

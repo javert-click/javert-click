@@ -11,6 +11,7 @@ function MessageEvent(){
     this.origin      = "";
     this.lastEventId = "";
     this.source      = null;
+    MessageEvent_construct(this);
 };
 
 MessageEvent.prototype = Object.create(Event.Event.prototype);
@@ -33,13 +34,5 @@ Object.defineProperty(Window.Window.prototype, 'MessageEvent', {
         return MessageEvent;
     }
 });
-
-/*
-* @id MessageEventToString
-*/
-MessageEvent.prototype.toString = function(){
-    console.log('executing toString MessageEvent');
-    return '[object MessageEvent]';
-}
 
 exports.MessageEvent = MessageEvent;

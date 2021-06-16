@@ -1,6 +1,0 @@
-proc Worker_construct(xsc, vthis, obj){
-    m := metadata(obj);
-    [m, "@class"] := "Worker";
-    ret := obj;
-    return
-};
