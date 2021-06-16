@@ -1,5 +1,4 @@
 proc Worker_construct(xsc, vthis, obj){
-    (*obj := "Object_construct" (xsc, vthis, undefined);*)
     m := metadata(obj);
     [m, "@class"] := "Worker";
     ret := obj;
