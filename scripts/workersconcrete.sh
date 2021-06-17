@@ -6,6 +6,8 @@ declare name=$(basename $testfile)
 declare base=${name%%.*}
 declare dir=$(dirname $testfile)
 
+declare log_test_file="log_test.log"
+
 declare workersexamples="$dir/workers"
 declare promisesdir="js/Promises"
 
@@ -47,6 +49,19 @@ echo "Compiling resulting file to JSIL"
 #cp -R "$dir/$base.jsil" .
 echo -e "running $base.jsil"
 ./jsil.native -file "$base.jsil" -pbn -mp
+
+declare nasserts=`grep -c "TestHarnessAssert: 0" $log_test_file`
+declare nasserts_passed=`grep -c "CMD: return" $log_test_file`
+declare nasserts_failed=`grep -c "CMD: throw" $log_test_file`
+echo "NUMBER OF ASSERTS CHECKED: $nasserts"
+echo "--Passing: $nasserts_passed"
+echo "--Failing: $nasserts_failed"
+if [[ $nasserts_failed = 0 ]] 
+then
+  echo "TEST PASSED"
+else 
+  echo "TEST FAILED"
+fi
 
 echo -e "removing log_verboser.log"
 rm "log_verboser.log"

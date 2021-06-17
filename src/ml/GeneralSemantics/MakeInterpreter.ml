@@ -530,6 +530,9 @@ let evaluate_cmd
 
   if (printing_allowed (ConfCont(state, cs, prev, i, b_counter, None))) then
     print_configuration annot_cmd state cs i b_counter;
+  
+  if (proc_name = CCommon.assert_fun_name) then
+   L.log L.Test (lazy (cconf_str annot_cmd state cs i b_counter !CCommon.print_by_need));
 
   let evaluate_return (v_ret : Val.t) (ev_cont : await_cont_t option) : cconf_t list =
     let result =
