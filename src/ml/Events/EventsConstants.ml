@@ -6,6 +6,7 @@ let add_handler           = "__ES__wrapper__addHandler"
 let remove_handler        = "__ES__wrapper__removeHandler"
 let await                 = "__ES__wrapper__js_await"
 let schedule              = "__ES__wrapper__schedule"
+let unschedule            = "__ES__wrapper__unschedule"
 let schedule_with_time    = "__ES__wrapper__schedule_with_time"
 
 let message_event         = "message"

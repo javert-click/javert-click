@@ -217,6 +217,7 @@ proc setupInitialHeap () {
 	  (* TIMING EVENTS *)
 	  [$lg, "setImmediate"]                           := {{ "d", $lsetImmediate, true, false, true }};
 	  [$lg, "setTimeout"]                             := {{ "d", $lsetTimeout, true, false, true }};
+	  [$lg, "clearTimeout"]                           := {{ "d", $lclearTimeout, true, false, true }};
 	  (* Events *)
 	  [$lg, "__ES__wrapper__addHandler"]			  := {{ "d", $laddhandler, true, false, true }};
 	  [$lg, "__ES__wrapper__removeHandler"]		      := {{ "d", $lremovehandler, true, false, true }};
@@ -225,6 +226,7 @@ proc setupInitialHeap () {
 	  [$lg, "__ES__wrapper__syncDispatch"]			  := {{ "d", $lsdispatch, true, false, true }};
 	  [$lg, "__ES__wrapper__asyncDispatch"]			  := {{ "d", $ladispatch, true, false, true }};
       [$lg, "__ES__wrapper__schedule"]			      := {{ "d", $lschedule, true, false, true }};
+	  [$lg, "__ES__wrapper__unschedule"]			  := {{ "d", $lunschedule, true, false, true }};
 	  [$lg, "__ES__schedule"]		      			  := {{ "d", $l_es_schedule, true, false, true }};
 	  [$lg, "__ES__addHandler"]		      			  := {{ "d", $l_es_addhandler, true, false, true }};
 	  [$lg, "__ES__wrapper__js_await"]    			  := {{ "d", $ljsawait, true, false, true }};
@@ -274,6 +276,7 @@ proc setupInitialHeap () {
 	  (* TIMING EVENTS *)
 	  ret := "create_object_with_call_construct_concrete" ($lsetImmediate, "setImmediate", empty, 1);
 	  ret := "create_object_with_call_construct_concrete" ($lsetTimeout, "setTimeout", empty, 1);
+	  ret := "create_object_with_call_construct_concrete" ($lclearTimeout, "clearTimeout", empty, 1);
 
   		(* Object object *)
 
@@ -874,6 +877,13 @@ proc setTimeout(_scope, _this, fname, time){
     elab: throw
 };
 
+proc clearTimeout(xsc, vthis, eid){
+    ret := "__ES__wrapper__unschedule"(xsc, vthis, eid) with elab;
+	return;
+	
+    elab: throw
+};
+
 (*  EVENTS *)
 proc setupEvents(){
 	ret := "create_object_with_call_construct_concrete"($ljsawait, "js_await", empty, 1);
@@ -884,6 +894,7 @@ proc setupEvents(){
 	ret := "create_object_with_call_construct_concrete"($lremovehandler, "__ES__wrapper__removeHandler", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($laddhandler, "__ES__wrapper__addHandler", empty, 1);
     ret := "create_object_with_call_construct_concrete"($lschedule, "__ES__wrapper__schedule", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lunschedule, "__ES__wrapper__unschedule", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($l_es_schedule, "__ES__schedule", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($l_es_addhandler, "__ES__addHandler", empty, 1);
 	ret := empty;

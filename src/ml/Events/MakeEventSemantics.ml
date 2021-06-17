@@ -290,6 +290,22 @@ module M
                     confs_so_far @ [((new_conf, prog), ehs, new_hq, n)]
               )
           ) [] [ cconf, [ fid ] ]
+      
+      | Unschedule (eid) -> 
+        let (conf, ehs, hq, n) = state in
+        (match Val.to_literal eid with
+        | Some (Num eid) -> 
+          let eid = int_of_float eid in
+          let hq' = List.filter 
+          (fun hdlr ->
+            match hdlr with
+            | Scheduler.Handler (_, _, TimingEvent (id, t), _) ->
+              eid <> id
+            | _ -> true 
+          ) hq in
+          [conf', ehs, hq', n]
+        | _ -> [conf', ehs, hq, n])
+        
 
       | _ -> [state]
 

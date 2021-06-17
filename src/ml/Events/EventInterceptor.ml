@@ -5,6 +5,7 @@ type ('conf, 'cinfo, 'v, 'm) t =
   | RemoveHandler     of 'v *'v * 'v                                                      (** Remove event handler     (xvar, event_type, event, handler) **)
   | Await             of ('conf * 'cinfo * ('v * 'v list))   
   | Schedule          of string * 'v * ('v list) * 'v option                              (** Schedule (xvar, fid, args, time) **)
+  | Unschedule        of 'v                                                               (** Unschedule (eid) *)
   | MLabel            of 'm                                                               (* Message Passing Label (See MPInterceptor for more details) *)
 
 
@@ -47,6 +48,9 @@ let intercept
         | ec, (_ :: _  :: fid :: args) when ec = EventsConstants.schedule ->
             (** Schedule **)
             Some (Schedule (x, fid, args, None))
+        | ec, [_; _; eid] when ec = EventsConstants.unschedule ->
+            (** Schedule **)
+            Some (Unschedule (eid))
         
         | ec, (_ :: _  :: time :: fid :: args) when ec = EventsConstants.schedule_with_time ->
             (** Schedule **)
