@@ -1,13 +1,18 @@
 type ('v) t =
-  | GeneralEvent of 'v   (* GeneralEvent (type) *)
-  | MessageEvent         (* MessageEvent (msg) *)
-  | TimingEvent of float (* TimingEvent used for setTimeout, setInterval *)
+  | GeneralEvent of 'v         (* GeneralEvent (type) *)
+  | MessageEvent               (* MessageEvent (msg) *)
+  | TimingEvent of int * float (* TimingEvent (id, time) *)
 
-let create (val_to_lit: 'v -> Literal.t option) (event_type: 'v) (event_data: ('v)) : ('v) t =
+let create (val_to_lit: 'v -> Literal.t option) (event_id: int) (event_type: 'v) (event_data: ('v)) : ('v) t =
   match val_to_lit event_type with
   | Some (String "General") -> GeneralEvent event_data
   | Some (String "Message") -> MessageEvent
-  | Some (String "Timing") -> TimingEvent (0.0)
+  | Some (String "Timing") -> 
+    (
+      match val_to_lit event_data with
+      | Some (Num time) -> TimingEvent (event_id, time)
+      | _ -> raise (Failure "Wrong parameters given to timing event") 
+    )
   | _ -> raise (Failure "Event type not supported") 
 
 let is_concrete (v_to_lit: 'v -> Literal.t option) (event: ('v) t) : bool =
@@ -26,17 +31,17 @@ let str (v_to_str: 'v -> string) (event: ('v) t) : string =
   match event with
   | GeneralEvent (v)   -> "GeneralEvent:" ^ v_to_str v
   | MessageEvent       -> "MessageEvent"
-  | TimingEvent (time) -> Printf.sprintf "TimingEvent(%f)" time
+  | TimingEvent (_, time) -> Printf.sprintf "TimingEvent(%f)" time
 
 let is_timing_event (event :('v) t): bool =
   match event with
   | GeneralEvent _ -> false
   | MessageEvent   -> false
-  | TimingEvent (time)   -> true
+  | TimingEvent _   -> true
 
 let lt (e1: ('v) t) (e2: ('v) t): bool =
   match e1, e2 with
-  | TimingEvent t1, TimingEvent t2 -> t1 < t2
+  | TimingEvent (_, t1), TimingEvent (_, t2) -> t1 < t2
   | _, _ -> raise (Failure "less than operator not defined for non-timing events")
   
 

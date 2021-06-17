@@ -107,6 +107,15 @@ module M
     let ((cconf,_), _, _, _) = estate in
     Interpreter.eval_expr cconf expr
 
+  let rec create_event_id (hq: handler_queue_t) : int =
+    Random.self_init ();
+    let eid = Random.int 1000 in
+    let present = List.fold_left 
+      (fun acc su -> match su with
+        | Scheduler.Handler (_, _, TimingEvent (id, _), _) -> id = eid
+        | _ -> acc) false hq in 
+    if (present) then (create_event_id hq) else eid
+
   (** Continuation **)
   let exec_handler (state : state_t) : state_t list =
     let (conf : Interpreter.econf_t), ehs, hq, n = state in
@@ -173,7 +182,7 @@ module M
   let print_state (state : state_t) : unit = 
     L.log L.Normal (lazy (Printf.sprintf
         "\n-------------------EVENT CONFIGURATION------------------------\n%s------------------------------------------------------\n" (state_str state)))
-
+  
   let dispatch 
       (ev_name             : event_t) 
       (state               : state_t) 
@@ -221,19 +230,19 @@ module M
     match label with
     | SyncDispatch (xvar, event_type, event, args) -> 
         (* TODO: check how events will be created! *)
-        let event = Events.create Val.to_literal event_type event in
+        let event = Events.create Val.to_literal (create_event_id hq) event_type event in
         (** Synchronous event dispatch*)           
         let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
         dispatch event (conf', ehs, hq, n) listeners xvar args true 
 
     | AsyncDispatch (xvar, event_type, event, args) ->
-        let event = Events.create Val.to_literal event_type event in
+        let event = Events.create Val.to_literal (create_event_id hq) event_type event in
         (** Asynchronous event dispatch*)
         let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
         dispatch event (conf', ehs, hq, n) listeners xvar args false
 
     | AddHandler (event_type, event, handler, args) ->
-        let event = Events.create Val.to_literal event_type event in
+        let event = Events.create Val.to_literal (create_event_id hq) event_type event in
         (** Add Event Handler *)
         let states = add_event_handler state event handler args in 
         List.map 
@@ -243,7 +252,7 @@ module M
 
     | RemoveHandler (event_type, event, handler) ->
         (** Remove Event Handler *)
-        let event = Events.create Val.to_literal event_type event in
+        let event = Events.create Val.to_literal (create_event_id hq) event_type event in
         let states = remove_event_handler state event handler in
         List.map 
           (fun (conf, ehs, hq, n) -> 
@@ -259,14 +268,16 @@ module M
         let (conf, ehs, hq, n) = state in
         let (cconf, prog) = conf' in
         let gen_event = GeneralEvent (Val.from_literal (String EventsConstants.schedule_event)) in
-        let event = match time with
+        let event, cconf = match time with
         | Some time -> 
           (*Printf.printf "\nFound schedule! time: %s" (Val.str time); *)
           (match Val.to_literal time with
-          | Some (Num time) -> (*Printf.printf "\nAdding timing event with time %f\n" time;*)
-            TimingEvent (time)
-          | _ -> gen_event)
-        | None -> gen_event in
+          | Some (Num time) -> 
+          (*Printf.printf "\nAdding timing event with time %f\n" time;*)
+            let eid = create_event_id hq in
+            TimingEvent (eid, time), Interpreter.set_var xvar (Val.from_literal (Num (float_of_int eid))) cconf
+          | _ -> gen_event, cconf)
+        | None -> gen_event, cconf in
         (* Dispatch *)
         List.fold_left
           (fun confs_so_far (new_conf, hdlrs) ->
@@ -349,7 +360,7 @@ module M
     let (econf, _, _, _) = state in
     let econf' = Interpreter.new_conf url setup_fid args econf in
     econf', SymbMap.init (), [], 0
-  
+
   let set_var (xvar: Var.t) (v: vt) (state: state_t) : state_t = 
     let ((c, prog), h, q, n) = state in
     ((Interpreter.set_var xvar v c, prog), h, q, n)
