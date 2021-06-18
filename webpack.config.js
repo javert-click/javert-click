@@ -12,6 +12,7 @@ module.exports = env => {
       optimization: {
         minimize: false
       },
+      stats: 'errors-only',
       mode: 'production',
       plugins: [
         new CircularDependencyPlugin({
