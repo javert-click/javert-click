@@ -73,7 +73,7 @@ MessagePort.prototype.postMessage = function(message, options){
     MPSem.beginAtomic();
     // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.
     var targetPort = MPSem.getPaired(this.__id);
-    console.log('Sending message from port '+this.__id+' to port '+targetPort);
+    //console.log('Sending message from port '+this.__id+' to port '+targetPort);
     // 2. Run the message port post message steps providing targetPort, message and options.
     postMessageSteps(this, targetPort, false, message, options);
     MPSem.endAtomic();
@@ -87,7 +87,7 @@ MessagePort.prototype.postMessageWindow = function(message, targetOrigin, transf
     MPSem.beginAtomic();
     // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.
     var targetPort = MPSem.getPaired(this.__id);
-    console.log('Sending message from port '+this.__id+' to port '+targetPort);
+    //console.log('Sending message from port '+this.__id+' to port '+targetPort);
     // 2. Run the message port post message steps providing targetPort, message and options.
     postMessageSteps(this, targetPort, true, message, transfer);
     MPSem.endAtomic();
@@ -247,7 +247,7 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
     var event = new scopeMP.MessageEvent.MessageEvent();
     event.data = messageClone; 
     event.ports = newPorts;
-    console.log('Going to dispatch message event');
+    //console.log('Going to dispatch message event');
     targetWindow.dispatchEvent(event);
 }
 

@@ -53,7 +53,10 @@ let debug        = ref false
 let sanity       = ref true
 
 let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoading"; "i__getValue" ]
-let assert_fun_name  = "TestHarnessAssert" 
+let assert_fun_names = ["TestHarnessAssertEquals"; "TestHarnessAssertNotEquals"; "TestHarnessAssertTrue"; "TestHarnessAssertFalse"; 
+  "TestHarnessAssertThrows"; "TestHarnessAssertThrowsJs"; "TestHarnessAssertThrowsExactly"; "TestHarnessAssertThrowsDom";
+  "TestHarnessAssertUnreached"; "TestHarnessAssertArrayEquals"; "TestHarnessAssertGreaterThanEqual"; "TestHarnessAssertLessThanEqual";
+  "TestHarnessAssertLessThan"; "TestHarnessAssertOwnProperty"; "TestHarnessAssertClassString"]
 
 let html_parser_path = "HTMLParser.js"
 let html_json_path   = "htmlfile.json"

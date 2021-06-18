@@ -245,7 +245,7 @@ module M
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
   let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * pc_map_t =
-    Printf.printf "\nProcessing message sent to port %s\n" (Literal.str port);
+    (*Printf.printf "\nProcessing message sent to port %s\n" (Literal.str port);*)
     let (vs, plist) = msg in
     (*Printf.printf "\nMessage parameters: %s" (String.concat ", " (List.map Val.str vs));*)
     let cid = Hashtbl.find pc port in
@@ -272,9 +272,9 @@ module M
         let conf'', new_conf = new_execution xvar url setup_fid args  cids (cid, conf) in
         [conf'', mq, pc, pp, Some (AddConf new_conf), None] 
       | Terminate (xvar, cid') -> 
-        Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');
+        (*Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');*)
         let cid' = compute_int_from_val cid' in
-        Printf.printf "\nComputed cid: %d\n" cid'; 
+        (*Printf.printf "\nComputed cid: %d\n" cid'; *)
         let plist = Hashtbl.fold (fun port' cid' acc -> if (cid = cid') then acc @ [port'] else acc) pc [] in
         let mq', pc', pp' = terminate plist mq pc pp in
         [(cid, conf), mq', pc', pp', Some (RemConf (cid')), None]
@@ -411,7 +411,7 @@ module M
     let first_cid = generate_new_conf_id [] in
     let initial_mpconf = [first_cid, initial_econf], [], Hashtbl.create CCommon.medium_tbl_size, Hashtbl.create CCommon.medium_tbl_size, None in
     let final_confs = make_steps [initial_mpconf] in
-    Printf.printf "\nMP-Semantics: Finished execution with %d MP-configurations.\n" (List.length final_confs);
+    (*Printf.printf "\nMP-Semantics: Finished execution with %d MP-configurations.\n" (List.length final_confs);*)
     List.map (fun (cq, mq, pc, pp, _) -> 
       let erets = List.map (fun (cid, econf) -> cid, EventSemantics.econf_to_result econf) cq in
       (erets, mq, pc, pp)) final_confs

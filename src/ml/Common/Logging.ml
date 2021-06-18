@@ -52,6 +52,17 @@ let log lvl (msg : string lazy_t) : unit =
     | Verboser -> output_string !log_verboser msg
     | Test -> output_string !log_test msg))
 
+(** 
+  Actual logging for testing purpose
+  @param msg Log message
+*)
+let log_test_only (msg : string lazy_t) : unit = 
+    let msg = Lazy.force msg in 
+    if (msg <> "") then (
+    let msg = Printf.sprintf "%s\n%!" msg in 
+    let msg = Printf.sprintf "%s\n%!" msg in 
+    output_string !log_test msg)
+
 (** Closing file descriptors *)
 
 let log_with_close lvl (msg : string lazy_t) : unit = 

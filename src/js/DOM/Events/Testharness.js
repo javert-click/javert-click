@@ -978,7 +978,7 @@ function format_value(val, seen)
 expose(format_value, "format_value");
 
 /*
-* @id TestharnessAssertTrue
+* @id TestHarnessAssertTrue
 */
 function assert_true(actual, description)
 {
@@ -987,6 +987,9 @@ function assert_true(actual, description)
 }
 expose(assert_true, "assert_true");
 
+/*
+* @id TestHarnessAssertFalse
+*/
 function assert_false(actual, description)
 {
     assert(actual === false, "assert_false", description,
@@ -1006,6 +1009,9 @@ function same_value(x, y) {
     return x === y;
 }
 
+/*
+* @id TestHarnessAssertEquals
+*/
 function assert_equals(actual, expected, description)
 {
     /*
@@ -1024,6 +1030,9 @@ function assert_equals(actual, expected, description)
 }
 expose(assert_equals, "assert_equals");
 
+/*
+* @id TestHarnessAssertNotEquals
+*/
 function assert_not_equals(actual, expected, description)
 {
     /*
@@ -1080,6 +1089,9 @@ function assert_object_equals(actual, expected, description)
 }
 expose(assert_object_equals, "assert_object_equals");
 
+/*
+* @id TestHarnessAssertArrayEquals
+*/
 function assert_array_equals(actual, expected, description)
 {
     assert(typeof actual === "object" && actual !== null && "length" in actual,
@@ -1150,6 +1162,9 @@ function assert_approx_equals(actual, expected, epsilon, description)
 }
 expose(assert_approx_equals, "assert_approx_equals");
 
+/*
+* @id TestHarnessAssertLessThan
+*/
 function assert_less_than(actual, expected, description)
 {
     /*
@@ -1167,6 +1182,9 @@ function assert_less_than(actual, expected, description)
 }
 expose(assert_less_than, "assert_less_than");
 
+/*
+* @id TestHarnessAssertGreaterThan
+*/
 function assert_greater_than(actual, expected, description)
 {
     /*
@@ -1202,6 +1220,9 @@ function assert_between_exclusive(actual, lower, upper, description)
 }
 expose(assert_between_exclusive, "assert_between_exclusive");
 
+/*
+* @id TestHarnessAssertLessThanEqual
+*/
 function assert_less_than_equal(actual, expected, description)
 {
     /*
@@ -1219,6 +1240,9 @@ function assert_less_than_equal(actual, expected, description)
 }
 expose(assert_less_than_equal, "assert_less_than_equal");
 
+/*
+* @id TestHarnessAssertGreaterThanEqual
+*/
 function assert_greater_than_equal(actual, expected, description)
 {
     /*
@@ -1265,13 +1289,18 @@ function assert_regexp_match(actual, expected, description) {
 }
 expose(assert_regexp_match, "assert_regexp_match");
 
+/*
+* @id TestHarnessAssertClassString
+*/
 function assert_class_string(object, class_string, description) {
     assert_equals({}.toString.call(object), "[object " + class_string + "]",
                 description);
 }
 expose(assert_class_string, "assert_class_string");
 
-
+/*
+* @id TestHarnessAssertOwnProperty
+*/
 function assert_own_property(object, property_name, description) {
     assert(object.hasOwnProperty(property_name),
         "assert_own_property", description,
@@ -1329,11 +1358,7 @@ function assert_readonly(object, property_name, description)
 expose(assert_readonly, "assert_readonly");
 
 /**
- * Assert an Exception with the expected code is thrown.
- *
- * @param {object|number|string} code The expected exception code.
- * @param {Function} func Function which should throw.
- * @param {string} description Error description for the case that the error is not thrown.
+ * @id TestHarnessAssertThrows
  */
 function assert_throws(code, func, description)
 {
@@ -1461,12 +1486,8 @@ function assert_throws(code, func, description)
 }
 expose(assert_throws, "assert_throws");
 
- /**
-     * Assert the provided value is thrown.
-     *
-     * @param {value} exception The expected exception.
-     * @param {Function} func Function which should throw.
-     * @param {string} description Error description for the case that the error is not thrown.
+    /**
+     * @id TestHarnessAssertThrowsExactly
      */
     function assert_throws_exactly(exception, func, description)
     {
@@ -1497,12 +1518,8 @@ expose(assert_throws, "assert_throws");
         }
     }
 
-/**
-     * Assert a JS Error with the expected constructor is thrown.
-     *
-     * @param {object} constructor The expected exception constructor.
-     * @param {Function} func Function which should throw.
-     * @param {string} description Error description for the case that the error is not thrown.
+    /**
+     * @id TestHarnessAssertThrowsJs
      */
     function assert_throws_js(constructor, func, description)
     {
@@ -1567,30 +1584,9 @@ expose(assert_throws, "assert_throws");
         }
     }
 
-/**
-     * Assert a DOMException with the expected type is thrown.
-     *
-     * @param {number|string} type The expected exception name or code.  See the
-     *        table of names and codes at
-     *        https://heycam.github.io/webidl/#dfn-error-names-table
-     *        If a number is passed it should be one of the numeric code values
-     *        in that table (e.g. 3, 4, etc).  If a string is passed it can
-     *        either be an exception name (e.g. "HierarchyRequestError",
-     *        "WrongDocumentError") or the name of the corresponding error code
-     *        (e.g. "HIERARCHY_REQUEST_ERR", "WRONG_DOCUMENT_ERR").
-     *
-     * For the remaining arguments, there are two ways of calling
-     * promise_rejects_dom:
-     *
-     * 1) If the DOMException is expected to come from the current global, the
-     * second argument should be the function expected to throw and a third,
-     * optional, argument is the assertion description.
-     *
-     * 2) If the DOMException is expected to come from some other global, the
-     * second argument should be the DOMException constructor from that global,
-     * the third argument the function expected to throw, and the fourth, optional,
-     * argument the assertion description.
-     */
+    /*
+    * @id TestHarnessAssertThrowsDom
+    */ 
     function assert_throws_dom(type, funcOrConstructor, descriptionOrFunc, maybeDescription)
     {
         let constructor, func, description;
@@ -1759,6 +1755,9 @@ expose(assert_throws, "assert_throws");
         }
     }
 
+/*
+ * @id TestHarnessAssertUnreached
+ */
 function assert_unreached(description) {
     assert(false, "assert_unreached", description,
             "Reached unreachable code");
@@ -1948,7 +1947,7 @@ Test.prototype.step_func_done = function(func, this_obj)
                 Array.prototype.slice.call(arguments)));
         }
         //TODOMP: this line was not commented before but this disables MP handlers to be executed.
-        //test_this.done();
+        test_this.done();
     };
 };
 
