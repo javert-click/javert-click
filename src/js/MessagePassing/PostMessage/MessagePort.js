@@ -223,14 +223,14 @@ function windowPostMessageSteps(targetWindow, message, options){
     // 7. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
     var serializeWithTransferResult = Serialization.StructuredSerializeWithTransfer(message, transfer);
     // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
-    __ES__wrapper__schedule("windowProcessMessageSteps", scopeMP, serializeWithTransferResult, transferIds, targetWindow);
+    __ES__wrapper__schedule("windowProcessMessageSteps", scopeMP, serializeWithTransferResult, transferIds, targetWindow, targetOrigin);
 }
 
 /*
 * @JSIL
 * @id windowProcessMessageSteps
 */
-function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, targetWindow){
+function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, targetWindow, origin){
     //transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
     // 8.1 If the targetOrigin argument is not a single literal U+002A ASTERISK character (*) and targetWindow's associated Document's origin is not same origin with targetOrigin, then return.
     // 8.2 Let origin be the serialization of incumbentSettings's origin.
@@ -239,6 +239,7 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(serializeWithTransferResult, transferIds, scopeMP.MessagePort);
     // 8.5 Let messageClone be deserializeRecord.[[Deserialized]].
     var messageClone = deserializeRecord.Deserialized;
+    //console.log('Obtained message '+messageClone);
     // 8.6 Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
     var newPorts = deserializeRecord.TransferredValues;
     // 8.7 Fire an event named message at targetWindow, using MessageEvent, 
@@ -247,7 +248,8 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
     var event = new scopeMP.MessageEvent.MessageEvent();
     event.data = messageClone; 
     event.ports = newPorts;
-    //console.log('Going to dispatch message event');
+    event.origin = origin;
+    //console.log('Going to dispatch message event, listeners: '+targetWindow.listeners);
     targetWindow.dispatchEvent(event);
 }
 

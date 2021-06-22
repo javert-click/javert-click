@@ -159,6 +159,15 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, typest
                   keyvals := {{ }};
                   i := 0;
                   n := l-len (keys);
+                  goto [n = 0] noelems loop;
+    noelems:      count := l-len(memory);
+                  countlist := {{ "Id", count }};
+                  properties := {{ }};
+                  propslist := {{ "Properties", properties }};
+                  lengthl := {{ "Length", 0 }};
+                  serialized := {{ type, propslist, countlist, lengthl }};
+                  memory := "JSILMap_add_or_replace" (memory, value, serialized);
+                  goto succ;
     loop:         goto [i < n] addprop succ;
     addprop:      key := l-nth (keys, i);
                   (* 26.4.1 If ! HasOwnProperty(value, key) is true, then:*)
@@ -436,6 +445,9 @@ proc DeserializeObject(xsc, vthis, id, value, props, memory, obj_memory){
     valok:      propslist := l-nth (props, 1);
                 i := 0;
                 n := l-len (propslist);
+                goto [n = 0] noprops loop;
+    noprops:    obj_memory := "JSILMap_add_or_replace" (obj_memory, id, value);
+                goto end;
                 (* 22.3.1 For each Record { [[Key]], [[Value]] } entry of serialized.[[Properties]]: *)
     loop:       goto [i < n] addprop end;
     addprop:    kvserialized := l-nth (propslist, i);
@@ -480,8 +492,7 @@ proc StructuredDeserializeWithMemory(xsc, vthis, serialized, memory, obj_memory)
     prim:       value := v;
                 goto mem;
                 (* Steps 6 - 16 are implemented in DeserializeObjectWithPrimVal (defined above) *)
-    nprim:      v := l-nth (serialized, 0);
-                value := "DeserializeObjectWithPrimVal" (xsc, vthis, type, v);
+    nprim:      value := "DeserializeObjectWithPrimVal" (xsc, vthis, type, v);
                 (* 17. Otherwise, if serialized.[[Type]] is "Array", then: *)
                 goto [type = "Array"] arr narr;
     arr:        (* (DONE INSIDE Array_construct) 17.1 Let outputProto be targetRealm.[[Intrinsics]].[[%Array.prototype%]]. *)
