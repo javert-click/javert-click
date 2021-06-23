@@ -233,7 +233,7 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
     nonerrorobj:  (* 18. Otherwise, if value is an Array exotic object, then:*)
                   m := metadata(value);
 			      clazz := [m, "@class"];
-                  goto [clazz = "Array"] arrobj nodataclone;
+                  goto [clazz = "Array"] arrobj is_obj;
     arrobj:       (* 18.1. Let valueLenDescriptor be ? OrdinaryGetOwnProperty(value, "length"). *)
                   valueLenDescriptor := "getOwnProperty" (value, "length");
                   (* 18.2. Let valueLen be valueLenDescriptor.[[Value]]. *)
@@ -248,8 +248,11 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   goto succ; 
                   (* 19. (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object: *)
                   (* 20. (NOT SUPPORTED) Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException. *)
+    is_obj:       goto [clazz = "Object"] checkplat updatemem;
+    checkplat:    is_platform := "get" (value, "__platform") with elab;
+                  goto [is_platform = true] dataclon nplatobj;      
                   (* 21. Otherwise, if IsCallable(value) is true, then throw a "DataCloneError" DOMException. *)
-                  is_callable := "i__isCallable" (value);
+    nplatobj:     is_callable := "i__isCallable" (value);
                   goto [is_callable = true] dataclon nodataclone;
     dataclon:     ret := datacloneerr;
                   throw;
@@ -257,8 +260,8 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* TODOMP *)
                   (* 23. (NOT SUPPORTED) Otherwise, if value is an exotic object ... *)
                   (* 24. Otherwise: *)
-                  goto [clazz = "Object"] obj updatemem;
-    obj:          (* 24.1 Set serialized to { [[Type]]: "Object", [[Properties]]: a new empty List }. *)
+                  
+                  (* 24.1 Set serialized to { [[Type]]: "Object", [[Properties]]: a new empty List }. *)
                   (* 24.2 Set deep to true. *)
                   deep := true;
                   goto updatemem;
@@ -290,7 +293,8 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
 proc StructuredSerializeInternal(xsc, vthis, value, forStorage, datacloneerr){
                   (* 1. If memory was not supplied, let memory be an empty map. *)
                   memory := "JSILMap_create" ();
-                  res := "StructuredSerializeInternalWithMemory" (xsc, vthis, value, forStorage, memory, datacloneerr, 0) with elab;
+                  ret := "StructuredSerializeInternalWithMemory" (xsc, vthis, value, forStorage, memory, datacloneerr) with elab;
+                  res := ret;
                   ret := [res, "serialized"];
                   goto succ;
     succ:         return;

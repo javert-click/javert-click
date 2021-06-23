@@ -14,3 +14,10 @@ proc MessageEvent_construct(xsc, vthis, obj){
     ret := "setClassAttr"(obj, "MessageEvent");
     return
 };
+
+proc Navigator_construct(){
+    ret := "create_default_object_concrete" ($lnavigator, $lobj_proto, "Object", true);
+    result := "put" ($lnavigator, "__platform", true);
+    ret := $lnavigator;
+    return
+};

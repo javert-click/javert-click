@@ -235,7 +235,7 @@ proc setupInitialHeap () {
 	  [$lg, "JSILSetGlobalObjProp"]                   := {{ "d", $ljsilsetmpscope, true, false, true }};
 	  [$lg, "StructuredSerializeInternal"]            := {{ "d", $lserializeinternal, true, false, true }};
 	  [$lg, "StructuredDeserialize"]                  := {{ "d", $ldeserialize, true, false, true }};
-
+	  
 	  [$lg, "__MP__wrapper__newPort"]			      := {{ "d", $lsmpnewport, true, false, true }};
 	  [$lg, "__MP__wrapper__send"]			          := {{ "d", $lsmpsend, true, false, true }};
 	  [$lg, "__MP__wrapper__create"]			      := {{ "d", $lsmpcreate, true, false, true }};
@@ -248,6 +248,9 @@ proc setupInitialHeap () {
 
 	  [$lg, "Worker_construct"]              		  := {{ "d", $lworkerconstruct, true, false, true }};
 	  [$lg, "MessageEvent_construct"]              	  := {{ "d", $lmessageeventconstruct, true, false, true }};
+      [$lg, "Navigator_construct"]              	  := {{ "d", $lnavigatorconstruct, true, false, true }};
+
+      [$lg, "navigator"]             		  		  := {{ "d", $lnavigator, true, false, true }};
 
 	  (* JS2JSIL List *)
 	  [$lg, "initJS2JSILList"]                        := {{ "d", $linitjsillist, true, false, true }};
@@ -957,7 +960,8 @@ proc setupInitialMP(){
 
 	ret := "create_object_with_call_construct_concrete"($lworkerconstruct, "Worker_construct", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lmessageeventconstruct, "MessageEvent_construct", empty, 1);
-
+    ret := "create_object_with_call_construct_concrete"($lnavigatorconstruct, "Navigator_construct", empty, 1);
+    ret := "Navigator_construct"();
 	ret := empty;
 	return
 };
