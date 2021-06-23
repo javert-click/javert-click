@@ -56,7 +56,7 @@ let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoadin
 let assert_fun_names = ["TestHarnessAssertEquals"; "TestHarnessAssertNotEquals"; "TestHarnessAssertTrue"; "TestHarnessAssertFalse"; 
   "TestHarnessAssertThrows"; "TestHarnessAssertThrowsJs"; "TestHarnessAssertThrowsExactly"; "TestHarnessAssertThrowsDom";
   "TestHarnessAssertUnreached"; "TestHarnessAssertArrayEquals"; "TestHarnessAssertGreaterThanEqual"; "TestHarnessAssertLessThanEqual";
-  "TestHarnessAssertLessThan"; "TestHarnessAssertOwnProperty"; "TestHarnessAssertClassString"]
+  "TestHarnessAssertLessThan"; "TestHarnessAssertOwnProperty"; "TestHarnessAssertClassString"; "TestHarnessAssertObjectEquals"]
 
 let html_parser_path = "HTMLParser.js"
 let html_json_path   = "htmlfile.json"

@@ -1053,6 +1053,9 @@ function assert_in_array(actual, expected, description)
 }
 expose(assert_in_array, "assert_in_array");
 
+/*
+* @id TestHarnessAssertObjectEquals
+*/
 function assert_object_equals(actual, expected, description)
 {
     assert(typeof actual === "object" && actual !== null, "assert_object_equals", description,

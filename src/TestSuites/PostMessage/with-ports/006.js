@@ -2,11 +2,9 @@
 
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
 import { assert_equals, async_test } from '../../../js/DOM/Events/Testharness';
-import { dummy_location } from '../stubs/Location';
+const location = require('../../../js/MessagePassing/PostMessage/Location');
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();
-
-var location = dummy_location;
 
 async_test(function() {
   window.postMessage('', location.protocol + '//' + location.host + '/', []);
