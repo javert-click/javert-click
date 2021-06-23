@@ -26,8 +26,8 @@ ArrayIterator.prototype.next = function () {
 }
 
 /* @id p_aux_proto_getIterator */
-Array.prototype.getIterator = function () {
-  return new ArrayIterator(this)
+function getIterator (iterable) {
+  if (iterable instanceof Array) return new ArrayIterator(iterable)
 }
 
 /* @id p_aux__IsNotObject */
@@ -473,7 +473,7 @@ var p__all = function (iterable) {
     throw new TypeError();
   var promiseCapability = NewPromiseCapability(C);
   try {
-    var iteratorRecord = iterable.getIterator()
+    var iteratorRecord = getIterator(iterable)
   } catch (e) {
     promiseCapability.Reject(undefined, e);
     return promiseCapability.Promise
@@ -564,7 +564,7 @@ var p__race = function (iterable) {
     throw new TypeError();
   var promiseCapability = NewPromiseCapability(C);
   try {
-    var iteratorRecord = iterable.getIterator()
+    var iteratorRecord = getIterator(iterable)
   } catch (e) {
     (promiseCapability.Reject).call(undefined, e);
     return promiseCapability.Promise
@@ -609,7 +609,7 @@ var p__allSettled = function (iterable) {
     throw new TypeError();
   var promiseCapability = NewPromiseCapability(C);
   try {
-    var iteratorRecord = iterable.getIterator()
+    var iteratorRecord = getIterator(iterable)
   } catch (e) {
     (promiseCapability.Reject).call(undefined, e);
     return promiseCapability.Promise
