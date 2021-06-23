@@ -4,6 +4,7 @@ const DOMException = require('../../DOM/Common/DOMException');
 const MessageEvent = require('../../DOM/Events/MessageEvent');
 const JS2JSILList  = require('../../Utils/JS2JSILList'); 
 const ArrayUtils   = require('../../Utils/ArrayUtils'); 
+const URL          = require('./URL');
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
 
@@ -83,6 +84,7 @@ MessagePort.prototype.postMessage = function(message, options){
 * @id MessagePortPostWindow
 */
 MessagePort.prototype.postMessageWindow = function(message, targetOrigin, transfer){
+    if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     //For the moment let's ignore targetOrigin
     MPSem.beginAtomic();
     // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.
@@ -138,7 +140,8 @@ function postMessageSteps(origPort, targetPort, isWindow, message, options){
     if(targetPort === null || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
     // Note: This call to 'send' will enable our MessagePassing semantics, which will then  trigger the processMessageSteps function.
-    MPSem.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort, isWindow);
+    var origin = URL.parse();
+    MPSem.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort, isWindow, origin);
 }
 
 var scopeMP = {};
@@ -147,7 +150,7 @@ var scopeMP = {};
 * @JSIL
 * @id processMessageSteps
 */
-function processMessageSteps(global, message, targetPortId, isWindow, transferIds){
+function processMessageSteps(global, message, targetPortId, isWindow, transferIds, origin){
     // Initial setup
     var scopeMP = global.__scopeMP;
     transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
@@ -172,6 +175,7 @@ function processMessageSteps(global, message, targetPortId, isWindow, transferId
     var event = new scopeMP.MessageEvent.MessageEvent();
     event.data = messageClone; 
     event.ports = newPorts;
+    if (isWindow) event.origin = origin;
 
     //console.log('Going to dispatch event, isWindow: '+isWindow);
     //console.log('finalTargetPort.targetWindow: '+finalTargetPort.targetWindow);
@@ -196,6 +200,7 @@ Object.defineProperty(Window.prototype, 'onmessage', {
 * @id WindowPostMessageWithOptions
 */
 Window.prototype.postMessage = function(message, options, transfer){
+    if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     // 1. Let targetWindow be this Window object.
     var targetWindow = this;
     // check which version of postMessage is called:
@@ -217,6 +222,11 @@ function windowPostMessageSteps(targetWindow, message, options){
     var targetOrigin = options['targetOrigin'];
     // 4. TODOMP: If targetOrigin is a single U+002F SOLIDUS character (/), then set targetOrigin to incumbentSettings's origin.
     // 5. TODOMP: Otherwise, if targetOrigin is not a single U+002A ASTERISK character (*), then:
+    // 5.1 Let parsedURL be the result of running the URL parser on targetOrigin.
+    var parsedURL = URL.parse(targetOrigin);
+    // 5.2 If parsedURL is failure, then throw a "SyntaxError" DOMException.
+    // 5.3 Set targetOrigin to parsedURL's origin.
+    targetOrigin = parsedURL;
     // 6. Let transfer be options["transfer"].
     var transfer = (options['transfer'] !== undefined) ? options['transfer'] : [];
     var transferIds = transfer.map(function(p) {return p.__id});
