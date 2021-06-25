@@ -155,6 +155,45 @@ module M
               update_store state x (Val.from_literal (String json_str));
               [ state, cs, i, i+1 ]
           | _ -> raise (Failure "Not possible to parse HTML."))))
+
+  (** 
+    JavaScript HTML Parsing
+
+    @param prog JSIL program
+    @param state Current state
+    @param preds Current predicates
+    @param cs Current call stack
+    @param i Current index
+    @param x Variable that stores the result
+    @param v_args Parameters
+    @param j Optional error index
+    @return Resulting configuration
+  *)
+  let execute_url_parsing prog state cs i x v_args j = 
+    (match v_args with 
+    | [x_scope; x_this; url_str] -> 
+      let opt_lit_str = Val.to_literal url_str in 
+      (match opt_lit_str with 
+      | None -> raise (Failure "ParseURL argument not a literal string")
+      | Some (String url) -> 
+        let cmd = "node " ^ url_parser_path ^ " " ^ "'"^url^"'" in 
+        let res = ref [] in
+        let in_channel = Unix.open_process_in cmd in
+        begin
+          try
+            while true do 
+              res := input_line in_channel :: !res
+            done;
+          with End_of_file ->
+           ignore (Unix.close_process_in in_channel)
+         end;
+              (*Printf.printf "Parsed url! Result: %s\n" (String.concat "" !res);*)
+              (** Update store so that return variable has the result **)
+              update_store state x (Val.from_literal (String (String.concat "" !res)));
+              [ state, cs, i, i+1 ] 
+          | _ -> raise (Failure "Not possible to parse URL."))
+      | _ -> raise (Failure "Not possible to parse URL."))
+
   (** 
     General External Procedure Treatment
 
@@ -182,6 +221,7 @@ module M
     | "ExecuteEvalJSIL"              -> execute_eval                 true prog state cs i x v_args j
     | "ExecuteFunctionConstructor"   -> execute_function_constructor prog state cs i x v_args j
     | "ExecuteHTMLParsing"           -> execute_html_parsing prog state cs i x v_args j
+    | "ExecuteURLParsing"            -> execute_url_parsing prog state cs i x v_args j
     | _ -> raise (Failure ("Unsupported external procedure call: " ^ pid)))
 
 end

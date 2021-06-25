@@ -249,6 +249,7 @@ proc setupInitialHeap () {
 	  [$lg, "Worker_construct"]              		  := {{ "d", $lworkerconstruct, true, false, true }};
 	  [$lg, "MessageEvent_construct"]              	  := {{ "d", $lmessageeventconstruct, true, false, true }};
       [$lg, "Navigator_construct"]              	  := {{ "d", $lnavigatorconstruct, true, false, true }};
+      [$lg, "URL_construct"]              	          := {{ "d", $lurlconstruct, true, false, true }};
 
       [$lg, "navigator"]             		  		  := {{ "d", $lnavigator, true, false, true }};
 
@@ -961,7 +962,8 @@ proc setupInitialMP(){
 	ret := "create_object_with_call_construct_concrete"($lworkerconstruct, "Worker_construct", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lmessageeventconstruct, "MessageEvent_construct", empty, 1);
     ret := "create_object_with_call_construct_concrete"($lnavigatorconstruct, "Navigator_construct", empty, 1);
-    ret := "Navigator_construct"();
+    ret := "create_object_with_call_construct_concrete"($lurlconstruct, "URL_construct", empty, 1);
+	ret := "Navigator_construct"();
 	ret := empty;
 	return
 };

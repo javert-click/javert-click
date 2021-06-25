@@ -1,5 +1,5 @@
-var dummy_protocol = "protocol";
-var dummy_host = "host";
+var dummy_protocol = "https:";
+var dummy_host     = "www.example.com";
 
 exports.protocol   = dummy_protocol;
-exports.dummy_host = dummy_host;
+exports.host       = dummy_host;

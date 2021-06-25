@@ -21,3 +21,8 @@ proc Navigator_construct(){
     ret := $lnavigator;
     return
 };
+
+proc URL_construct(xsc, vthis, str){
+    ret := extern ExecuteURLParsing (xsc, vthis, str);
+    return 
+};

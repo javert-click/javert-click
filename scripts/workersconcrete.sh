@@ -6,8 +6,14 @@ declare name=$(basename $testfile)
 declare base=${name%%.*}
 declare dir=$(dirname $testfile)
 
+declare log_test_file="log_test.log"
+
 declare workersexamples="$dir/workers"
 declare promisesdir="js/Promises"
+
+declare url_parser_file="js/MessagePassing/URLParsing/URLParser.js"
+
+cp $url_parser_file .
 
 npx webpack --config ../webpack.config.js --env entry=$testfile --env out=$testfile
 cp $testfile .
@@ -46,6 +52,19 @@ cp $setupconffilejsil .
 ./js2jsil.native -file $name -mp
 #cp -R "$dir/$base.jsil" .
 echo -e "-----Running $base.jsil-----"
-./jsil.native -file "$base.jsil" -silent -mp
+./jsil.native -file "$base.jsil" -pbn -mp
+
+declare nasserts=`grep -c "TestHarnessAssert.*: 0" $log_test_file`
+declare nasserts_passed=`grep -c "CMD: return" $log_test_file`
+declare nasserts_failed=`grep -c "CMD: throw" $log_test_file`
+echo "NUMBER OF ASSERTS CHECKED: $nasserts"
+echo "--Passing: $nasserts_passed"
+echo "--Failing: $nasserts_failed"
+if [[ $nasserts_failed = 0 ]] 
+  then
+    echo "TEST PASSED"
+else 
+    echo "TEST FAILED"
+fi
 
 

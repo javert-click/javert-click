@@ -205,9 +205,10 @@ Window.prototype.postMessage = function(message, options, transfer){
     var targetWindow = this;
     // check which version of postMessage is called:
     // postMessage(message [, options ]) or postMessage(message, targetOrigin [, transfer ])
-    if (options === undefined || (options['targetOrigin'] === undefined && transfer !== undefined)) {
+    if (options === undefined || (options['targetOrigin'] === undefined)) {
         options = { 'targetOrigin': options, 'transfer': transfer };
     }
+    if(transfer === undefined) options.transfer = [];
     // 2. Run the window post message steps providing targetWindow, message, and options.
     windowPostMessageSteps(targetWindow, message, options);
 }

@@ -59,6 +59,7 @@ let assert_fun_names = ["TestHarnessAssertEquals"; "TestHarnessAssertNotEquals";
   "TestHarnessAssertLessThan"; "TestHarnessAssertOwnProperty"; "TestHarnessAssertClassString"; "TestHarnessAssertObjectEquals"]
 
 let html_parser_path = "HTMLParser.js"
+let url_parser_path  = "URLParser.js"
 let html_json_path   = "htmlfile.json"
 
 let debugger_eval_re = Str.regexp "eval(\(.*\))"
