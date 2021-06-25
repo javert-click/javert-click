@@ -184,7 +184,7 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, typest
                   countlist := {{ "Id", countstr }};
                   properties := {{ }};
                   propslist := {{ "Properties", properties }};
-                  serializedobj := {{ type, propslist, countlist }};
+                  serializedobj := {{ type, propslist }};
                   serialized := {{ serializedtype, countlist }};
                   memory := "JSILMap_add_or_replace" (memory, value, serialized);
                   goto succ;
@@ -200,18 +200,14 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, typest
                   countstr := "i__toString" (count) with elab;
                   countlist := {{ "Id", countstr }};
                   [idslocs, countstr] := value;
+                  serialized := {{ serializedtype, countlist }};
                   outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory, datacloneerr, idslocs, objsserialized)with elab;
                   outputSerialized := [outputValue, "serialized"];
                   outputMemory := [outputValue, "memory"];
                   objsserialized := [outputValue, "objects"];
-                  (*count := l-len(outputMemory);
-                  countstr := "i__toString" (count) with elab;
-                  countlist := {{ "Id", countstr }};*)
-                  (* 26.4.1.3 Append { [[Key]]: key, [[Value]]: outputValue } to serialized.[[Properties]]. *)
-                  serialized := {{ serializedtype, countlist }};
                   properties := "JSILMap_add" (properties, key, outputSerialized);
                   propslist := {{ "Properties", properties }};
-                  serializedobj := {{ type, propslist, countlist }};
+                  serializedobj := {{ type, propslist }};
                   outputMemory := "JSILMap_add_or_replace" (outputMemory, value, serialized);
                   memory := outputMemory;
                   i := i+1;   
@@ -518,7 +514,7 @@ proc DeserializeObject(xsc, vthis, id, value, props, objs, memory, obj_memory, v
                 entrykey := l-nth (kv, 0);
                 entryvalue := l-nth (kv, 1);
                 (* 22.3.1.1 Let deserializedValue be ? StructuredDeserialize(entry.[[Value]], targetRealm, memory). *)
-                deserializedValueObj := "StructuredDeserializeWithMemory"(xsc, vthis, entryvalue, objs, memory, obj_memory, visited_ids);
+                deserializedValueObj := "StructuredDeserializeWithMemory"(xsc, vthis, entryvalue, objs, memory, obj_memory, visited_ids, undefined);
                 obj_memory := [deserializedValueObj, "memory"];
                 deserializedValue := [deserializedValueObj, "deserialized"];
                 (* 22.3.1.2 Let result be ! CreateDataProperty(value, entry.[[Key]], deserializedValue). *)
@@ -535,7 +531,7 @@ proc DeserializeObject(xsc, vthis, id, value, props, objs, memory, obj_memory, v
                 throw       
 };
 
-proc StructuredDeserializeWithMemory(xsc, vthis, serialized, objs, memory, obj_memory, visited_ids){
+proc StructuredDeserializeWithMemory(xsc, vthis, serialized, objs, memory, obj_memory, visited_ids, id){
                 (* 2. If memory[serialized] exists, then return memory[serialized]. *)  
                 cache := "JSILMap_find" (memory, serialized);
                 goto [(cache = null) or (cache = undefined)] notfound found;
@@ -560,7 +556,7 @@ proc StructuredDeserializeWithMemory(xsc, vthis, serialized, objs, memory, obj_m
                 goto [type = "Array"] arr narr;
     arr:        (* (DONE INSIDE Array_construct) 17.1 Let outputProto be targetRealm.[[Intrinsics]].[[%Array.prototype%]]. *)
                 (* 17.2 Set value to ! ArrayCreate(serialized.[[Length]], outputProto). *)
-                lengthl := l-nth (serialized, 3);
+                lengthl := l-nth (serialized, 2);
                 length := l-nth (lengthl, 1);
                 value := "Array_construct" (xsc, vthis, length);
                 (* 17.3 Set deep to true. *)
@@ -587,8 +583,8 @@ proc StructuredDeserializeWithMemory(xsc, vthis, serialized, objs, memory, obj_m
                 (* 22.3 Otherwise, if serialized.[[Type]] is "Array" or "Object", then: *)
                 goto [(type = "Array") or (type = "Object")] arrobj narrobj;
     arrobj:     keys := l-nth(serialized, 1);
-                ids := l-nth(serialized, 2);
-                id := l-nth(ids, 1);
+                (*ids := l-nth(serialized, 2);*)
+                (*id := l-nth(ids, 1);*)
                 cache := "JSILMap_find" (obj_memory, id);
                 goto [cache = null] nullcache nnullcache;
     nnullcache: res := new ();
@@ -609,7 +605,7 @@ proc StructuredDeserializeWithMemory(xsc, vthis, serialized, objs, memory, obj_m
                 hasId := "OP_hasOwnProperty"(xsc, visited_ids, v);
                 goto [hasId = false] refnf reffound;
     refnf:      serializedObj := "JSILMap_find" (objs, v);
-                ret := "StructuredDeserializeWithMemory" (xsc, vthis, serializedObj, objs, memory, obj_memory, visited_ids) with elab;
+                ret := "StructuredDeserializeWithMemory" (xsc, vthis, serializedObj, objs, memory, obj_memory, visited_ids, v) with elab;
                 return;
     reffound:   existingLoc := [visited_ids, v];
                 (*debugger;*)
@@ -634,7 +630,7 @@ proc StructuredDeserialize (xsc, vthis, serialized){
                 serializedtoplevel := l-nth (serialized, 0);
                 objs := l-nth (serialized, 1);
                 (*debugger;*)
-                deserializedObj := "StructuredDeserializeWithMemory" (xsc, vthis, serializedtoplevel, objs, memory, obj_memory, visited_ids) with elab;
+                deserializedObj := "StructuredDeserializeWithMemory" (xsc, vthis, serializedtoplevel, objs, memory, obj_memory, visited_ids, undefined) with elab;
     succ:       ret := [deserializedObj, "deserialized"];
                 (*debugger;*)
                 return;
