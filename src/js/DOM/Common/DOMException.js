@@ -21,6 +21,7 @@ const NOT_FOUND_ERR                = 8;
 const NOT_SUPPORTED_ERR            = 9; 
 const INUSE_ATTRIBUTE_ERR          = 10;  
 const INVALID_STATE_ERR            = 11; 
+const SYNTAX_ERR                   = 12;
 const DATA_CLONE_ERR               = 25;
 
 exports.DOMException                = DOMException;
@@ -36,3 +37,4 @@ exports.NOT_SUPPORTED_ERR           = NOT_SUPPORTED_ERR;
 exports.INUSE_ATTRIBUTE_ERR         = INUSE_ATTRIBUTE_ERR;
 exports.INVALID_STATE_ERR           = INVALID_STATE_ERR;
 exports.DATA_CLONE_ERR              = DATA_CLONE_ERR;
+exports.SYNTAX_ERR                  = SYNTAX_ERR;
