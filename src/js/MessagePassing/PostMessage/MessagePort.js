@@ -5,6 +5,7 @@ const MessageEvent = require('../../DOM/Events/MessageEvent');
 const JS2JSILList  = require('../../Utils/JS2JSILList'); 
 const ArrayUtils   = require('../../Utils/ArrayUtils'); 
 const URL          = require('./URL');
+const location     = require('./Location');
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
 
@@ -244,6 +245,7 @@ function windowPostMessageSteps(targetWindow, message, options){
 function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, targetWindow, origin){
     //transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
     // 8.1 If the targetOrigin argument is not a single literal U+002A ASTERISK character (*) and targetWindow's associated Document's origin is not same origin with targetOrigin, then return.
+    if((origin !== "*") && (origin !== scopeMP.location.origin)) return; 
     // 8.2 Let origin be the serialization of incumbentSettings's origin.
     // 8.3 Let source be the WindowProxy object corresponding to incumbentSettings's global object (a Window object).
     // 8.4 Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
@@ -269,6 +271,7 @@ scopeMP.MessageEvent = MessageEvent;
 scopeMP.JS2JSILList  = JS2JSILList;
 scopeMP.ArrayUtils   = ArrayUtils;
 scopeMP.Serialization = Serialization;
+scopeMP.location     = location
 
 JSILSetGlobalObjProp("__scopeMP", scopeMP);
 
