@@ -201,7 +201,8 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, typest
                   countlist := {{ "Id", countstr }};
                   [idslocs, countstr] := value;
                   serialized := {{ serializedtype, countlist }};
-                  outputValue := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory, datacloneerr, idslocs, objsserialized)with elab;
+                  ret := "StructuredSerializeInternalWithMemory" (xsc, vthis, inputVal, forStorage, memory, datacloneerr, idslocs, objsserialized) with elab;
+                  outputValue := ret;
                   outputSerialized := [outputValue, "serialized"];
                   outputMemory := [outputValue, "memory"];
                   objsserialized := [outputValue, "objects"];
@@ -225,8 +226,7 @@ proc SerializeObject(xsc, vthis, value, forStorage, memory, datacloneerr, typest
                   [res, "objects"] := objsserialized;
                   ret := res;
                   return;
-    elab:         ret := outputValueSerialized;
-                  throw; 
+    elab:         throw; 
     eget:         ret := inputVal;  
                   throw              
 };
@@ -239,6 +239,7 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
     nonnullcache: res := new ();
                   [res, "serialized"] := cache;
                   [res, "memory"] := memory;
+                  [res, "objects"] := objsserialized;
                   ret := res;
                   return;
     nullcache:    (* 3. Let deep be false. *)
@@ -277,7 +278,8 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* 18.2. Let valueLen be valueLenDescriptor.[[Value]]. *)
                   valueLen := l-nth (valueLenDescriptor, 1);
                   (* 18.3 Set serialized to { [[Type]]: "Array", [[Length]]: valueLen, [[Properties]]: a new empty List }. *)
-                  serializedArrObj := "SerializeObject"(xsc, vthis, value, forStorage, memory, datacloneerr, "Array", idslocs, objsserialized, valueLen);
+                  ret := "SerializeObject"(xsc, vthis, value, forStorage, memory, datacloneerr, "Array", idslocs, objsserialized, valueLen) with elab;
+                  serializedArrObj := ret;
                   serialized := [serializedArrObj, "serialized"];
                   objmem := [serializedArrObj, "memory"];
                   idslocs := [serializedArrObj, "idslocs"];
@@ -286,7 +288,7 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   goto succ; 
                   (* 19. (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object: *)
                   (* 20. (NOT SUPPORTED) Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException. *)
-    is_obj:       goto [clazz = "Object"] checkplat updatemem;
+    is_obj:       goto [(clazz = "Object") or (clazz = "Function")] checkplat updatemem;
     checkplat:    is_platform := "get" (value, "__platform") with elab;
                   goto [is_platform = true] dataclon nplatobj;      
                   (* 21. Otherwise, if IsCallable(value) is true, then throw a "DataCloneError" DOMException. *)
@@ -318,7 +320,8 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   (* 26.3 (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object, ... *)
                   (* 26.4 Otherwise, for each key in ! EnumerableOwnPropertyNames(value, key): *)
                   (* Step 26.4 is implemented in SerializeObject (defined above) *)
-                  serializedObj := "SerializeObject"(xsc, vthis, value, forStorage, memory, datacloneerr, "Object", idslocs, objsserialized, undefined) with elab;
+                  ret := "SerializeObject"(xsc, vthis, value, forStorage, memory, datacloneerr, "Object", idslocs, objsserialized, undefined) with elab;
+                  serializedObj := ret;
                   serialized := [serializedObj, "serialized"];
                   objmem := [serializedObj, "memory"];
                   idslocs := [serializedObj, "idslocs"];
@@ -344,9 +347,7 @@ proc StructuredSerializeInternal(xsc, vthis, value, forStorage, datacloneerr){
                   memory := "JSILMap_create" ();
                   objects := "JSILMap_create" ();
                   idslocs := "Object_construct" ();
-                  (*debugger;*)
                   ret := "StructuredSerializeInternalWithMemory" (xsc, vthis, value, forStorage, memory, datacloneerr, idslocs, objects) with elab;
-                  debugger;
                   res := ret;
                   serialized := [res, "serialized"];
                   objs := [res, "objects"];

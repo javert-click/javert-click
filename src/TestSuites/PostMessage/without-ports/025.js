@@ -6,7 +6,6 @@ import { Worker } from '../../../js/MessagePassing/WebWorkers/Worker';
 import { test, assert_true, assert_throws } from '../../../js/DOM/Events/Testharness';
 
 test(function() {
-   console.log('haaaaaahha');
    var ch = new MessageChannel();
    var x = ch.port1 instanceof MessagePort;
    assert_true(ch.port1 instanceof MessagePort, "MessageChannel's port not an instance of MessagePort");

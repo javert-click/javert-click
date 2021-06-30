@@ -16,6 +16,7 @@ policies and contribution forms [3].
 import {Node} from './Node';
 import {Promise} from '../../Promises/Promise';
 const DOMException = require('../../DOM/Common/DOMException');
+const StringUtils = require('../../Utils/StringUtils');
 
 //TODOMP: check if this solution can work!
 var global_scope = executeJSILProc("JSILGetGlobal");
@@ -1734,7 +1735,7 @@ expose(assert_throws, "assert_throws");
 
             if (required_props.code === 0 ||
                ("name" in e &&
-                e.name !== e.name.toUpperCase() &&
+                e.name !== StringUtils.toUpperCase(e.name) &&
                 e.name !== "DOMException")) {
                 // New style exception: also test the name property.
                 required_props.name = name;
@@ -1827,7 +1828,6 @@ function Test(name, properties)
     if (tests.phase === tests.phases.COMPLETE) {
         return;
     }
-
     tests.push(this);
 }
 
@@ -1949,7 +1949,6 @@ Test.prototype.step_func_done = function(func, this_obj)
             test_this.step.apply(test_this, [func, this_obj].concat(
                 Array.prototype.slice.call(arguments)));
         }
-        //TODOMP: this line was not commented before but this disables MP handlers to be executed.
         test_this.done();
     };
 };
@@ -3691,6 +3690,7 @@ export { test, assert_equals,
             assert_array_equals,
             assert_object_equals,
             assert_greater_than_equal,
+            assert_less_than,
             assert_less_than_equal,
             assert_own_property,
             assert_class_string,

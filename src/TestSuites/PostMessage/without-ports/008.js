@@ -10,5 +10,4 @@ test(function() {
   console.log('Finished test');
   this.done();
  });
-
- // Question: why this should throw type error? I don't understand
+ //TODOMP: What is the purpose of this test?

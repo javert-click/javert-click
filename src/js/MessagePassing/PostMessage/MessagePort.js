@@ -84,7 +84,7 @@ MessagePort.prototype.postMessage = function(message, options){
 /*
 * @id MessagePortPostWindow
 */
-MessagePort.prototype.postMessageWindow = function(message, targetOrigin, transfer){
+MessagePort.prototype.postMessageWindow = function(message, targetWindow, transfer){
     if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     //For the moment let's ignore targetOrigin
     MPSem.beginAtomic();
@@ -92,7 +92,7 @@ MessagePort.prototype.postMessageWindow = function(message, targetOrigin, transf
     var targetPort = MPSem.getPaired(this.__id);
     //console.log('Sending message from port '+this.__id+' to port '+targetPort);
     // 2. Run the message port post message steps providing targetPort, message and options.
-    postMessageSteps(this, targetPort, true, message, transfer);
+    postMessageSteps(this, targetPort, true, message, transfer, targetWindow.__id);
     MPSem.endAtomic();
 }
 
@@ -121,7 +121,7 @@ MessagePort.prototype.toString = function(){
 /*
 * @id postMessageSteps
 */
-function postMessageSteps(origPort, targetPort, isWindow, message, options){
+function postMessageSteps(origPort, targetPort, isWindow, message, options, targetWindowId){
     // 1. Let transfer be options["transfer"].
     var transfer = options ? ((options instanceof Array) ? options : options['transfer']) : [];
     var transferIds = transfer.map(function(p) { return p.__id });
@@ -135,14 +135,21 @@ function postMessageSteps(origPort, targetPort, isWindow, message, options){
         doomed = true;
         console.log('Target port was posted to itself which causes the communication channel to be lost.')
     }
+    var targetOrigin = options ? options['targetOrigin'] : undefined;
+    //console.log('targetOrigin:'+targetOrigin);
+    if((isWindow === true) && (targetOrigin !== undefined) && (targetOrigin !== '*')){
+        var parsedURL = URL.parse(targetOrigin);
+        // 5.2 If parsedURL is failure, then throw a "SyntaxError" DOMException.
+        // 5.3 Set targetOrigin to parsedURL's origin.
+        targetOrigin = parsedURL;
+    }
     // 5. Let serializeWithTransferResult be StructuredSerializeWithTransfer(message, transfer). Rethrow any exceptions.
     var serializeWithTransferResult = Serialization.StructuredSerializeWithTransfer(message, transfer);
     // 6. If targetPort is null, or if doomed is true, then return.
     if(targetPort === null || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
     // Note: This call to 'send' will enable our MessagePassing semantics, which will then  trigger the processMessageSteps function.
-    var origin = URL.parse();
-    MPSem.send(serializeWithTransferResult, transferIds, origPort.__id, targetPort, isWindow, origin);
+    MPSem.send([serializeWithTransferResult, targetPort, isWindow, targetOrigin, targetWindowId],transferIds, origPort.__id, targetPort);
 }
 
 var scopeMP = {};
@@ -151,9 +158,13 @@ var scopeMP = {};
 * @JSIL
 * @id processMessageSteps
 */
-function processMessageSteps(global, message, targetPortId, isWindow, transferIds, origin){
+function processMessageSteps(global, message, targetPortId, isWindow, targetOrigin, targetWindowId, transferIds){
+    //debugger;
     // Initial setup
+    //console.log('ProcessMessageSteps, targetOrigin: '+targetOrigin);
     var scopeMP = global.__scopeMP;
+    if((isWindow === true) && (targetOrigin !== "*") && (targetOrigin !== scopeMP.location.origin)) return; 
+    var origin = scopeMP.location.origin;
     transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
     // 1. Let finalTargetPort be the MessagePort in whose port message queue the task now finds itself.
     var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
@@ -165,7 +176,6 @@ function processMessageSteps(global, message, targetPortId, isWindow, transferId
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(message, transferIds, scopeMP.MessagePort);
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
     var messageClone = deserializeRecord.Deserialized;
-    //console.log('Message: '+messageClone);
     // 5. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
     var newPorts = Object.freeze(deserializeRecord.TransferredValues);
     newPorts.forEach(np => {
@@ -176,26 +186,23 @@ function processMessageSteps(global, message, targetPortId, isWindow, transferId
     var event = new scopeMP.MessageEvent.MessageEvent();
     event.data = messageClone; 
     event.ports = newPorts;
-    if (isWindow) event.origin = origin;
+    if (isWindow) {
+        if (global.origin === undefined) event.origin = String(null);
+        else event.origin = origin;
+    }
 
-    //console.log('Going to dispatch event, isWindow: '+isWindow);
-    //console.log('finalTargetPort.targetWindow: '+finalTargetPort.targetWindow);
-    if(isWindow && finalTargetPort.targetWindow) finalTargetPort.targetWindow.dispatchEvent(event);
+    if(isWindow){
+        var targetWindow = scopeMP.WindowInfo.Window.prototype.windows.find(w => {return w.__id === targetWindowId});
+        //console.log('Have I found targetWindow in proto? '+targetWindow);
+        if(targetWindow) targetWindow.dispatchEvent(event);
+        else finalTargetPort.targetWindow.dispatchEvent(event);
+    } 
     else finalTargetPort.dispatchEvent(event);
 }
 
 //TODOMP: think of a better solution for this. 
 
 var Window = WindowInfo.Window;
-
-Object.defineProperty(Window.prototype, 'onmessage', {
-    /*
-    * @id WindowOnMessage
-    */
-    set: function(f){
-        this.addEventListener('message', f);
-    }
-});
 
 /*
 * @id WindowPostMessageWithOptions
@@ -204,14 +211,12 @@ Window.prototype.postMessage = function(message, options, transfer){
     if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     // 1. Let targetWindow be this Window object.
     var targetWindow = this;
-    // check which version of postMessage is called:
-    // postMessage(message [, options ]) or postMessage(message, targetOrigin [, transfer ])
-    if (options === undefined || (options['targetOrigin'] === undefined)) {
-        options = { 'targetOrigin': options, 'transfer': transfer };
-    }
-    if(transfer === undefined) options.transfer = [];
+    options = (options === undefined) ? {} : (typeof options === "string" ? {targetOrigin: options} : options);
+    options['targetOrigin'] = (options.targetOrigin === undefined) ? "/" : options.targetOrigin;
+    options['transfer'] = options.transfer === undefined ? (transfer === undefined ? [] : transfer) : options.transfer;
+    if (this.__port) this.__port.postMessageWindow(message, targetWindow, options);
     // 2. Run the window post message steps providing targetWindow, message, and options.
-    windowPostMessageSteps(targetWindow, message, options);
+    else windowPostMessageSteps(targetWindow, message, options);
 }
 
 /*
@@ -222,13 +227,19 @@ function windowPostMessageSteps(targetWindow, message, options){
     // 2. (NOT SUPPORTED) Let incumbentSettings be the incumbent settings object.
     // 3. Let targetOrigin be options["targetOrigin"].
     var targetOrigin = options['targetOrigin'];
-    // 4. TODOMP: If targetOrigin is a single U+002F SOLIDUS character (/), then set targetOrigin to incumbentSettings's origin.
-    // 5. TODOMP: Otherwise, if targetOrigin is not a single U+002A ASTERISK character (*), then:
-    // 5.1 Let parsedURL be the result of running the URL parser on targetOrigin.
-    var parsedURL = URL.parse(targetOrigin);
-    // 5.2 If parsedURL is failure, then throw a "SyntaxError" DOMException.
-    // 5.3 Set targetOrigin to parsedURL's origin.
-    targetOrigin = parsedURL;
+    // 4. If targetOrigin is a single U+002F SOLIDUS character (/), then set targetOrigin to incumbentSettings's origin.
+    if(targetOrigin === '/'){
+      targetOrigin = location.origin;
+    }else{
+        // 5. Otherwise, if targetOrigin is not a single U+002A ASTERISK character (*), then:
+        if(targetOrigin !== '*' && targetOrigin !== "/"){
+            // 5.1 Let parsedURL be the result of running the URL parser on targetOrigin
+            var parsedURL = URL.parse(targetOrigin);
+            // 5.2 If parsedURL is failure, then throw a "SyntaxError" DOMException.
+            // 5.3 Set targetOrigin to parsedURL's origin.
+            targetOrigin = parsedURL;
+          }
+    }
     // 6. Let transfer be options["transfer"].
     var transfer = (options['transfer'] !== undefined) ? options['transfer'] : [];
     var transferIds = transfer.map(function(p) {return p.__id});
@@ -242,11 +253,12 @@ function windowPostMessageSteps(targetWindow, message, options){
 * @JSIL
 * @id windowProcessMessageSteps
 */
-function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, targetWindow, origin){
+function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, targetWindow, targetOrigin){
     //transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
     // 8.1 If the targetOrigin argument is not a single literal U+002A ASTERISK character (*) and targetWindow's associated Document's origin is not same origin with targetOrigin, then return.
-    if((origin !== "*") && (origin !== scopeMP.location.origin)) return; 
+    if((targetOrigin !== "*") && (targetOrigin !== scopeMP.location.origin)) return; 
     // 8.2 Let origin be the serialization of incumbentSettings's origin.
+    var origin = scopeMP.location.origin;
     // 8.3 Let source be the WindowProxy object corresponding to incumbentSettings's global object (a Window object).
     // 8.4 Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(serializeWithTransferResult, transferIds, scopeMP.MessagePort);
@@ -266,12 +278,13 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
     targetWindow.dispatchEvent(event);
 }
 
-scopeMP.MessagePort  = PublicMessagePort;
-scopeMP.MessageEvent = MessageEvent;
-scopeMP.JS2JSILList  = JS2JSILList;
-scopeMP.ArrayUtils   = ArrayUtils;
+scopeMP.MessagePort   = PublicMessagePort;
+scopeMP.MessageEvent  = MessageEvent;
+scopeMP.JS2JSILList   = JS2JSILList;
+scopeMP.ArrayUtils    = ArrayUtils;
 scopeMP.Serialization = Serialization;
-scopeMP.location     = location
+scopeMP.WindowInfo    = WindowInfo;
+scopeMP.location      = location
 
 JSILSetGlobalObjProp("__scopeMP", scopeMP);
 

@@ -28,9 +28,9 @@ MPSemantics.prototype.newPort = function(){
 /*
 * @id MPSemanticsSend
 */
-MPSemantics.prototype.send = function(message, plist, orig_port, dest_port, isWindow){
+MPSemantics.prototype.send = function(message, plist, orig_port, dest_port){
     //console.log('MPSem: send');
-    var mplist = JS2JSILList.JS2JSILList([message, dest_port, isWindow]); 
+    var mplist = JS2JSILList.JS2JSILList(message); 
     var plistJSIL = JS2JSILList.JS2JSILList(plist);
     __MP__wrapper__send(mplist, plistJSIL, orig_port, dest_port);
 }
@@ -38,10 +38,10 @@ MPSemantics.prototype.send = function(message, plist, orig_port, dest_port, isWi
 /*
 * @id MPSemanticsCreate
 */
-MPSemantics.prototype.create = function(url, setup_fid, outsidePortId, isShared){
+MPSemantics.prototype.create = function(url, setup_fid, outsidePortId, isShared, parentWindowId){
     //console.log('MPSem: create, outsideportid: '+outsidePortId);
     var main_fid = "main"+url.substring(0, url.length - 3);
-    var argslist = JS2JSILList.JS2JSILList([url, outsidePortId, isShared, main_fid]); 
+    var argslist = JS2JSILList.JS2JSILList([url, outsidePortId, isShared, parentWindowId, main_fid]); 
     return __MP__wrapper__create(url, setup_fid, argslist);
 }
 

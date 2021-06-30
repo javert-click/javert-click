@@ -28,6 +28,7 @@ function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element
     scopeEvents.Element          = Element;
     scopeEvents.Text             = Text;
     scopeEvents.window           = Window.getInstance();
+    scopeEvents.Window           = Window;
     scopeEvents.Event            = Event;
 }
 
@@ -349,6 +350,7 @@ function invoke(struct, event, phase, legacyOutputDidListenersThrowFlag){
     if(desc && desc.writable){
         event.currentTarget = struct.item;
     }
+
     if(struct.item.listeners){
         //6. Let listeners be a clone of event's currentTarget attribute value's event listener list
         var listeners = struct.item.listeners.slice();
@@ -400,6 +402,7 @@ function innerInvoke(event, listeners, phase, legacyOutputDidListenersThrowFlag)
             event.inPassiveListener = true;
         }
         // 2.10 Call a user object's operation with listener's callback, "handleEvent", event, and event's currentTarget attribute value.
+        //console.log('Going to call execCallBack with '+listener.callback);
         execCallBack(listener.callback, "handleEvent", event, event.currentTarget);
         // 2.11 Unset event's in passive listener flag.
         event.inPassiveListener = false;
@@ -430,7 +433,7 @@ function execCallBack(callback, opName, event, currentTarget){
                 }
         }else{
             if(typeof callback == 'function'){
-                //console.log('Going to call callback '+callback);
+                console.log('Going to call callback '+callback);
                 callback.apply(currentTarget,[event]);
             }
             else

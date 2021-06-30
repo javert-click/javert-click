@@ -4,7 +4,6 @@
 
 const DOMException = require('../Common/DOMException');
 const LiveNodeList = require('../Common/LiveNodeList');
-const ArrayUtils   = require('../../Utils/ArrayUtils');
 const EventTarget  = require('./EventTarget');
 
 /*
@@ -144,7 +143,7 @@ Object.defineProperty(Node.prototype, 'childNodes', {
 */
 Object.defineProperty(Node.prototype, 'children', {
     get: function(){
-        return ArrayUtils.filter(this.__childNodes, function(c){
+        return this.__childNodes.filter(function(c){
             return c.nodeType === ELEMENT_NODE;
         }) 
     }
@@ -156,7 +155,7 @@ Object.defineProperty(Node.prototype, 'firstElementChild', {
     */
     get: function(){
         //Returns the last node which is both a child of this ParentNode and is an Element, or null if there is none.
-        var children = ArrayUtils.filter(this.__childNodes, 
+        var children = this.__childNodes.filter( 
             /*
             * @id NodeFindElementNode
             */
@@ -191,7 +190,7 @@ Node.prototype.notify = function () {
 Node.prototype.insertBefore = function (newChild, refChild) {
     this.notify(); 
     newChild.notify();
-    LiveNodeList.LiveNodeList.prototype.recompute();		
+    LiveNodeList.LiveNodeList.prototype.recompute();	
     checkChildValidity(this, newChild); 
     if(newChild.nodeType === DOCUMENT_FRAGMENT_NODE){
         for(var i = 0; i < newChild.__childNodes.length; i++){
@@ -468,7 +467,7 @@ var searchNodeByType = function(nodeList, type){
 * @id nodeAncestor
 */
 var nodeAncestor = function(node, ancestor){
-    if(node === null){
+    if(node === null || node === undefined){
         return false;
     }else{
         return ((node.id === ancestor.id) || nodeAncestor(node.parentNode, ancestor));

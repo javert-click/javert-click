@@ -5,10 +5,7 @@ import { async_test } from '../../../js/DOM/Events/Testharness';
 //TODOMP: we fail this test due to scheduler choices?
 async_test(function(t) {
   var channel = new MessageChannel();
-  channel.port2.onmessage = function (e){
-      console.log('Got message '+e.data);
-      t.step_func_done();
-  }
+  channel.port2.onmessage = t.step_func_done();
   channel.port1.postMessage("ping");
   setTimeout(t.unreached_func(), 100);
   console.log('TEST DONE');

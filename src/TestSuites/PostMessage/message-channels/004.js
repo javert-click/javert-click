@@ -2,23 +2,25 @@
 //cross-document channel</title>
 
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
-import { async_test, assert_equals } from '../../../js/DOM/Events/Testharness';
+import { assert_equals, async_test } from '../../../js/DOM/Events/Testharness';
+const HTMLDocument = require('../../../js/DOM/Events/HTMLDocument');
 const Window = require('../../../js/DOM/Events/Window');
+const location = require('../../../js/MessagePassing/PostMessage/Location');
 var window = Window.getInstance();
-const IFrame = require('../../../js/DOM/Events/IFrame');
+var document = new HTMLDocument.HTMLDocument();
 
-var iframe1 = new IFrame.IFrame('004-1.js', window);
-var iframe2 = new IFrame.IFrame('004-2.js', window);
-
-console.log('MAIN: created two iframes');
+var iframe1 = document.createElement('iframe');
+var iframe2 = document.createElement('iframe');
+document.appendChild(iframe1);
+iframe1.appendChild(iframe2);
+iframe1.src = "004-1.js";
+iframe2.src = "004-2.js";
 
 //TODO: window.onload!
 
 async_test(
   function(t) {
-    console.log('executing tstepfun handler');
     var channel = new MessageChannel();
-    console.log('Do I have iframes? '+window['0']);
     window[0].postMessage(1, '*', [channel.port1]);
     window[1].postMessage(2, '*', [channel.port2]);
     channel = null;
