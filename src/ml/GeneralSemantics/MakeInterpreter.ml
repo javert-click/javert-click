@@ -704,7 +704,7 @@ let evaluate_cmd
       | _ -> raise (Failure "Malformed callstack"))
 
   | Debug ->
-    Printf.printf "----Starting JaVerT Debugger----\n--Proc: %s, line %d--\n" proc_name i;
+    Printf.printf "\n----Starting JaVerT Debugger----\n--Proc: %s, line %d--\n" proc_name i;
     read_debug_input annot_cmd state cs i b_counter;
     [ ConfCont (state, cs, i, i+1, b_counter, None), None ]
 
