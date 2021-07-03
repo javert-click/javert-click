@@ -59,6 +59,8 @@ function DedicatedWorkerGlobalScope (global, name, parentWindowId) {
         */
         set: function(f){
             this.__port.addEventListener('messageerror', f);
+            var window = WindowInfo.getInstance();
+            window.addEventListener('messageerror', f);
         }
     });
 
