@@ -433,7 +433,6 @@ function execCallBack(callback, opName, event, currentTarget){
                 }
         }else{
             if(typeof callback == 'function'){
-                console.log('Going to call callback '+callback);
                 callback.apply(currentTarget,[event]);
             }
             else
