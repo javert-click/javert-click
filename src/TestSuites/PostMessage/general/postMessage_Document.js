@@ -24,7 +24,7 @@ iframe.src = "ChildWindowPostMessage.js";
 window.onload = PostMessageTest;
 
 var DATA = document;
-var TARGET = iframe;//TODOMP: document.querySelector("iframe");
+var TARGET = document.querySelector("iframe");
 
 function PostMessageTest()
 {

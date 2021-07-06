@@ -14,8 +14,11 @@ var t = async_test(description);
 var window = Window.getInstance();
 var document = new HTMLDocument.HTMLDocument();
 
+
 var iframe = document.createElement('iframe');
 document.appendChild(iframe);
+
+console.log('Created iframe with tagName '+iframe.tagName);
 
 iframe.src = "ChildWindowPostMessage.js";
 
@@ -26,7 +29,7 @@ var LocalPorts = [];
 var RemotePorts = [];
 var PassedResult = 0;
 var sum = 0;
-var TARGET = iframe.contentWindow; //document.querySelector("iframe").contentWindow;
+var TARGET = document.querySelector("iframe").contentWindow;
 
 function PostMessageTest()
 {

@@ -310,14 +310,19 @@ Document.prototype.querySelectorAll = function(selector){
 Document.prototype.querySelector = function(selector){
     if(selector.length > 1){
         var fstChar = selector.charAt(0);
+        var elems = [];
         switch(fstChar){
             case ".":
-                return this.getElementsByClassName(selector.substring(1, selector.length));
+                elems = this.getElementsByClassName(selector.substring(1, selector.length));
+                break;
             case "#":
-                return this.getElementById(selector.substring(1, selector.length));
+                elems = this.getElementById(selector.substring(1, selector.length));
+                break;
             default:
-                return this.getElementsByTagName(selector); 
+                elems = this.getElementsByTagName(selector);
+                break;
         }
+        return elems.length > 0 ? elems[0] : null;
     }
 }
 

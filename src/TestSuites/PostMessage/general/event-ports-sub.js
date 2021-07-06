@@ -19,7 +19,7 @@ iframe.src = "ChildWindowPostMessage.js";
 var t = async_test(description);
 
 var DATA = {test: "e.source.postMessage(e.ports.toString(), '*', e.ports)"};
-var TARGET = iframe//document.querySelector("iframe");
+var TARGET = document.querySelector("iframe");
 var ExpectedResult = "";
 
 console.log('Do I have target? '+TARGET);
