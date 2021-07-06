@@ -77,7 +77,7 @@ MessagePort.prototype.postMessage = function(message, options){
     var targetPort = MPSem.getPaired(this.__id);
     //console.log('Sending message from port '+this.__id+' to port '+targetPort);
     // 2. Run the message port post message steps providing targetPort, message and options.
-    postMessageSteps(this, targetPort, false, message, options);
+    postMessageSteps(this, targetPort, message, options);
     MPSem.endAtomic();
 }  
 
@@ -134,7 +134,7 @@ MessagePort.prototype.toString = function(){
 */
 function postMessageSteps(origPort, targetPort, message, options){
     // 1. Let transfer be options["transfer"].
-    var transfer = options ? ((options instanceof Array) ? options : options['transfer']) : [];
+    var transfer = options ? ((options instanceof Array) ? options : (options['transfer'] ? options['transfer'] : [])) : [];
     var transferIds = transfer.map(function(p) { return p.__id });
     // 2. If transfer contains this MessagePort, then throw a "DataCloneError" DOMException.
     if(transfer && transferIds.indexOf(origPort.__id) !== -1) throw new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
@@ -152,7 +152,7 @@ function postMessageSteps(origPort, targetPort, message, options){
     if(targetPort === null || doomed === true) return;
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
     // Note: This call to 'send' will enable our MessagePassing semantics, which will then  trigger the processMessageSteps function.
-    MPSem.send([serializeWithTransferResult, targetPort, false, targetOrigin, undefined],transferIds, origPort.__id, targetPort);
+    MPSem.send([serializeWithTransferResult, targetPort, false, undefined, undefined, undefined],transferIds, origPort.__id, targetPort);
 }
 
 var scopeMP = {};
@@ -161,15 +161,14 @@ var scopeMP = {};
 * @JSIL
 * @id processMessageSteps
 */
-function processMessageSteps(global, message, targetPortId, isWindow, targetOrigin, targetWindowId, transferIds){
+function processMessageSteps(global, message, targetPortId, isWindow, originWindowId, targetOrigin, targetWindowId, transferIds){
     // Initial setup
     var scopeMP = global.__scopeMP;
     transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
-    debugger;
     if(isWindow){
         var targetWindow = scopeMP.WindowInfo.Window.prototype.windows.find(w => {return w.__id === targetWindowId});
         scopeMP.origin = global.origin;
-        (scopeMP.windowProcessMessageSteps(scopeMP, message, transferIds, targetWindow, targetOrigin, targetPortId, false))();
+        (scopeMP.windowProcessMessageSteps(scopeMP, message, transferIds, originWindowId, targetWindow, targetOrigin, targetPortId, false))();
     } else {
         scopeMP.messagePortProcessMessageSteps(scopeMP, message, targetPortId, transferIds);
     }
@@ -230,12 +229,14 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
     var serializeWithTransferResult = Serialization.StructuredSerializeWithTransfer(message, transfer);
     // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
     // If window has port associated, the message may be sent to another window
+    var currWindow = WindowInfo.getInstance();
+    //console.log('originWindow.__port: '+originWindow.__port);
     if(originWindow.__port && targetPort) {
-      MPSem.send([serializeWithTransferResult, targetPort, true, targetOrigin, targetWindow.__id],transferIds, originWindow.__port.__id, targetPort);
+      MPSem.send([serializeWithTransferResult, targetPort, true, currWindow.__id, targetOrigin, targetWindow.__id],transferIds, originWindow.__port.__id, targetPort);
     }
     // Otherwise, message is processed locally
     else {
-        var pMessageSteps = windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, targetWindow, targetOrigin, undefined, true);
+        var pMessageSteps = windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, currWindow.__id, targetWindow, targetOrigin, undefined, true);
         __ES__schedule(pMessageSteps);
     }
 }
@@ -243,32 +244,36 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
 /*
 * @id windowProcessMessageSteps
 */
-function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, targetWindow, targetOrigin, targetPortId, sameWindow){
+function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, originWindowId, targetWindow, targetOrigin, targetPortId, sameWindow){
     return function(){
-      //transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
+        //transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
       // 8.1 If the targetOrigin argument is not a single literal U+002A ASTERISK character (*) and targetWindow's associated Document's origin is not same origin with targetOrigin, then return.
       if((targetOrigin !== "*") && (targetOrigin !== scopeMP.location.origin)) return; 
       // 8.2 Let origin be the serialization of incumbentSettings's origin.
       var origin = scopeMP.location.origin;
       // 8.3 Let source be the WindowProxy object corresponding to incumbentSettings's global object (a Window object).
+      var source = scopeMP.WindowInfo.Window.prototype.windows.find(w => { return w.__id === originWindowId })
+      if (!source) source = new scopeMP.WindowInfo.Window(originWindowId);
       // 8.4 Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
       var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(serializeWithTransferResult, transferIds, scopeMP.MessagePort);
       // 8.5 Let messageClone be deserializeRecord.[[Deserialized]].
       var messageClone = deserializeRecord.Deserialized;
-      //console.log('Obtained message '+messageClone);
+      //console.log('windowProcessMessageSteps, Obtained message '+messageClone);
       // 8.6 Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
       var newPorts = deserializeRecord.TransferredValues;
       // 8.7 Fire an event named message at targetWindow, using MessageEvent, 
       // with the origin attribute initialized to origin, the source attribute initialized to source, 
       // the data attribute initialized to messageClone, and the ports attribute initialized to newPorts.
       var event = new scopeMP.MessageEvent.MessageEvent();
+      event.source = source;
       event.data = messageClone; 
       event.ports = newPorts;
       if (sameWindow === true) event.origin = origin;
       else event.origin = (scopeMP.origin === undefined) ? String(null) : origin;
-      //console.log('Going to dispatch message event, listeners: '+targetWindow.listeners);
-      if(targetWindow) targetWindow.dispatchEvent(event);
-      else{
+      if(targetWindow){
+        //console.log('windowProcessMessageSteps, Going to dispatch message event, listeners: '+targetWindow.listeners);
+        targetWindow.dispatchEvent(event);  
+      } else{
         var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
         if(finalTargetPort) finalTargetPort.targetWindow.dispatchEvent(event);
       }

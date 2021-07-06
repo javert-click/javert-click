@@ -3,6 +3,7 @@
 /********************/
 
 const EventTarget = require('./EventTarget');
+const DOMException = require('../Common/DOMException');
 
 /*
 * @id Window
@@ -13,7 +14,8 @@ var Window = function(id, parent){
       this.__id = id;
     }else{
       Window.counter = (Window.counter || 0) + 1; 
-      this.__id = Window.counter; 
+      //this.__id = Window.counter; 
+      this.__id = Math.random();
     }
     this.document = null;
     this.timeStamp = (new Date()).getTime();
@@ -32,6 +34,12 @@ var Window = function(id, parent){
 Window.prototype = Object.create(EventTarget.EventTarget.prototype);
 
 Window.prototype.windows = [];
+
+Object.defineProperty(Window.prototype, "DOMException", {
+    get: function(){
+        return DOMException.DOMException;
+    }
+})
 
 Object.defineProperty(Window.prototype, 'onmessage', {
     /*

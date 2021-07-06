@@ -11,7 +11,7 @@ const EventListener   = require('./EventListener');
 * @id EventTarget
 */
 var EventTarget = function (){
-
+  this.__platform = true;
 };
 
 var scopeEvents = {};
@@ -90,6 +90,19 @@ function getActivationTarget(event, target, isActivationEvent){
 var eventsSemantics = new EventsSemantics.EventsSemantics(dispatch);
 
 EventTarget.prototype.dispatch = false;
+
+Object.defineProperty(EventTarget.prototype, 'onload', {
+   set: function(f){
+       this.addEventListener('load', f);
+       var target = this;
+       var event = new scopeEvents.Event.Event('load');
+       /* @id triggerLoad */
+       function triggerLoadEvent(){
+         target.dispatchEvent(event);
+       }
+       __ES__schedule(triggerLoadEvent);
+   }
+});
 
 /*
 * @id dispatchEvent

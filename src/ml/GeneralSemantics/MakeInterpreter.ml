@@ -1080,12 +1080,19 @@ let set_var (xvar: Var.t) (v: vt) (conf: cconf_t) : cconf_t =
   set_state conf state'
 
 let new_conf (url: string) (setup_fid: string) (args: vt list) ((conf, _): econf_t) : econf_t =
+  (*let main : string = IO_Utils.load_file url in
+  let offset_converter = JS_Utils.memoized_offsetchar_to_offsetline main in
+  let e    = JSParserMain.exp_from_string ~force_strict:true main in
+  let basename = Filename.basename (Filename.chop_extension url) in
+  Printf.printf "\nGoing to compile program, %s!\n" basename;
+  let (ext_prog, cc_tbl, vis_tbl) = JS2JSIL_Compiler.js2jsil e offset_converter false basename in
+  Printf.printf "\nProgram compiled!\n";
+  let prog = Parsing_Utils.eprog_to_prog ext_prog in*)
   let jsil_path = IO_Utils.parse_url url in
   let ext_prog = Parsing_Utils.parse_eprog_from_file jsil_path in
   let basename = Filename.basename (Filename.chop_extension jsil_path) in
   let ext_prog = {ext_prog with filename = basename} in
   let prog = Parsing_Utils.eprog_to_prog ext_prog in
-  let main_fid = Prog.get_main prog in
   let prog = UP.init_prog prog in
   match prog with 
   | Ok prog -> 

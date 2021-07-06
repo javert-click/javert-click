@@ -1,5 +1,6 @@
 const MessagePort = require('./MessagePort');
 const MPSemantics = require('../Common/MPSemantics');
+const WindowInfo  = require('../../DOM/Events/Window');
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
 
@@ -32,6 +33,14 @@ Object.defineProperty(MessageChannel.prototype, 'port2', {
     get: function(){
         // The port2 getter steps are to return this's port 2.
         return this.__port2;
+    }
+});
+
+var window = WindowInfo.getInstance();
+
+Object.defineProperty(window, "MessageChannel", {
+    get: function(){
+        return MessageChannel;
     }
 });
 
