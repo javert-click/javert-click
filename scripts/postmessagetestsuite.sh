@@ -6,11 +6,9 @@ declare log_test_file="log_test.log"
 declare passed=0
 declare failed=0
 
-declare testnamefuns=TestHarnessAssertEquals
-
 #Running tests for postMessage
 for testfile in $tests; do
-  ./workersconcrete.sh $testfile
+  ./workersconcrete.sh $testfile $2
 
   declare nasserts=`grep -c "TestHarnessAssert.*: 0" $log_test_file`
   declare nasserts_passed=`grep -c "CMD: return" $log_test_file`
