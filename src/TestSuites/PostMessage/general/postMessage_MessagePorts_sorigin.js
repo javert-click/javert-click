@@ -18,8 +18,6 @@ var document = new HTMLDocument.HTMLDocument();
 var iframe = document.createElement('iframe');
 document.appendChild(iframe);
 
-console.log('Created iframe with tagName '+iframe.tagName);
-
 iframe.src = "ChildWindowPostMessage.js";
 
 window.onload = PostMessageTest;

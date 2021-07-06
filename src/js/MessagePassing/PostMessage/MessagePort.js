@@ -269,7 +269,7 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
       event.data = messageClone; 
       event.ports = newPorts;
       if (sameWindow === true) event.origin = origin;
-      else event.origin = (scopeMP.origin === undefined) ? String(null) : origin;
+      else event.origin = origin;
       if(targetWindow){
         //console.log('windowProcessMessageSteps, Going to dispatch message event, listeners: '+targetWindow.listeners);
         targetWindow.dispatchEvent(event);  
