@@ -1,9 +1,8 @@
-<!doctype html>
-<title>user activation messagechannel test</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
+//Title: user activation messagechannel test
+
+import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { async_test, assert_equals, assert_false  } from '../../../js/DOM/Events/Testharness';
+
 async_test(function(t) {
   var channel = new MessageChannel();
   channel.port1.postMessage(1, {includeUserActivation: true});
@@ -23,4 +22,3 @@ async_test(function(t) {
     });
   channel.port2.start();
 });
-</script>

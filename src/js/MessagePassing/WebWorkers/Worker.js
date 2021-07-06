@@ -10,7 +10,7 @@ var MPSem = MPSemantics.getMPSemanticsInstance();
 * @id Worker
 */
 function Worker(scriptURL, options){
-    EventTarget.EventTarget.call(worker);
+    EventTarget.EventTarget.call(this);
     // 1. The user agent may throw a "SecurityError" DOMException if the request violates a policy decision.
     // 2. Let outside settings be the current settings object.
     var outsideSettings = null;
@@ -77,6 +77,9 @@ Worker.prototype.terminate = function(){
     MPSem.terminate(this.__id);
 }
 
+/*
+* @id runWorker
+*/
 function runWorker(worker, workerURL, outsideSettings, outsidePort, options){
     // 1. Let is shared be true if worker is a SharedWorker object, and false otherwise.
     var isShared = worker instanceof SharedWorker.SharedWorker;

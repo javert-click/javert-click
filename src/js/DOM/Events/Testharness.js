@@ -14,7 +14,9 @@ policies and contribution forms [3].
  * (../docs/_writing-tests/testharness-api.md) */
 
 import {Node} from './Node';
-import {Promise} from '../../Promises/Promise';
+//import {Promise} from '../../Promises/Promise';
+const PromiseInfo = require('../../Promises/Promise');
+const Promise = PromiseInfo.Promise;
 const DOMException = require('../../DOM/Common/DOMException');
 const StringUtils = require('../../Utils/StringUtils');
 

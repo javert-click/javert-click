@@ -52,6 +52,7 @@ onmessage = function(e)
                 }
             }
         }
+        console.log('IFrame: message sent back to main');
     }
     catch(ex)
     {
