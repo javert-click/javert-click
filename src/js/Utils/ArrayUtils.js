@@ -76,4 +76,5 @@ function map(array, f){
 exports.find = find;
 exports.filter = filter;
 exports.map = map;
+exports.index = index;
 exports.ArrayIterator = ArrayIterator;

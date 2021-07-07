@@ -77,6 +77,11 @@ Worker.prototype.terminate = function(){
     MPSem.terminate(this.__id);
 }
 
+Worker.prototype.addEventListener = function(type, f, options){
+    this.__port.__Enabled = true;
+    this.__port.addEventListener(type, f, options);
+}
+
 /*
 * @id runWorker
 */
