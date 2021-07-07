@@ -8,16 +8,16 @@ const Worker = WorkerInfo.Worker;
 
 promise_test(async function(t) {
     var worker = new Worker("worker_postMessage_user_activation.js");
-    /*let workerReply = () => { console.log('Going to create promise'); return new Promise((resolve, reject) => {
+    let workerReply = () => { console.log('Going to create promise'); return new Promise((resolve, reject) => {
       console.log('Going to add worker handler');
-      worker.addEventListener('message', (e) => { console.log('Main: got message '+e.data); resolve(e.data)}, {once: true});
-    })};*/
-    worker.onmessage = (e) => { console.log('Main: got message '+e.data)};
-    worker.__port.start();
+      //worker.addEventListener('message', (e) => { console.log('Main: got message '+e.data); resolve(e.data)}, {once: true});
+      worker.onmessage = (e) => { console.log('Main: got message '+e.data); resolve(e.data)};
+    })};
+    //worker.onmessage = (e) => { console.log('Main: got message '+e.data)};
     console.log('Going to post message to worker');
     worker.postMessage(null, {includeUserActivation: true});
-    //assert_equals(await workerReply(), true);
+    assert_equals(await workerReply(), true);
     worker.postMessage(null, {includeUserActivation: false});
-    //assert_equals(await workerReply(), false);
+    assert_equals(await workerReply(), false);
 }, "Post Message from a worker");
   

@@ -79,7 +79,7 @@ module M
     | (x::xs) -> (
       match x with
       | Handler (_, _, event, _) -> (Events.is_timing_event event) && only_timing_events_left xs;
-      | CondConf _ -> false
+      | CondConf _ -> only_timing_events_left xs
       | Conf _ -> false 
     )
   
