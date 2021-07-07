@@ -28,6 +28,9 @@ onmessage = function(e)
             console.log('IFrame: going to send message to main, e.source.__port: '+e.source.__port);
             //TODOMP:
             //eval(e.data.test);
+            if (e.data.test === "e.ports[0].postMessage('TRANSFERRED')")
+            e.ports[0].postMessage('TRANSFERRED');
+            else if (e.data.test === "e.source.postMessage(e.ports.toString(), '*', e.ports)")
             e.source.postMessage(e.ports.toString(), "*", e.ports);
         }
         else if (e.data == "*" || e.data == "/")

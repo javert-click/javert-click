@@ -71,6 +71,7 @@ Object.defineProperty(MessagePort.prototype, 'onmessageerror', {
 * @id MessagePortPostMessage
 */
 MessagePort.prototype.postMessage = function(message, options){
+    if (this.__Detached === true) return;
     if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     MPSem.beginAtomic();
     // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.
@@ -239,7 +240,8 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
     var currWindow = WindowInfo.getInstance();
     //console.log('originWindow.__port: '+originWindow.__port);
     if(originWindow.__port && targetPort) {
-      MPSem.send([serializeWithTransferResult, targetPort, true, currWindow.__id, targetOrigin, targetWindow.__id],transferIds, originWindow.__port.__id, targetPort);
+      var includeUserActivation = (options && typeof options === "object") ? options['includeUserActivation'] : undefined;
+      MPSem.send([serializeWithTransferResult, targetPort, true, currWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation],transferIds, originWindow.__port.__id, targetPort);
     }
     // Otherwise, message is processed locally
     else {
@@ -260,7 +262,6 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
       var origin = scopeMP.location.origin;
       // 8.3 Let source be the WindowProxy object corresponding to incumbentSettings's global object (a Window object).
       var source = scopeMP.WindowInfo.Window.prototype.windows.find(w => { return w.__id === originWindowId })
-      console.log('Have I found source? '+source);
       if (!source) source = new scopeMP.WindowInfo.Window(originWindowId);
       // 8.4 Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
       var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(serializeWithTransferResult, transferIds, scopeMP.MessagePort);

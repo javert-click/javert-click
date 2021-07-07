@@ -55,7 +55,14 @@ function StructuredSerializeWithTransfer(message, transfer){
         if (transferable.__Detached == true) throw new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
         // 5.3 (MP-Semantics) Let dataHolder be memory[transferable].
         // 5.4 (NOT SUPPORTED) If transferable has an [[ArrayBufferData]] internal slot, then:
-
+        // 5.5 Otherwise:
+        // 5.5.1 Assert: transferable is a platform object that is a transferable object.
+        // 5.5.2 Let interfaceName be the identifier of the primary interface of transferable.
+        // 5.5.3 Set dataHolder.[[Type]] to interfaceName.
+        // 5.5.4 Perform the appropriate transfer steps for the interface identified by interfaceName, given transferable and dataHolder.
+        // 5.5.5 Set transferable.[[Detached]] to true.
+        transferable.__Detached = true;
+    
     });
     // Note: the StructuredSerializeInternal function is a JSIL function, found in ml/JS2JSIL/MP_runtime/Serialization.jsil
     // Note: we skip the steps (4-5) related to transferDataHolders, as we are handling this in the MP semantics.
