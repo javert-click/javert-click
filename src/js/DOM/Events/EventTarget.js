@@ -107,13 +107,13 @@ Object.defineProperty(EventTarget.prototype, 'onload', {
 /*
 * @id dispatchEvent
 */
-EventTarget.prototype.dispatchEvent = function (event, flags){
+EventTarget.prototype.dispatchEvent = function (event, flags, isTrusted){
     //1. If event’s dispatch flag is set, or if its initialized flag is not set, then throw an "InvalidStateError" DOMException.
     if(event.dispatch || !event.initialized){
         throw new DOMException.DOMException(DOMException.INVALID_STATE_ERR)
     }
     //2. Initialize event’s isTrusted attribute to false.
-    event.isTrusted = false;
+    event.isTrusted = isTrusted !== undefined ? isTrusted : false;
     //3. Return the result of dispatching event to the context object.
     var event_str = jsilEvent(event.type);
     event.target = this;

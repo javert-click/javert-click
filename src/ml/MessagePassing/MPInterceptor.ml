@@ -1,5 +1,6 @@
 type('v) t = 
-  | Send of 'v list * 'v list * 'v * 'v                                 (* msg, port list, port_orig, port_dest *)
+  | Send of 'v list * 'v list * 'v * 'v * 'v                            (* msg, port list, port_orig, port_dest, event *)
+  | SendSync of 'v list * 'v                                            (* msg, event *)
   | Create of string * string * string * 'v list                        (* xvar, url, fid_t, args *)
   | Terminate of string * 'v                                            (* xvar, cid *)
   | NewPort of string                                                   (* xvar *)
@@ -18,7 +19,8 @@ let rec str (label: ('v) t) (v_to_str: 'v -> string) : string =
   let v_list_to_str vlist = "(" ^ String.concat "," (List.map (fun v -> v_to_str v) vlist) in
 
   match label with 
-  | Send (msg, plist, porig, pdest) -> Printf.sprintf "Send<%s, %s, %s, %s>" (v_list_to_str msg) (v_list_to_str plist) (v_to_str porig) (v_to_str pdest)
+  | Send (msg, plist, porig, pdest, event) -> Printf.sprintf "Send<%s, %s, %s, %s, %s>" (v_list_to_str msg) (v_list_to_str plist) (v_to_str porig) (v_to_str pdest) (v_to_str event)
+  | SendSync (msg, event) -> Printf.sprintf "SendSync<%s, %s>" (v_list_to_str msg) (v_to_str event)
   | Create (xvar, url, fid, args) -> Printf.sprintf "%s = Create<%s, %s, %s>" xvar url fid (v_list_to_str args) 
   | Terminate (xvar, cid) -> Printf.sprintf "%s = Terminate<%s>" xvar (v_to_str cid)
   | NewPort (xvar) ->  Printf.sprintf "%s = NewPort<>" xvar
@@ -41,12 +43,15 @@ let intercept
 (fid: string) 
 (vs : 'v list) : ('v t) option =
   match fid, vs with 
-    | mc, [_; _; msg; plist; port_orig; port_dest] when mc = MPConstants.send -> 
+    | mc, [_; _; msg; plist; port_orig; port_dest; event] when mc = MPConstants.send -> 
       (match list_of_val plist, list_of_val msg with
         | Some plist, Some msg ->
           let msg = (lit_to_v (Loc JS2JSIL_Constants.locGlobName)) :: msg in
-          Some (Send (msg, plist, port_orig, port_dest))
+          Some (Send (msg, plist, port_orig, port_dest, event))
         | _, _ -> raise (Failure ("__MP__wrapper__send: Invalid input parameter for port/message.")))
+    | mc, [_; _; msg; port_orig; event] when mc = MPConstants.send_sync ->
+          let msg = (lit_to_v (Loc JS2JSIL_Constants.locGlobName)) :: [msg; port_orig] in
+          Some (SendSync (msg, event))
     | mc, [_; _; url; setup_fid; args] when mc = MPConstants.create -> 
       (*Printf.printf "\nFound call to create";*)
       let url = Literal.unwrap_string (v_to_lit url) in

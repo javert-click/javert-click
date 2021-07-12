@@ -29,7 +29,16 @@ function TransferReceivingSteps(value){
 }
 
 /*
-* @id StructuredSerializeWithTransfer
+* @id SerializationStructuredSerialize
+*/
+function StructuredSerialize(message){
+    var datacloneerr = new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
+    var serialiazed = StructuredSerializeInternal(message, false, datacloneerr);
+    return serialiazed;
+}
+
+/*
+* @id SerializationStructuredSerializeWithTransfer
 */
 function StructuredSerializeWithTransfer(message, transfer){
     // 1. Let memory be an empty map *)
@@ -56,6 +65,7 @@ function StructuredSerializeWithTransfer(message, transfer){
         // 5.3 (MP-Semantics) Let dataHolder be memory[transferable].
         // 5.4 (NOT SUPPORTED) If transferable has an [[ArrayBufferData]] internal slot, then:
         // 5.5 Otherwise:
+        // Note: steps 5.5.1 - 5.5.4 do not make sense as we handle port transfer in the semantics
         // 5.5.1 Assert: transferable is a platform object that is a transferable object.
         // 5.5.2 Let interfaceName be the identifier of the primary interface of transferable.
         // 5.5.3 Set dataHolder.[[Type]] to interfaceName.
@@ -70,7 +80,7 @@ function StructuredSerializeWithTransfer(message, transfer){
 }
 
 /*
-* @id StructuredDeserializeWithTransfer
+* @id SerializationStructuredDeserializeWithTransfer
 */
 function StructuredDeserializeWithTransfer(message, transferIds, MessagePort){
     // 1. Let memory be an empty map.

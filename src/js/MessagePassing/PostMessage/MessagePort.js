@@ -154,7 +154,7 @@ function postMessageSteps(origPort, targetPort, message, options){
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
     // Note: This call to 'send' will enable our MessagePassing semantics, which will then  trigger the processMessageSteps function.
     var includeUserActivation = (options && typeof options === "object") ? options['includeUserActivation'] : undefined;
-    MPSem.send([serializeWithTransferResult, targetPort, false, undefined, undefined, undefined, includeUserActivation],transferIds, origPort.__id, targetPort);
+    MPSem.send([serializeWithTransferResult, targetPort, false, undefined, undefined, undefined, includeUserActivation],transferIds, origPort.__id, targetPort, "ProcessMessage");
 }
 
 var scopeMP = {};
@@ -241,7 +241,7 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
     //console.log('originWindow.__port: '+originWindow.__port);
     if(originWindow.__port && targetPort) {
       var includeUserActivation = (options && typeof options === "object") ? options['includeUserActivation'] : undefined;
-      MPSem.send([serializeWithTransferResult, targetPort, true, currWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation],transferIds, originWindow.__port.__id, targetPort);
+      MPSem.send([serializeWithTransferResult, targetPort, true, currWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation],transferIds, originWindow.__port.__id, targetPort, "ProcessMessage");
     }
     // Otherwise, message is processed locally
     else {

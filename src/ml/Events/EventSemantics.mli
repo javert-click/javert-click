@@ -23,7 +23,7 @@ module type M = sig
 
   val make_step : state_t -> (((vt -> (vt list) option) -> (vt -> Literal.t option) -> (Literal.t -> vt) -> string -> string -> vt list -> message_label_t option) option) -> (state_t * event_label_t option) list * state_t option
 
-  val fire_event : event_t -> vt list -> state_t -> state_t list
+  val fire_event : event_t -> vt list -> state_t -> bool -> state_t list
 
   val final_with_timing_events : state_t -> bool
 

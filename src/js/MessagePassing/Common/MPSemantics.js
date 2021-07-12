@@ -28,11 +28,15 @@ MPSemantics.prototype.newPort = function(){
 /*
 * @id MPSemanticsSend
 */
-MPSemantics.prototype.send = function(message, plist, orig_port, dest_port){
+MPSemantics.prototype.send = function(message, plist, orig_port, dest_port, event){
     //console.log('MPSem: send');
     var mplist = JS2JSILList.JS2JSILList(message); 
     var plistJSIL = JS2JSILList.JS2JSILList(plist);
-    __MP__wrapper__send(mplist, plistJSIL, orig_port, dest_port);
+    __MP__wrapper__send(mplist, plistJSIL, orig_port, dest_port, event);
+}
+
+MPSemantics.prototype.sendSync = function(message, orig_port, fid){
+    __MP__wrapper__send_sync(message, orig_port, fid);
 }
 
 /*
@@ -51,7 +55,7 @@ MPSemantics.prototype.create = function(url, setup_fid, outsidePortId, isShared,
 MPSemantics.prototype.pairPorts = function(port1Id, port2Id){
     this.unpairPort(port1Id);
     this.unpairPort(port2Id);
-    //console.log('MPSem: pair');
+    console.log('MPSem: pairing '+port1Id+' and '+port2Id);
     __MP__wrapper__pairPorts(port1Id, port2Id);
 }
 

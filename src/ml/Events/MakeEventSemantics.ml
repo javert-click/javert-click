@@ -335,7 +335,7 @@ module M
     (*if (Interpreter.printing_allowed cconf) then 
       print_state state;*)
     if (Interpreter.final conf) then (
-      (*Printf.printf "\nConfiguration is final!";*)
+      L.log L.Normal (lazy (Printf.sprintf "\nConfiguration is final!"));
       let new_states = List.map (fun s -> s, None) (exec_handler state) in
       match new_states with
       | [] -> [], Some state
@@ -382,12 +382,16 @@ module M
     ((Interpreter.set_var xvar v c, prog), h, q, n)
 
   (* Environment event dispatch. Adds handlers at the back of the continuation queue *) 
-  let fire_event (event: event_t) (args: vt list) (state: state_t) : state_t list =
+  let fire_event (event: event_t) (args: vt list) (state: state_t) (sync: bool) : state_t list =
     let (c, ehs, hq, _) = state in 
     let listeners = SymbMap.find ehs event (Events.is_concrete Val.to_literal) (Events.to_expr Val.to_expr) in 
-    (*Printf.printf "\nFiring message event, listeners: %d" (List.length listeners);*)
+    (*if((List.length listeners) > 0) then
+    (
+      let fidsargs, f = List.hd listeners in
+      Printf.printf "Listener: %s" (String.concat ", " (List.map (fun (fid, _) -> Val.str fid) fidsargs)); 
+    );*)
     (* How to obtain xvar? The ideal thing to do would be allow calls without ret vars... *) 
-    dispatch event state listeners "" args false
+    dispatch event state listeners "" args sync
 
   let fresh_lvar (x: string) (v: string) (state: state_t) (vart: Type.t) : state_t * vt =
     let ((conf, prog), ehs, hq, n) = state in
