@@ -170,7 +170,7 @@ let cconf_str (cmd : (Annot.t * Cmd.t)) (state : State.t)  (cs : CallStack.t) (i
       Some store_dom) in
     let which_heap = if (print_by_need) then Some SS.empty else None in
     Printf.sprintf
-      "-----------------------------------\nJSIL Configuration:\n-----------------------------------\nCMD: %s\n%s: %i--\nTIME: %f\nCS: %s\nBRANCHING: %d\n\n%s\n------------------------------------------------------\n"
+      "-----------------------------------\nJSIL Configuration:\n-----------------------------------\nCMD: %s\nproc %s: %i--\nTIME: %f\nCS: %s\nBRANCHING: %d\n\n%s\n------------------------------------------------------\n"
       (Cmd.str "" 0 cmd) (CallStack.get_cur_proc_id cs) i (Sys.time()) (CallStack.str cs) b_counter (State.str ~which_store ~which_heap state))  in
       msg
 
@@ -963,6 +963,7 @@ let continue_with_h (econf: econf_t) (xvar: string) (fid: fid_t) (args: vt list)
   let cur_state = get_state conf in
   let state = State.set_store cur_state (Store.init []) in
   let rets = (evaluate_procedure_call state None [] prog xvar fid args 0 None (-1) None 0) in
+    L.log L.Normal (lazy (Printf.sprintf "Rets from evaluate_procedure_call: %d" (List.length rets)));
     List.map (fun ret -> ret, prog) rets
 
 let check_handler_continue (econf: econf_t) : unit =
