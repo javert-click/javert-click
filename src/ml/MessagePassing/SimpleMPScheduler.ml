@@ -39,7 +39,9 @@ module M
       (* If the configurations are not final or the queue is empty, returns None *)
       let schedule_msg  (cq: ('conf) conf_q_t) (mq: ('msg) message_queue_t) (ready_to_process_msg: ('conf) conf_q_t -> bool) (is_sync: 'msg -> bool) (has_transfer: 'msg -> bool) : ('msg * ('msg) message_queue_t) option = 
         match List.filter is_sync mq with
-        | (msg :: mq') -> Some (msg, mq')
+        | (msg :: sync_mq) -> 
+          let async_mq = List.filter (fun msg' -> not (is_sync msg')) mq in
+          Some (msg, sync_mq @ async_mq)
         | [] ->
           let mq' = (List.filter has_transfer mq) @ (List.filter (fun msg -> not (has_transfer msg)) mq) in
           (match mq' with
