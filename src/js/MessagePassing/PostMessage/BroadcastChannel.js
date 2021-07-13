@@ -1,10 +1,22 @@
-const EventTarget   = require('../../DOM/Events/EventTarget');
-const MPSemantics   = require('../Common/MPSemantics');
-const ESemantics    = require('../../DOM/Events/EventsSemantics');
-const Serialization = require('./MessageSerialization');
-const DOMException  = require('../../DOM/Common/DOMException');
-const WindowInfo    = require('../../DOM/Events/Window');
-const MessageEvent = require('../../DOM/Events/MessageEvent');
+const EventTarget       = require('../../DOM/Events/EventTarget');
+const MPSemantics       = require('../Common/MPSemantics');
+const ESemantics        = require('../../DOM/Events/EventsSemantics');
+const Serialization     = require('./MessageSerialization');
+const DOMException      = require('../../DOM/Common/DOMException');
+const MessageEvent      = require('../../DOM/Events/MessageEvent');
+const location          = require('../PostMessage/Location'); 
+
+const Node              = require('../../DOM/Events/Node');
+const ShadowRoot        = require('../../DOM/Events/ShadowRoot');
+const DocumentFragment  = require('../../DOM/Events/DocumentFragment');
+const MouseEvent        = require('../../DOM/Events/MouseEvent');
+const Element           = require('../../DOM/Events/Element');
+const Text              = require('../../DOM/Events/Text');
+const WindowInfo        = require('../../DOM/Events/Window');
+const Event             = require('../../DOM/Events/Event');
+
+EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo, Event);
+
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
 var ESem  = new ESemantics.EventsSemantics();
@@ -70,12 +82,13 @@ BroadcastChannel.prototype.postMessage = function(message){
   var serialized = StructuredSerializeInternal(message, false, datacloneerr);
   // 3. Let sourceOrigin be this's relevant settings object's origin.
   // 4. (MPSem!) Let destinations be a list of BroadcastChannel objects that match the following criteria
-  var targetPort = MPSem.getPaired(this.__id);
+  var destinations = MPSem.getAllPairedPorts(this.__id);
+  console.log('got '+destinations.length+' paired ports with '+this.__id);
+  var orig_id = this.__id;
   // 5. Remove source from destinations.
-  console.log('Sending message from bc '+this.__id+'to '+targetPort);
   // 6. Sort destinations such that all BroadcastChannel objects whose relevant agents are the same are sorted in creation order, oldest first
   // 7. For each destination in destinations, queue a global task on the DOM manipulation task source given destination's relevant global object to perform the following steps
-  MPSem.send([serialized, targetPort],[], this.__id, targetPort, "ProcessMessageBroadcast");
+  destinations.forEach((d) => { console.log('Sending message from bc '+orig_id+'to '+d); MPSem.send([serialized, d],[], orig_id, d, "ProcessMessageBroadcast");})
 }
 
 /*
@@ -92,8 +105,10 @@ function broadcastChannelProcessMessage(global, serialized, targetPort){
    var data = StructuredDeserialize(serialized);
    // If this throws an exception, catch it, fire an event named messageerror at destination, using MessageEvent, with the origin attribute initialized to the serialization of sourceOrigin, and then abort these steps.
    // 4. Fire an event named message at destination, using MessageEvent, with the data attribute initialized to data and the origin attribute initialized to the serialization of sourceOrigin.
-   var event = new xsc.MessageEvent.MessageEvent();
-   event.data = data;
+   var event    = new xsc.MessageEvent.MessageEvent();
+   event.data   = data;
+   event.source = null;
+   event.origin = xsc.location.origin;
    destination.dispatchEvent(event, undefined, true);
 }
 
@@ -117,6 +132,7 @@ var xsc = {};
 xsc.BroadcastChannel = BroadcastChannel;
 xsc.Serialization    = Serialization;
 xsc.MessageEvent     = MessageEvent;
+xsc.location         = location;
 xsc.MPSem            = MPSem;
 
 JSILSetGlobalObjProp("__scopeBC", xsc);

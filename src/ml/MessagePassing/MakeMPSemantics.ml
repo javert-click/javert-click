@@ -33,7 +33,7 @@ module M
   type pc_map_t = (port_t, cid_t) Hashtbl.t
 
   (* Paired Ports Map *)
-  type pp_map_t = (port_t, port_t) Hashtbl.t
+  type pp_map_t = (port_t, port_t list) Hashtbl.t
 
   (* Message Queue *)
   type mq_t = (message_t * port_t list) list
@@ -202,9 +202,9 @@ module M
   let unpair_port (port: port_t) (pp: pp_map_t) : pp_map_t =
     (* 1st step: finding the port(s) paired with the given port *) 
     match Hashtbl.find_opt pp port with
-    | Some paired -> 
+    | Some paired_ports -> 
       Hashtbl.remove pp port;
-      Hashtbl.remove pp paired;
+      List.iter (fun paired -> Hashtbl.remove pp paired) paired_ports;
       pp
     | None -> pp
 
@@ -216,7 +216,7 @@ module M
     let pp' = List.fold_left (fun pp' port -> unpair_port port pp') pp plist in
     (* 3. Removing messages sent to ports in the given port list *)
     (* TODOMP: fix this! *)
-    let mq' = List.filter (fun (_,dest_ports) -> not (List.mem (List.hd dest_ports) plist)) mq in
+    let mq' = List.filter (fun (_,dest_ports) -> List.for_all (fun des_port -> not (List.mem des_port plist)) dest_ports) mq in
     mq', pc, pp'
 
   (* Creates new port, adds to current configuration and sets return variable to new port id *)
@@ -230,26 +230,37 @@ module M
 
   (* Adds both entries to pp map. Note that we assume pre-existing values of p1 and p2 to have been removed. The map is bi-directional *)
   let pair_ports (p1: port_t) (p2: port_t) (plist: port_t list) (pp: pp_map_t) : pp_map_t =
+    
+    (** Auxiliary function that pairs the ports in the paired ports map *)
+    let add_port_to_paired_list (p1: port_t) (p2: port_t) (pp: pp_map_t) : pp_map_t =
+      if (Hashtbl.mem pp p1) then (
+        let paired_ports = Hashtbl.find pp p1 in
+        Hashtbl.replace pp p1 (paired_ports @ [p2]);
+      ) else (
+        Hashtbl.add pp p1 [p2];
+      );  
+      pp in
+    
     (* Pair p1 and p2 by adding both (p1, p2) and (p2, p1) to the map *)
     (* 1: Adding (p1, p2) to pp *)
     (* I have to assume that both ports belong to the port configuration map *)
     if (List.mem p1 plist && List.mem p2 plist) then (
-      Hashtbl.add pp p1 p2;
-      Hashtbl.add pp p2 p1;
-      pp
+      let pp'  = add_port_to_paired_list p1 p2 pp in
+      let pp'' = add_port_to_paired_list p2 p1 pp' in
+      pp''
     ) else pp
         
 
-  (* Returns the port paired with the given port *)
+  (* Returns the ports paired with the given port *)
   let get_paired (xvar: string) (port: port_t) (conf: event_conf_t) (pp: pp_map_t) : event_conf_t =
     let (cid, conf) = conf in 
     (*Printf.printf "\nGetPaired: searching for paired port of %s" (Val.str port);*)
     match Hashtbl.find_opt pp port with
     | None ->
       (* return null if no paired port is found *)
-      cid, EventSemantics.set_var xvar (Val.from_literal Null) conf
-    | Some port' -> 
-      cid, EventSemantics.set_var xvar (Val.from_literal port') conf
+      cid, EventSemantics.set_var xvar (Val.from_list []) conf
+    | Some ports -> 
+      cid, EventSemantics.set_var xvar (Val.from_list (List.map Val.from_literal ports)) conf
 
   let e_confs_str (cq:cq_t) = 
       String.concat "\n" (List.map (
@@ -264,33 +275,36 @@ module M
     match msg with
     | Async (vs, plist, event_data) ->
     (* TODOMP: FIX THIS *)
-    let port = List.hd ports in
-    let cid = Hashtbl.find pc port in
-    let pc' = redirect plist cid pc in
-    (match get_conf cid cq with
-    | None -> raise (Failure ("Invalid Configuration Identifier."))
-    | Some (cid, econf) -> 
-      let event = Events.MessageEvent (event_data) in
-      let econfs' = EventSemantics.fire_event event (vs @ [Val.from_list (List.map (fun p -> (Val.from_literal p)) plist)]) econf false in
-      let cq_list = List.map (fun econf' -> set_conf (cid, econf') cq) econfs' in
-            cq_list, pc')
+    let cids = List.map (fun port -> Hashtbl.find pc port) ports in
+    let pc' = redirect plist (List.hd cids) pc in
+    let event = Events.MessageEvent (event_data) in
+    let cq_list = List.fold_left (fun acc cid ->
+      (match get_conf cid cq with
+      | None -> raise (Failure ("Invalid Configuration Identifier."))
+      | Some (cid, econf) -> 
+        let confs' = EventSemantics.fire_event event (vs @ [Val.from_list (List.map (fun p -> (Val.from_literal p)) plist)]) econf false in
+        List.concat (List.map (
+          fun econf' -> List.map (fun cq' -> set_conf (cid, econf') cq') acc
+        ) confs'
+       ))) [cq] cids in
+      cq_list, pc'
     | Sync (vs, event, cid_orig) -> 
-      (* we need to fire the event to all confs *)
-       let cq_list = List.fold_left (fun acc (cid, conf) -> 
-        let event = Events.GeneralEvent (event) in
-        let confs' = EventSemantics.fire_event event vs conf true in
+       let event = Events.GeneralEvent (event) in
+       (* we need to fire the event to all confs *)
+       let cq_list = List.fold_left (fun acc (cid, econf) -> 
+        let econfs' = EventSemantics.fire_event event vs econf true in
         (* TODOMP: Check later best solution for this. 
         Changing position of confs in cq should not be necessary! *)
         List.concat 
           (List.map 
-            (fun conf' -> 
+            (fun econf' -> 
               List.map 
                 (fun cq' -> 
-                  let cq'' = set_conf (cid, conf') cq' in
+                  let cq'' = set_conf (cid, econf') cq' in
                   List.filter (fun (cid', _) -> cid_orig = cid') cq'' @ 
                   List.filter (fun (cid', _) -> cid_orig <> cid') cq''
                 ) acc
-            ) confs')
+            ) econfs')
         ) [cq] cq in
 
         (*L.log L.Normal (lazy (Printf.sprintf "-----RESULTING CONFS:-------"));
@@ -301,13 +315,12 @@ module M
   let rec process_mp_label (label: mp_label_t) (cids: cid_t list) (cid: cid_t) (conf: EventSemantics.state_t) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : reduced_mp_conf_t list = 
       match label with
       | Send (msg, plist, port_orig, port_dest, event) -> 
-        L.log L.Normal (lazy (Printf.sprintf "Found send. Port orig:%s, Port dest:%s" (Val.str port_orig) (Val.str port_dest)));
+        (*L.log L.Normal (lazy (Printf.sprintf "Found send. Port orig:%s, Port dest:%s" (Val.str port_orig) (Val.str port_dest)));*)
         (*Printf.printf "\nProcessing send label";*)
         let plist = List.map (fun p -> compute_num_from_val p) plist in
         let mq' = send cid msg plist (compute_num_from_val port_orig) (compute_num_from_val port_dest) event mq pc pp in
         [(cid, conf), mq', pc, pp, None, None]
       | SendSync (msg, event) ->
-        L.log L.Normal (lazy (Printf.sprintf "Found send_sync. Event:%s" (Val.str event)));
         (*Printf.printf "\nFound send_sync. Event:%s\n" (Val.str event);*)
         let dest_ports = Hashtbl.fold (fun p _ acc -> acc @ [p]) pc [] in
         let mq' = mq @ [Sync (msg, event, cid), dest_ports] in
@@ -382,7 +395,7 @@ module M
     Printf.sprintf "\nPort-Confs map: %s" (map_str pc string_of_int)
   
   let pp_str pp =
-    Printf.sprintf "\nPort-Port map: %s\n" (map_str pp Literal.str)
+    Printf.sprintf "\nPort-Port map: %s\n" (map_str pp (fun ports -> String.concat ", " (List.map Literal.str ports)))
 
   let print_mpconf (mpconf: mp_conf_t) : unit =
     let (econfs, mq, pc, pp, lead_conf) = mpconf in

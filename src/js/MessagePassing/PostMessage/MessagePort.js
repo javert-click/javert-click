@@ -75,7 +75,7 @@ MessagePort.prototype.postMessage = function(message, options){
     if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     MPSem.beginAtomic();
     // 1. Let targetPort be the port with which this MessagePort is entangled, if any; otherwise let it be null.
-    var targetPort = MPSem.getPaired(this.__id);
+    var targetPort = MPSem.getPairedPort(this.__id);
     //console.log('Sending message from port '+this.__id+' to port '+targetPort);
     // 2. Run the message port post message steps providing targetPort, message and options.
     postMessageSteps(this, targetPort, message, options);
@@ -98,7 +98,7 @@ Window.prototype.postMessage = function(message, options, transfer){
     options['targetOrigin'] = (options.targetOrigin === undefined) ? "/" : options.targetOrigin;
     options['transfer'] = options.transfer === undefined ? (transfer === undefined ? [] : transfer) : options.transfer;
     if (this.__port){
-        var targetPort = MPSem.getPaired(this.__port.__id);
+        var targetPort = MPSem.getPairedPort(this.__port.__id);
         //console.log('Sending message from port '+this.__id+' to port '+targetPort);
         // 2. Run the message port post message steps providing targetPort, message and options.
         windowPostMessageSteps(this, targetWindow, message, options, targetPort);

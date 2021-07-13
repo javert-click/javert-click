@@ -39,6 +39,8 @@ function __setupConf(workerURL, outsidePortId, isShared, parentWindowId, main_fi
     parent.__port = insidePort;
     var MPSem = global.MPSemantics.getMPSemanticsInstance();
     // 18. Entangle outside port and inside port.
+    MPSem.unpairPort(outsidePortId);
+    MPSem.unpairPort(insidePort.__id);
     MPSem.pairPorts(outsidePortId, insidePort.__id);
     //console.log('WORKER: just paired ports '+outsidePortId+' and '+insidePort.__id);
     // 23. If script is a classic script, then run the classic script script. Otherwise, it is a module script; run the module script script.
