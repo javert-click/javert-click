@@ -13,10 +13,12 @@ var ESem  = new ESemantics.EventsSemantics();
 * @id BroadcastChannel
 */
 function BroadcastChannel(name){
+    if(arguments.length === 0) throw new TypeError("Failed to create BroadcastChannel: 1 argument required, but only 0 present.")
     EventTarget.EventTarget.call(this);
-    this.name = name;
+    this.name = String(name);
     this.__id = MPSem.newPort();
     this.closed = false;
+    this.__onmessage = null;
     BroadcastChannel.prototype.channels.push(this);
     // Adds handler so that async message is processed correctly
     ESem.addHandler("Message", "ProcessMessageBroadcast", "broadcastChannelProcessMessage");
@@ -31,7 +33,11 @@ BroadcastChannel.prototype = Object.create(EventTarget.EventTarget.prototype);
 
 Object.defineProperty(BroadcastChannel.prototype, 'onmessage', {
     set: function(f){
+        this.__onmessage = f;
         this.addEventListener('message', f);
+    },
+    get: function(){
+        return this.__onmessage;
     }
 });
 
@@ -56,6 +62,7 @@ BroadcastChannel.prototype.close = function(){
 * @id BroadcastChannelPostMessage
 */
 BroadcastChannel.prototype.postMessage = function(message){
+  if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'BroadcastChannel': 1 argument required, but only 0 present.")
   // 1. If this's closed flag is true, then throw an "InvalidStateError" DOMException.
   if(this.closed) throw new DOMException.DOMException(DOMException.INVALID_STATE_ERR);
   // 2. Let serialized be StructuredSerialize(message)

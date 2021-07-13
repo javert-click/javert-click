@@ -206,7 +206,7 @@ function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transfer
     } else {
         event.userActivation = null;
     }
-    finalTargetPort.dispatchEvent(event);
+    finalTargetPort.dispatchEvent(event, undefined, true);
 }
 
 /*
@@ -281,10 +281,10 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
       else event.origin = origin;
       if(targetWindow){
         //console.log('windowProcessMessageSteps, Going to dispatch message event, listeners: '+targetWindow.listeners);
-        targetWindow.dispatchEvent(event);  
+        targetWindow.dispatchEvent(event, undefined, true);  
       } else{
         var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
-        if(finalTargetPort) finalTargetPort.targetWindow.dispatchEvent(event);
+        if(finalTargetPort) finalTargetPort.targetWindow.dispatchEvent(event, undefined, true);
       }
   }
 }
