@@ -235,6 +235,7 @@ module M
     let add_port_to_paired_list (p1: port_t) (p2: port_t) (pp: pp_map_t) : pp_map_t =
       if (Hashtbl.mem pp p1) then (
         let paired_ports = Hashtbl.find pp p1 in
+        if (not (List.mem p2 paired_ports)) then
         Hashtbl.replace pp p1 (paired_ports @ [p2]);
       ) else (
         Hashtbl.add pp p1 [p2];
