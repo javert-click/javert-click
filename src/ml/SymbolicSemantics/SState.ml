@@ -104,6 +104,7 @@ module M = struct
       let f = symb_evaluate_expr ~no_reduce:true state in
       let _, store, pfs, gamma, _ = state in
       let result : Expr.t = (match expr with
+          | Lit (Constant c) -> Lit (Literal.evaluate_constant c)
           (* Variables:
              a) If a variable is already in the store, return the variable
              b) Otherwise, it dies! *)
