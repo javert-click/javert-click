@@ -42,10 +42,11 @@ MPSemantics.prototype.sendSync = function(message, orig_port, fid){
 /*
 * @id MPSemanticsCreate
 */
-MPSemantics.prototype.create = function(url, setup_fid, outsidePortId, isShared, parentWindowId){
+MPSemantics.prototype.create = function(url, setup_fid, xargs){
     //console.log('MPSem: create, outsideportid: '+outsidePortId);
     var main_fid = "main"+url.substring(0, url.length - 3);
-    var argslist = JS2JSILList.JS2JSILList([url, outsidePortId, isShared, parentWindowId, main_fid]); 
+    xargs.push(main_fid);
+    var argslist = JS2JSILList.JS2JSILList(xargs); 
     return __MP__wrapper__create(url, setup_fid, argslist);
 }
 

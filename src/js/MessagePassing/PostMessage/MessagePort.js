@@ -71,6 +71,7 @@ Object.defineProperty(MessagePort.prototype, 'onmessageerror', {
 * @id MessagePortPostMessage
 */
 MessagePort.prototype.postMessage = function(message, options){
+    console.log('PortPostMessage');
     if (this.__Detached === true) return;
     if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     MPSem.beginAtomic();
@@ -104,7 +105,9 @@ Window.prototype.postMessage = function(message, options, transfer){
         windowPostMessageSteps(this, targetWindow, message, options, targetPort);
     } 
     // 2. Run the window post message steps providing targetWindow, message, and options.
-    else windowPostMessageSteps(this, targetWindow, message, options);
+    else {
+        windowPostMessageSteps(this, targetWindow, message, options);
+    } 
     MPSem.endAtomic();
 }
 
@@ -238,13 +241,16 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
     // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
     // If window has port associated, the message may be sent to another window
     var currWindow = WindowInfo.getInstance();
-    //console.log('originWindow.__port: '+originWindow.__port);
+    console.log('originWindow.__port: '+originWindow.__port);
+    console.log('targetPort: '+targetPort);
     if(originWindow.__port && targetPort) {
       var includeUserActivation = (options && typeof options === "object") ? options['includeUserActivation'] : undefined;
+      console.log('Sending message to window '+targetWindow.__id);
       MPSem.send([serializeWithTransferResult, targetPort, true, currWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation],transferIds, originWindow.__port.__id, targetPort, "ProcessMessage");
     }
     // Otherwise, message is processed locally
     else {
+        console.log('processing message locally');
         var pMessageSteps = windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, currWindow.__id, targetWindow, targetOrigin, undefined, true);
         __ES__schedule(pMessageSteps);
     }

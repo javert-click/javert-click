@@ -99,7 +99,7 @@ function runWorker(worker, workerURL, outsideSettings, outsidePort, options){
     // For the global object, if is shared is true, create a new SharedWorkerGlobalScope object. Otherwise, create a new DedicatedWorkerGlobalScope object.
     //var workerGlobalObj = isShared ? new SharedWorkerGlobalScope.SharedWorkerGlobalScope(workerURL) : new DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope(workerURL);
     //worker.__id = MPSemantics.create(workerURL, "__setupConf", [workerURL, outsidePort.__id, isShared]);
-    worker.__id = MPSem.create(workerURL, "__setupConf", outsidePort.__id, isShared);
+    worker.__id = MPSem.create(workerURL, "__setupConf", [workerURL, outsidePort.__id, isShared]);
 }
 
 exports.Worker = Worker;

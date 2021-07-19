@@ -26,7 +26,7 @@ function SharedWorker(scriptURL, options){
     worker.__port = outsidePort;
     //10. (NOT SUPPORTED) Let callerIsSecureContext be true if outside settings is a secure context; otherwise, false.
     //11. Enqueue the following steps to the shared worker manager:
-    worker.__id = MPSem.create(urlRecord, "__setupConf", outsidePort.__id, true);
+    worker.__id = MPSem.create(urlRecord, "__setupConf", [urlRecord, outsidePort.__id, true]);
     //12. Return worker.
     return worker;
 }

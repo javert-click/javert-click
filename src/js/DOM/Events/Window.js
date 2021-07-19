@@ -108,14 +108,14 @@ Window.prototype.createCommunicationPoint = function(MessagePort, url, MPSem){
     this.__port = outsidePort;
     this.__port.targetWindow = this;
     this.src = url;
-    if(url) this.__id = MPSem.create(url, "__setupConf", outsidePort.__id, false, this.parent.__id);
+    if(url) this.__id = MPSem.create(url, "__setupIFrameContext", [outsidePort.__id, this.parent.__id, this.__id]);
 }
 
 var windowInstance;
 
-function getInstance(){
+function getInstance(id){
     if (!windowInstance){
-        windowInstance = new Window();
+        windowInstance = new Window(id);
     }
     return windowInstance;
 }
