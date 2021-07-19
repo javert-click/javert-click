@@ -55,7 +55,7 @@ MPSemantics.prototype.create = function(url, setup_fid, outsidePortId, isShared,
 MPSemantics.prototype.pairPorts = function(port1Id, port2Id){
     /*this.unpairPort(port1Id);
     this.unpairPort(port2Id);*/
-    console.log('MPSem: pairing '+port1Id+' and '+port2Id);
+    //console.log('MPSem: pairing '+port1Id+' and '+port2Id);
     __MP__wrapper__pairPorts(port1Id, port2Id);
 }
 
@@ -75,7 +75,6 @@ MPSemantics.prototype.getPairedPort = function(portId){
     var paired_ports = __MP__wrapper__getPaired(portId);
     paired_ports = JS2JSILList.JSILListToArray(paired_ports);
     //console.log('MPSem returned '+paired_port+' as getPaired of '+portId);
-    debugger;
     return paired_ports && paired_ports.length > 0 ? paired_ports[0] : null;
 }
 
