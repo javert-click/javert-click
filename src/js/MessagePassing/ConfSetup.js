@@ -36,7 +36,8 @@ function __setupConf(workerURL, outsidePortId, isShared, parentWindowId, main_fi
     //console.log('WORKER: created inside port with id '+insidePort.__id);
     // 17. Associate inside port with worker global scope.
     workerGlobalObj.__port = insidePort;
-    parent.__port = insidePort;
+    // TODOMP: fix this!
+    //parent.__port = insidePort;
     var MPSem = global.MPSemantics.getMPSemanticsInstance();
     // 18. Entangle outside port and inside port.
     MPSem.unpairPort(outsidePortId);
@@ -54,10 +55,11 @@ function __setupConf(workerURL, outsidePortId, isShared, parentWindowId, main_fi
      // the ports attribute initialized to a new frozen array containing inside port, 
      // and the source attribute initialized to inside port.
     if(workerGlobalObj.hasOwnProperty('onconnect')){
-        var event = new workerGlobalObj.MessageEvent.MessageEvent();
+        var event = new global.MessageEvent.MessageEvent("connect");
         event.data = "";
         event.ports = [workerGlobalObj.__port];
         Object.freeze(event.ports);
+        event.source = insidePort;
         workerGlobalObj.dispatchEvent(event);
     }
 }

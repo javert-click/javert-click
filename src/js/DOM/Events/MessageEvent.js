@@ -4,8 +4,9 @@ const Window = require('./Window');
 /*
 * @id MessageEvent
 */
-function MessageEvent(){
-    Event.Event.call(this, "message");
+function MessageEvent(type){
+    var type = type !== undefined ? type : "message";
+    Event.Event.call(this, type);
     this.data        = "";
     this.ports       = [];
     this.origin      = "";

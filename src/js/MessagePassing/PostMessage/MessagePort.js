@@ -263,6 +263,7 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
       // 8.3 Let source be the WindowProxy object corresponding to incumbentSettings's global object (a Window object).
       var source = scopeMP.WindowInfo.Window.prototype.windows.find(w => { return w.__id === originWindowId })
       if (!source) source = new scopeMP.WindowInfo.Window(originWindowId);
+      // TODOMP: insert window created
       // 8.4 Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
       var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(serializeWithTransferResult, transferIds, scopeMP.MessagePort);
       // 8.5 Let messageClone be deserializeRecord.[[Deserialized]].

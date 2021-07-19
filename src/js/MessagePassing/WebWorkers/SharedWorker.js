@@ -12,7 +12,7 @@ function SharedWorker(scriptURL, options){
     //1. (NOT SUPPORTED) Optionally, throw a "SecurityError" DOMException if the request violates a policy decision 
      //(e.g. if the user agent is configured to not allow the page to start shared workers).
     //2. If options is a DOMString, set options to a new WorkerOptions dictionary whose name member is set to the value of options and whose other members are set to their default values.
-    if(typeOf(options) === 'string') options = {name: options};
+    if(typeof(options) === 'string') options = {name: options};
     //3. (NOT SUPPORTED) Let outside settings be the current settings object.
     //4. (NOT SUPPORTED) Parse scriptURL relative to outside settings.
     //5. (NOT SUPPORTED) If this fails, throw a "SyntaxError" DOMException.

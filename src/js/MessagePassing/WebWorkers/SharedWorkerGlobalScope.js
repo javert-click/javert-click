@@ -4,18 +4,22 @@ const WorkerGlobalScope = require('./WorkerGlobalScope');
 * @id SharedWorkerGlobalScope
 */
 function SharedWorkerGlobalScope(global, name){
-    //WorkerGlobalScope.WorkerGlobalScope.call(this, name);
+    WorkerGlobalScope.WorkerGlobalScope.call(this, name);
+
+    var scope = this;
 
     Object.defineProperty(global, 'onconnect', {
         /*
         * @id SharedWorkerGlobalScopeOnConnect
         */
         set: function(f){
-            this.addEventListener('connect', f);
+            scope.addEventListener('connect', f);
         }
     });
 
-    return global;
+    scope.onconnect = global.onconnect;
+
+    return scope;
 }
 
 SharedWorkerGlobalScope.prototype = Object.create(WorkerGlobalScope.WorkerGlobalScope.prototype);
