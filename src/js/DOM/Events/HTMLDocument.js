@@ -13,11 +13,48 @@ const HTMLIFrameElement = require('./HTMLIFrameElement');
  */   
 var HTMLDocument = function (){
     Document.Document.call(this);
-    this.head = null;
-    this.body = null;
+    this.__head = null;
+    this.__body = null;
 };
 
 HTMLDocument.prototype = Object.create(Document.Document.prototype);
+
+Object.defineProperty(HTMLDocument.prototype, 'head', {
+    get: function(){
+        return this.__head;
+    }
+});
+
+Object.defineProperty(HTMLDocument.prototype, 'body', {
+    get: function(){
+        return this.__body;
+    },
+    set: function(o){
+        this.__body = o;
+        if(o){
+          this.__body.__onmessageerror = null;
+          var body = this.__body;
+          var w = this.window;
+          this.__body.setAttribute = function(name, value){
+            if(value){
+              var fun = function(){ var window = w; eval(value); };
+              body[name] = fun;
+            } 
+          }
+          Object.defineProperty(this.__body, 'onmessageerror',{
+              set: function(f){
+                this.__onmessageerror = f;
+                if(w){
+                  w.onmessageerror = f;
+                } 
+              },
+              get: function(){
+                return this.__onmessageerror;
+              }
+          });
+        }
+    }
+});
 
 /*
 * @id HTMLDocumentCreateElement

@@ -26,6 +26,8 @@ var Window = function(id, parent){
     this.outerHeight = 820;
     this.iframes = this;
     this.__iframes_array = [];
+
+    this.__onmessageerror = null;
     //console.log('Adding window of id '+this.__id+' to prototype ');
     Window.prototype.windows.push(this);
 };
@@ -65,6 +67,17 @@ Object.defineProperty(Window.prototype, 'onerror', {
         return this.__onerror;
     }
 });
+
+Object.defineProperty(Window.prototype, 'onmessageerror', {
+    set: function(f){
+       console.log('setting onmessageerror for window obj');
+       this.__onmessageerror = f;
+       this.addEventListener('messageerror', f);
+    },
+    get: function(){
+        return this.__onmessageerror;
+    }
+})
 
 /*
 * @id WindowGetComputedStyle
