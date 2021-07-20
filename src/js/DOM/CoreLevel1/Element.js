@@ -127,7 +127,7 @@ Element.prototype.removeAttribute = function(name){
     if(this.is_readonly()){
         throw new DOMException.DOMException(7);
     }
-    this.attributes.removeNamedItem(name);
+    if(this.attributes) this.attributes.removeNamedItem(name);
 };
 
 /**
