@@ -3,14 +3,6 @@ const WindowInfo = require('../../DOM/Events/Window');
 * @id IFrameGlobalScope
 */
 function IFrameGlobalScope (global, mainWindowId, proxyIFrameId) {
-    Object.defineProperty(global, 'window', {
-        /*
-        * @id IFrameSelf
-        */
-        get: function(){
-            return WindowInfo.getInstance(proxyIFrameId);
-        }
-    });
     Object.defineProperty(global, 'self', {
         /*
         * @id IFrameSelf
@@ -24,8 +16,7 @@ function IFrameGlobalScope (global, mainWindowId, proxyIFrameId) {
         * @id IFrameGlobalGetParent
         */
         get: function(){
-            var parent = WindowInfo.getParent(mainWindowId);
-            return parent;
+            return WindowInfo.getParent(proxyIFrameId, mainWindowId);
         }
     });
     Object.defineProperty(global, 'origin', {
@@ -47,9 +38,7 @@ function IFrameGlobalScope (global, mainWindowId, proxyIFrameId) {
         * @id IFrameOnMessage
         */
         set: function(f){
-            this.__port.__Enabled = true;
-            this.__port.addEventListener('message', f);
-            var window = WindowInfo.getInstance();
+            var window = WindowInfo.getInstance(proxyIFrameId);
             window.addEventListener('message', f);
         }
     });
@@ -68,7 +57,7 @@ function IFrameGlobalScope (global, mainWindowId, proxyIFrameId) {
         */
         set: function(f){
             this.__port.addEventListener('messageerror', f);
-            var window = WindowInfo.getInstance();
+            var window = WindowInfo.getInstance(proxyIFrameId);
             window.addEventListener('messageerror', f);
         }
     });

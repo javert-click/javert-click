@@ -10,11 +10,9 @@ const DOMException = require('../Common/DOMException');
 */
 var Window = function(id, parent){
     EventTarget.EventTarget.call(this);
-    if (id) {
+    if (id !== undefined) {
       this.__id = id;
     }else{
-      Window.counter = (Window.counter || 0) + 1; 
-      //this.__id = Window.counter; 
       this.__id = Math.random();
     }
     this.document = null;
@@ -28,6 +26,7 @@ var Window = function(id, parent){
     this.outerHeight = 820;
     this.iframes = this;
     this.__iframes_array = [];
+    //console.log('Adding window of id '+this.__id+' to prototype ');
     Window.prototype.windows.push(this);
 };
 
@@ -105,37 +104,59 @@ Window.prototype.clone = function () {
 Window.prototype.createCommunicationPoint = function(MessagePort, url, MPSem){
     var outsidePort = new MessagePort();
     outsidePort.__Enabled = true;
+    windowInstance.__port = outsidePort;
     this.__port = outsidePort;
-    this.__port.targetWindow = this;
+    //this.__port.targetWindow = this;
     this.src = url;
-    if(url) this.__id = MPSem.create(url, "__setupIFrameContext", [outsidePort.__id, this.parent.__id, this.__id]);
+    //console.log('createCommunicationPoint, parentId: '+this.parent.__id+', this.id: '+this.__id);
+    if(url) MPSem.create(url, "__setupIFrameContext", [outsidePort.__id, this.parent.__id, this.__id]);
 }
 
 var windowInstance;
 
+/*
+* @id WindowGetInstance
+*/
 function getInstance(id){
-    if (!windowInstance){
-        windowInstance = new Window(id);
+    if(id){
+        var instance = Window.prototype.windows.find((w) => {return w.__id === id});
+        if(!instance){
+          instance = new Window(id);
+        }
+        return instance;
+    } else {
+        if (!windowInstance){
+          windowInstance = new Window(id);
+        }
+        return windowInstance;
     }
-    return windowInstance;
+}
+
+/*
+* @id WindowSetInstance
+*/
+function setInstance(id){
+    var w = Window.prototype.windows.find((w) => { return w.__id === id });
+    if(w !== undefined) windowInstance = w;
 }
 
 /* 
 * @id WindowGetParent
 */
-function getParent(id){
-    var window = getInstance();
-    if(window.parent){
-        return window.parent;
+function getParent(id, parentId){
+    var curr = getInstance(id);
+    if(curr.parent){
+        return curr.parent;
     }else{
-       var parent = new Window(id);
-       window.parent = parent;
+       var parent = new Window(parentId);
+       curr.parent = parent;
        return parent;
     }
 }
 
 exports.Window = Window;
 exports.getInstance = getInstance;
+exports.setInstance = setInstance;
 exports.getParent   = getParent;
 
 

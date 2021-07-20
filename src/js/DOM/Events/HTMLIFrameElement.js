@@ -14,6 +14,7 @@ function HTMLIFrameElement(name, document){
    var window = Window.getInstance();
    var contentWindow = new Window.Window(undefined, window);
    this.contentWindow = contentWindow;
+   this.contentWindow.document = document;
    window.__iframes_array.push(this.contentWindow);
    var i = (window.__iframes_array.length-1)+"";
    Object.defineProperty(window, i, {

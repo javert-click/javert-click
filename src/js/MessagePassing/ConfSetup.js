@@ -31,7 +31,7 @@ function __setupConf(workerURL, outsidePortId, isShared, main_fid){
     var insidePort = new global.MessagePort.PublicMessagePort();
     //TODOMP: check if this call to start() should be here!
     insidePort.start();
-    insidePort.targetWindow = global.Window.getInstance();
+    //insidePort.targetWindow = global.Window.getInstance();
     parent.__port = insidePort;
     //console.log('WORKER: created inside port with id '+insidePort.__id);
     // 17. Associate inside port with worker global scope.
@@ -69,24 +69,29 @@ function __setupConf(workerURL, outsidePortId, isShared, main_fid){
 function __setupIFrameContext(outsidePortId, mainId, proxyIFrameId, main_fid){
     // First thing to be executed in every IFrame. Script file needs to import this file. This function needs to be executed before the script.
     executeJSILProc("mainConfSetup");
+    console.log('__setupIFrameContext');
     var global = executeJSILProc("JSILGetGlobal");  
-    var context = new global.IFrameGlobalScope.IFrameGlobalScope(global, mainId, proxyIFrameId);;
+    var insidePort = new global.MessagePort.PublicMessagePort();
+    var context = new global.IFrameGlobalScope.IFrameGlobalScope(global, mainId, proxyIFrameId);
     // Create inside port and associate it with global object
     // 16. Let inside port be a new MessagePort object in inside settings's Realm.
     //console.log('WORKER: Going to create inside port');
-    var insidePort = new global.MessagePort.PublicMessagePort();
     //TODOMP: check if this call to start() should be here!
     insidePort.start();
-    insidePort.targetWindow = global.Window.getInstance(mainId);
-    parent.__port = insidePort;
-    window.__port = insidePort;
+    //insidePort.targetWindow = global.Window.getInstance(mainId);
+    //console.log('targetWindowId? '+insidePort.targetWindow.__id);
     //console.log('WORKER: created inside port with id '+insidePort.__id);
     // 17. Associate inside port with worker global scope.
+    var window = global.Window.getInstance(proxyIFrameId);
+    window.__port = insidePort;
+    var parent = global.Window.getInstance(mainId);
+    parent.__port = insidePort;
     context.__port = insidePort;
     var MPSem = global.MPSemantics.getMPSemanticsInstance();
     // 18. Entangle outside port and inside port.
     MPSem.unpairPort(outsidePortId);
     MPSem.unpairPort(insidePort.__id);
     MPSem.pairPorts(outsidePortId, insidePort.__id);
+    global.Window.setInstance(proxyIFrameId);
     executeJSILProc(main_fid);
 }

@@ -37,6 +37,7 @@ function PostMessageTest()
 
 window.onmessage = t.step_func(function(e)
 {
+    console.log('Main: window received message '+e.data);
     try
     {
         var sdomainCookie = e.source.document.cookie;
@@ -46,7 +47,6 @@ window.onmessage = t.step_func(function(e)
     {
         ActualResult.push(e.origin, "AccessCookieDenied");
     }
-    console.log('Going to compare e.source and TARGET.contentWindow, '+e.source === TARGET.contentWindow);
     assert_true(e.source === TARGET.contentWindow);
     assert_array_equals(ActualResult, ExpectedResult, "ActualResult");
     t.done();

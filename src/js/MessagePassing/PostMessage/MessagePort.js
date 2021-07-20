@@ -71,7 +71,6 @@ Object.defineProperty(MessagePort.prototype, 'onmessageerror', {
 * @id MessagePortPostMessage
 */
 MessagePort.prototype.postMessage = function(message, options){
-    console.log('PortPostMessage');
     if (this.__Detached === true) return;
     if(arguments.length === 0) throw new TypeError("Failed to execute 'postMessage' on 'Messageport': 1 argument required, but only 0 present.")
     MPSem.beginAtomic();
@@ -98,15 +97,16 @@ Window.prototype.postMessage = function(message, options, transfer){
     options = (options === undefined) ? {} : (typeof options === "string" ? {targetOrigin: options} : options);
     options['targetOrigin'] = (options.targetOrigin === undefined) ? "/" : options.targetOrigin;
     options['transfer'] = options.transfer === undefined ? (transfer === undefined ? [] : transfer) : options.transfer;
+    var originWindow = WindowInfo.getInstance();
     if (this.__port){
         var targetPort = MPSem.getPairedPort(this.__port.__id);
         //console.log('Sending message from port '+this.__id+' to port '+targetPort);
         // 2. Run the message port post message steps providing targetPort, message and options.
-        windowPostMessageSteps(this, targetWindow, message, options, targetPort);
+        windowPostMessageSteps(originWindow, targetWindow, message, options, targetPort);
     } 
     // 2. Run the window post message steps providing targetWindow, message, and options.
     else {
-        windowPostMessageSteps(this, targetWindow, message, options);
+        windowPostMessageSteps(originWindow, targetWindow, message, options);
     } 
     MPSem.endAtomic();
 }
@@ -173,7 +173,7 @@ function processMessageSteps(global, message, targetPortId, isWindow, originWind
     if(isWindow){
         var targetWindow = scopeMP.WindowInfo.Window.prototype.windows.find(w => {return w.__id === targetWindowId});
         scopeMP.origin = global.origin;
-        (scopeMP.windowProcessMessageSteps(scopeMP, message, transferIds, originWindowId, targetWindow, targetOrigin, targetPortId, false))();
+        (scopeMP.windowProcessMessageSteps(scopeMP, message, transferIds, originWindowId, targetWindow, targetOrigin, false))();
     } else {
         scopeMP.messagePortProcessMessageSteps(scopeMP, message, targetPortId, transferIds, includeUserActivation);
     }
@@ -241,17 +241,18 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
     // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
     // If window has port associated, the message may be sent to another window
     var currWindow = WindowInfo.getInstance();
-    console.log('originWindow.__port: '+originWindow.__port);
-    console.log('targetPort: '+targetPort);
+    //console.log('originWindow.__port: '+originWindow.__port);
+    //console.log('postMessageWindow, originWindowId: '+originWindow.__id)
+    //console.log('postMessageWindow, targetWindowId: '+targetWindow.__id)
+    //console.log('targetPort: '+targetPort);
     if(originWindow.__port && targetPort) {
       var includeUserActivation = (options && typeof options === "object") ? options['includeUserActivation'] : undefined;
-      console.log('Sending message to window '+targetWindow.__id);
-      MPSem.send([serializeWithTransferResult, targetPort, true, currWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation],transferIds, originWindow.__port.__id, targetPort, "ProcessMessage");
+      MPSem.send([serializeWithTransferResult, targetPort, true, originWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation],transferIds, originWindow.__port.__id, targetPort, "ProcessMessage");
     }
     // Otherwise, message is processed locally
     else {
         console.log('processing message locally');
-        var pMessageSteps = windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, currWindow.__id, targetWindow, targetOrigin, undefined, true);
+        var pMessageSteps = windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, currWindow.__id, targetWindow, targetOrigin, true);
         __ES__schedule(pMessageSteps);
     }
 }
@@ -259,7 +260,7 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
 /*
 * @id windowProcessMessageSteps
 */
-function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, originWindowId, targetWindow, targetOrigin, targetPortId, sameWindow){
+function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, originWindowId, targetWindow, targetOrigin, sameWindow){
     return function(){
         //transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
       // 8.1 If the targetOrigin argument is not a single literal U+002A ASTERISK character (*) and targetWindow's associated Document's origin is not same origin with targetOrigin, then return.
@@ -268,7 +269,7 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
       var origin = scopeMP.location.origin;
       // 8.3 Let source be the WindowProxy object corresponding to incumbentSettings's global object (a Window object).
       var source = scopeMP.WindowInfo.Window.prototype.windows.find(w => { return w.__id === originWindowId })
-      if (!source) source = new scopeMP.WindowInfo.Window(originWindowId);
+      //if (!source) source = new scopeMP.WindowInfo.Window(originWindowId);
       // TODOMP: insert window created
       // 8.4 Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
       var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(serializeWithTransferResult, transferIds, scopeMP.MessagePort);
@@ -287,11 +288,12 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
       if (sameWindow === true) event.origin = origin;
       else event.origin = origin;
       if(targetWindow){
-        //console.log('windowProcessMessageSteps, Going to dispatch message event, listeners: '+targetWindow.listeners);
         targetWindow.dispatchEvent(event, undefined, true);  
-      } else{
-        var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
-        if(finalTargetPort) finalTargetPort.targetWindow.dispatchEvent(event, undefined, true);
+      } else {
+          console.log('windowProcessMessageSteps, TARGET WINDOW NOT FOUND')
+      //  var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
+      //  console.log('Dispatching event to window of id '+finalTargetPort.targetWindow.__id+', Listeners: '+finalTargetPort.targetWindow.listeners);
+      //  if(finalTargetPort) finalTargetPort.targetWindow.dispatchEvent(event, undefined, true);
       }
   }
 }
