@@ -3,7 +3,7 @@ module L = Logging
 module M 
     : EventScheduler.M = struct
 
-  let timing_event_cycle = 2
+  let timing_event_cycle = 6
 
   type ('conf, 'v, 'conf_info) scheduled_unit_t = 
     | Handler  of string * 'v * ('v) Events.t * ('v list) (** xvar, funname, event, arguments **) 

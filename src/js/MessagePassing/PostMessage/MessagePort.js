@@ -39,6 +39,7 @@ function PublicMessagePort(id){
     this.__Detached          = false;
     this.__PrimaryInterface  = 'MessagePort'; //TODO CHECK
     this.__HasBeenShipped    = false;
+    this.__onmessagehandler  = null;
     MessagePort.prototype.ports.push(this);
 }
 
@@ -54,7 +55,9 @@ Object.defineProperty(MessagePort.prototype, 'onmessage', {
     */
     set: function(f){
         this.__Enabled = true;
+        if(this.__onmessagehandler) this.removeEventListener('message', __onmessagehandler);
         this.addEventListener('message', f);
+        this.__onmessagehandler = f;
     }
 });
 
@@ -169,6 +172,7 @@ var scopeMP = {};
 */
 function processMessageSteps(global, message, targetPortId, isWindow, originWindowId, targetOrigin, targetWindowId, includeUserActivation, transferIds){
     // Initial setup
+    //debugger;
     var scopeMP = global.__scopeMP;
     transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
     if(isWindow){
@@ -210,6 +214,7 @@ function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transfer
     } else {
         event.userActivation = null;
     }
+    //console.log('processMessageSteps, dispatching event on port '+finalTargetPort.__id+', listeners: '+finalTargetPort.listeners.length);
     finalTargetPort.dispatchEvent(event, undefined, true);
 }
 

@@ -46,6 +46,7 @@ BroadcastChannel.prototype = Object.create(EventTarget.EventTarget.prototype);
 Object.defineProperty(BroadcastChannel.prototype, 'onmessage', {
     set: function(f){
         this.__onmessage = f;
+        if(this.__onmessage) this.removeEventListener('message', this.__onmessage);
         this.addEventListener('message', f);
     },
     get: function(){

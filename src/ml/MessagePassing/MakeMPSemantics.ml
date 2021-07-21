@@ -287,11 +287,11 @@ module M
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
   let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * pc_map_t =
-    (*Printf.printf "\nProcessing message sent to ports %s\n" (String.concat "," (List.map Literal.str ports));*)
    let (vs, plist, event_data) = msg  in
+   (*Printf.printf "\nProcessing message %s sent to port %s\n" (String.concat ", " (List.map Val.str vs))  (Literal.str port);*)
     (* TODOMP: FIX THIS *)
    let cid = Hashtbl.find pc port in
-    (*Printf.printf "\nFound %d confs for port %s" (List.length cids_fs) (Val.str port);*)
+    (*Printf.printf "\nFound %d conf for port %s" cid (Literal.str port);*)
     let pc' = redirect plist cid pc in
     (match get_conf cid cq with
     | None -> raise (Failure ("Invalid Configuration Identifier."))
@@ -305,7 +305,7 @@ module M
       match label with
       | Send (msg, plist, port_orig, port_dest, event) -> 
         (*L.log L.Normal (lazy (Printf.sprintf "Found send. Port orig:%s, Port dest:%s" (Val.str port_orig) (Val.str port_dest)));*)
-        (*Printf.printf "\nProcessing send label";*)
+        (*Printf.printf "\nProcessing send label\n";*)
         let plist = List.map (fun p -> compute_num_from_val p) plist in
         let mq' = send cid msg plist (compute_num_from_val port_orig) (compute_num_from_val port_dest) event mq pc pp in
         [(cid, conf), mq', pc, pp, None, None]
@@ -421,9 +421,10 @@ module M
       (* Scheduler decides if a configuration or a message is scheduled *)
       (match Scheduler.schedule cq mq final ready_to_process_msg has_transfer with
       (* There is nothing left to do *)
-      | None -> [], [conf]
+      | None -> L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose none")); [], [conf]
       (* Configuration is scheduled *)
       | Some (Conf (cq_pre, c, cq_post)) -> 
+        L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose conf"));
         let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
         let cids, _ = List.split cq in
         (match run_conf cids c mq pc pp with
@@ -431,6 +432,7 @@ module M
         | new_reduced_confs, _ -> List.concat (List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs), [])
       (* Message is scheduled from message queue *)
       | Some (Message (mq, mq')) -> 
+        L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose msg"));
         let (msg, port) = mq in
         let cqs, pc' = process_message msg port cq pc in
         List.map (fun cq -> cq, mq', pc', pp, lead_conf) cqs, [])

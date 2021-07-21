@@ -27,6 +27,7 @@ var Window = function(id, parent){
     this.iframes = this;
     this.__iframes_array = [];
 
+    this.__onmessage = null;
     this.__onmessageerror = null;
     //console.log('Adding window of id '+this.__id+' to prototype ');
     Window.prototype.windows.push(this);
@@ -40,14 +41,16 @@ Object.defineProperty(Window.prototype, "DOMException", {
     get: function(){
         return DOMException.DOMException;
     }
-})
+});
 
 Object.defineProperty(Window.prototype, 'onmessage', {
     /*
     * @id WindowOnMessage
     */
     set: function(f){
+        if(this.__onmessage) this.removeEventListener('message', this.__onmessage);
         this.addEventListener('message', f);
+        this.__onmessage = f;
     }
 });
 

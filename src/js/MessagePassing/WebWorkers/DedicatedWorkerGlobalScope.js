@@ -16,6 +16,8 @@ function DedicatedWorkerGlobalScope (global) {
         */
         set: function(f){
             this.__port.__Enabled = true;
+            if(this.__port.__onmessagehandler) this.__port.removeEventListener('message', this.__port.__onmessagehandler);
+            this.__port.__onmessagehandler = f;
             this.__port.addEventListener('message', f);
         }
     });
@@ -41,6 +43,7 @@ function DedicatedWorkerGlobalScope (global) {
         * @id DedicatedWorkerGlobalScopePostMessage
         */
         get: function(){
+            console.log('Going to postMessage from worker. Do I have port? '+this.__port);
             var port = this.__port;
             return port.postMessage.bind(port);
         }

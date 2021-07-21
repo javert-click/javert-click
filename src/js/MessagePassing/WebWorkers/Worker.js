@@ -44,6 +44,8 @@ Object.defineProperty(Worker.prototype, 'onmessage', {
     */
     set: function(f){
         this.__port.__Enabled = true;
+        if(this.__port.__onmessagehandler) this.__port.removeEventListener('message', this.__port.__onmessagehandler);
+        this.__port.__onmessagehandler = f;
         this.__port.addEventListener('message', f);
     }
 });
