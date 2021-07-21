@@ -31,8 +31,6 @@ function __setupConf(workerURL, outsidePortId, isShared, main_fid){
     var insidePort = new global.MessagePort.PublicMessagePort();
     //TODOMP: check if this call to start() should be here!
     insidePort.start();
-    //insidePort.targetWindow = global.Window.getInstance();
-    parent.__port = insidePort;
     //console.log('WORKER: created inside port with id '+insidePort.__id);
     // 17. Associate inside port with worker global scope.
     globalObj.__port = insidePort;
@@ -84,13 +82,14 @@ function __setupIFrameContext(outsidePortId, mainId, proxyIFrameId, main_fid){
     // 17. Associate inside port with worker global scope.
     var window = global.Window.getInstance(proxyIFrameId);
     window.__port = insidePort;
-    var parent = global.Window.getInstance(mainId);
+    //var parent = global.Window.getInstance(mainId);
     parent.__port = insidePort;
     context.__port = insidePort;
     var MPSem = global.MPSemantics.getMPSemanticsInstance();
     // 18. Entangle outside port and inside port.
     MPSem.unpairPort(outsidePortId);
     MPSem.unpairPort(insidePort.__id);
+    //console.log('Pairing ports '+outsidePortId+' and '+insidePort.__id);
     MPSem.pairPorts(outsidePortId, insidePort.__id);
     global.Window.setInstance(proxyIFrameId);
     executeJSILProc(main_fid);

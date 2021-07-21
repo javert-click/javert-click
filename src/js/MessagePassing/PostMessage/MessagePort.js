@@ -98,9 +98,10 @@ Window.prototype.postMessage = function(message, options, transfer){
     options['targetOrigin'] = (options.targetOrigin === undefined) ? "/" : options.targetOrigin;
     options['transfer'] = options.transfer === undefined ? (transfer === undefined ? [] : transfer) : options.transfer;
     var originWindow = WindowInfo.getInstance();
+    console.log('this.port: '+this.port);
     if (this.__port){
         var targetPort = MPSem.getPairedPort(this.__port.__id);
-        //console.log('Sending message from port '+this.__id+' to port '+targetPort);
+        console.log('Sending message from port '+this.__id+' to port '+targetPort);
         // 2. Run the message port post message steps providing targetPort, message and options.
         windowPostMessageSteps(originWindow, targetWindow, message, options, targetPort);
     } 
@@ -241,10 +242,10 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
     // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
     // If window has port associated, the message may be sent to another window
     var currWindow = WindowInfo.getInstance();
-    //console.log('originWindow.__port: '+originWindow.__port);
-    //console.log('postMessageWindow, originWindowId: '+originWindow.__id)
-    //console.log('postMessageWindow, targetWindowId: '+targetWindow.__id)
-    //console.log('targetPort: '+targetPort);
+    console.log('originWindow.__port: '+originWindow.__port);
+    console.log('postMessageWindow, originWindowId: '+originWindow.__id)
+    console.log('postMessageWindow, targetWindowId: '+targetWindow.__id)
+    console.log('targetPort: '+targetPort);
     if(originWindow.__port && targetPort) {
       var includeUserActivation = (options && typeof options === "object") ? options['includeUserActivation'] : undefined;
       MPSem.send([serializeWithTransferResult, targetPort, true, originWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation],transferIds, originWindow.__port.__id, targetPort, "ProcessMessage");

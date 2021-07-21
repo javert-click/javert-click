@@ -35,8 +35,8 @@ MPSemantics.prototype.send = function(message, plist, orig_port, dest_port, even
     __MP__wrapper__send(mplist, plistJSIL, orig_port, dest_port, event);
 }
 
-MPSemantics.prototype.sendSync = function(message, orig_port, fid){
-    __MP__wrapper__send_sync(message, orig_port, fid);
+MPSemantics.prototype.notifyAll = function(message, orig_port, fid){
+    __MP__wrapper__notify_all(message, orig_port, fid);
 }
 
 /*

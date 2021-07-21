@@ -238,7 +238,7 @@ proc setupInitialHeap () {
 	  
 	  [$lg, "__MP__wrapper__newPort"]			      := {{ "d", $lsmpnewport, true, false, true }};
 	  [$lg, "__MP__wrapper__send"]			          := {{ "d", $lsmpsend, true, false, true }};
-	  [$lg, "__MP__wrapper__send_sync"]			      := {{ "d", $lsmpsendsync, true, false, true }};
+	  [$lg, "__MP__wrapper__notify_all"]			  := {{ "d", $lsmpnotifyall, true, false, true }};
 	  [$lg, "__MP__wrapper__create"]			      := {{ "d", $lsmpcreate, true, false, true }};
 	  [$lg, "__MP__wrapper__pairPorts"]			      := {{ "d", $lsmppairports, true, false, true }};
 	  [$lg, "__MP__wrapper__unpairPort"]			  := {{ "d", $lsmpunpairports, true, false, true }};
@@ -952,7 +952,7 @@ proc setupInitialMP(){
 	
 	ret := "create_object_with_call_construct_concrete"($lsmpnewport, "__MP__wrapper__newPort", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lsmpsend, "__MP__wrapper__send", empty, 1);
-	ret := "create_object_with_call_construct_concrete"($lsmpsendsync, "__MP__wrapper__send_sync", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lsmpnotifyall, "__MP__wrapper__notify_all", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lsmpcreate, "__MP__wrapper__create", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lsmppairports, "__MP__wrapper__pairPorts", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lsmpunpairports, "__MP__wrapper__unpairPort", empty, 1);

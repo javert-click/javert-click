@@ -1,6 +1,6 @@
 (* Wrapper functions *)
 let send                  = "__MP__wrapper__send"
-let send_sync             = "__MP__wrapper__send_sync"
+let notify_all            = "__MP__wrapper__notify_all"
 let create                = "__MP__wrapper__create"
 let terminate             = "__MP__wrapper__terminate"
 let new_port              = "__MP__wrapper__newPort"

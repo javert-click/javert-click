@@ -38,7 +38,7 @@ function BroadcastChannel(name){
     var newbc_msg = { id: this.__id, name: this.name };
     var datacloneerr = new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
     var serialized = StructuredSerializeInternal(newbc_msg, false, datacloneerr);
-    MPSem.sendSync(serialized, this.__id, "ProcessSyncMessageBroadcast");
+    MPSem.notifyAll(serialized, this.__id, "ProcessSyncMessageBroadcast");
 }
 
 BroadcastChannel.prototype = Object.create(EventTarget.EventTarget.prototype);

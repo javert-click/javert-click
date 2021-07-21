@@ -70,7 +70,6 @@ Object.defineProperty(Window.prototype, 'onerror', {
 
 Object.defineProperty(Window.prototype, 'onmessageerror', {
     set: function(f){
-       console.log('setting onmessageerror for window obj');
        this.__onmessageerror = f;
        this.addEventListener('messageerror', f);
     },
