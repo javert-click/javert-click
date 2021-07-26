@@ -14,13 +14,13 @@ var wf = async(op) => {
     return new Promise((res, rej) => { w.onmessage = res; });
 };
 
-(async()=>{
+(async function f(){
     var f1 = await wf("+1");
     console.log('Going to check if '+f1.data+' === 1');
     assert_true(f1.data === 1);
 })();
 
-(async()=>{
+(async function g(){
     var f2 = await wf("+2");
     console.log('Going to check if '+f2.data+' === 3');
     assert_true(f2.data === 3);

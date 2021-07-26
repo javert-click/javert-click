@@ -3,6 +3,7 @@ const MPSemantics       = require('../Common/MPSemantics');
 const MessagePort       = require('../PostMessage/MessagePort');
 const SharedWorker      = require('./SharedWorker');
 const WorkerGlobalScope = require('./WorkerGlobalScope');
+const DOMException      = require('../../DOM/Common/DOMException');
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
 
@@ -23,7 +24,11 @@ function Worker(scriptURL, options){
     }
     // 5. let worker URL be the resulting URL record.
     //var workerURL = url.urlRecord;
-    var workerURL = scriptURL;
+    var workerURL = String(scriptURL);
+    if(workerURL.length < 3 || workerURL.substring(workerURL.length - 3, workerURL.length) !== ".js"){
+        console.log('substr? '+workerURL.substring(workerURL.length - 3, workerURL.length));
+        workerURL = workerURL + ".js";
+    }
     // 6. Let worker be a new Worker object. 
     var worker = Worker_construct(this);
     // 7. Create a new MessagePort object whose owner is outside settings. Let this be the outside port
@@ -88,6 +93,9 @@ Worker.prototype.addEventListener = function(type, f, options){
 * @id runWorker
 */
 function runWorker(worker, workerURL, outsideSettings, outsidePort, options){
+    var datacloneerr = new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
+    if(options === undefined) options = {};
+    var optionsSerialized = StructuredSerializeInternal(options, false, datacloneerr);
     // 1. Let is shared be true if worker is a SharedWorker object, and false otherwise.
     var isShared = worker instanceof SharedWorker.SharedWorker;
     // 2. Let owner be the relevant owner to add given outside settings.
@@ -101,7 +109,7 @@ function runWorker(worker, workerURL, outsideSettings, outsidePort, options){
     // For the global object, if is shared is true, create a new SharedWorkerGlobalScope object. Otherwise, create a new DedicatedWorkerGlobalScope object.
     //var workerGlobalObj = isShared ? new SharedWorkerGlobalScope.SharedWorkerGlobalScope(workerURL) : new DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope(workerURL);
     //worker.__id = MPSemantics.create(workerURL, "__setupConf", [workerURL, outsidePort.__id, isShared]);
-    worker.__id = MPSem.create(workerURL, "__setupConf", [workerURL, outsidePort.__id, isShared]);
+    worker.__id = MPSem.create(workerURL, "__setupConf", [workerURL, outsidePort.__id, isShared, optionsSerialized]);
 }
 
 exports.Worker = Worker;

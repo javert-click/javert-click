@@ -217,7 +217,9 @@ proc setupInitialHeap () {
 	  (* TIMING EVENTS *)
 	  [$lg, "setImmediate"]                           := {{ "d", $lsetImmediate, true, false, true }};
 	  [$lg, "setTimeout"]                             := {{ "d", $lsetTimeout, true, false, true }};
+	  [$lg, "setInterval"]                            := {{ "d", $lsetInterval, true, false, true }};
 	  [$lg, "clearTimeout"]                           := {{ "d", $lclearTimeout, true, false, true }};
+	  [$lg, "clearInterval"]                          := {{ "d", $lclearInterval, true, false, true }};
 	  (* Events *)
 	  [$lg, "__ES__wrapper__addHandler"]			  := {{ "d", $laddhandler, true, false, true }};
 	  [$lg, "__ES__wrapper__removeHandler"]		      := {{ "d", $lremovehandler, true, false, true }};
@@ -281,7 +283,9 @@ proc setupInitialHeap () {
 	  (* TIMING EVENTS *)
 	  ret := "create_object_with_call_construct_concrete" ($lsetImmediate, "setImmediate", empty, 1);
 	  ret := "create_object_with_call_construct_concrete" ($lsetTimeout, "setTimeout", empty, 1);
+	  ret := "create_object_with_call_construct_concrete" ($lsetInterval, "setInterval", empty, 1);
 	  ret := "create_object_with_call_construct_concrete" ($lclearTimeout, "clearTimeout", empty, 1);
+	  ret := "create_object_with_call_construct_concrete" ($lclearInterval, "clearInterval", empty, 1);
 
   		(* Object object *)
 
@@ -882,8 +886,22 @@ proc setTimeout(_scope, _this, fname, time){
     elab: throw
 };
 
+proc setInterval(_scope, _this, fname, time){
+    ret := "setTimeout"(_scope, _this, fname, time) with elab;
+	return;
+	
+    elab: throw
+};
+
 proc clearTimeout(xsc, vthis, eid){
     ret := "__ES__wrapper__unschedule"(xsc, vthis, eid) with elab;
+	return;
+	
+    elab: throw
+};
+
+proc clearInterval(xsc, vthis, eid){
+    ret := "clearTimeout"(xsc, vthis, eid) with elab;
 	return;
 	
     elab: throw

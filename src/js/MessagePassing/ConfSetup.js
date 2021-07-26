@@ -6,6 +6,7 @@ const MPSemantics                = require('./Common/MPSemantics');
 const EventSemantics             = require('../DOM/Events/EventsSemantics');
 const MessageEvent               = require('../DOM/Events/MessageEvent');
 const Window                     = require('../DOM/Events/Window');
+const WorkerInfo                 = require('./WebWorkers/Worker');
 
 JSILSetGlobalObjProp("DedicatedWorkerGlobalScope", DedicatedWorkerGlobalScope);
 JSILSetGlobalObjProp("SharedWorkerGlobalScope", SharedWorkerGlobalScope);
@@ -15,16 +16,19 @@ JSILSetGlobalObjProp("MessageEvent", MessageEvent);
 JSILSetGlobalObjProp("MPSemantics", MPSemantics);
 JSILSetGlobalObjProp("EventSemantics", EventSemantics);
 JSILSetGlobalObjProp("Window", Window);
+JSILSetGlobalObjProp("WorkerInfo", WorkerInfo);
+
 
 /*
 * @JSIL
 * @id __setupConf
 */
-function __setupConf(workerURL, outsidePortId, isShared, main_fid){
+function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
     // First thing to be executed in every worker. Script file needs to import this file. This function needs to be executed before the script.
     executeJSILProc("mainConfSetup");
-    var global = executeJSILProc("JSILGetGlobal");  
-    var globalObj = isShared ? new global.SharedWorkerGlobalScope.SharedWorkerGlobalScope(global, workerURL) : new global.DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope(global, workerURL) ;
+    var global = executeJSILProc("JSILGetGlobal");
+    var optionsDeserialized = StructuredDeserialize(options);  
+    var globalObj = isShared ? new global.SharedWorkerGlobalScope.SharedWorkerGlobalScope(global, optionsDeserialized.name, global.WorkerInfo) : new global.DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope(global, workerURL, global.WorkerInfo) ;
     // Create inside port and associate it with global object
     // 16. Let inside port be a new MessagePort object in inside settings's Realm.
     //console.log('WORKER: Going to create inside port');
