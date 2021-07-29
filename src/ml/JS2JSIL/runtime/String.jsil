@@ -468,3 +468,9 @@ proc SP_startsWith(xsc, vthis, searchval, start){
              return;
    elab:     throw
 };
+
+(* DUMMY SP_REPLACE *)
+proc SP_replace(xsc, vthis, oldval, newval){
+	ret := vthis;
+	return
+};

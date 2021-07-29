@@ -1,4 +1,4 @@
-import { test, assert_unreached } from '../../../../js/DOM/Events/Testharness';
+import { test } from '../../../../js/DOM/Events/Testharness';
 const WorkerInfo = require('../../../../js/MessagePassing/WebWorkers/Worker');
 const Worker = WorkerInfo.Worker;
 

@@ -12,7 +12,7 @@ JSILSetGlobalObjProp("DedicatedWorkerGlobalScope", DedicatedWorkerGlobalScope);
 JSILSetGlobalObjProp("SharedWorkerGlobalScope", SharedWorkerGlobalScope);
 JSILSetGlobalObjProp("IFrameGlobalScope", IFrameGlobalScope);
 JSILSetGlobalObjProp("MessagePort", MessagePort);
-JSILSetGlobalObjProp("MessageEvent", MessageEvent);
+//JSILSetGlobalObjProp("MessageEvent", MessageEvent.MessageEvent);
 JSILSetGlobalObjProp("MPSemantics", MPSemantics);
 JSILSetGlobalObjProp("EventSemantics", EventSemantics);
 JSILSetGlobalObjProp("Window", Window);
@@ -55,7 +55,7 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
      // the ports attribute initialized to a new frozen array containing inside port, 
      // and the source attribute initialized to inside port.
     if(globalObj.hasOwnProperty('onconnect')){
-        var event = new global.MessageEvent.MessageEvent("connect");
+        var event = new global.MessageEvent("connect");
         event.data = "";
         event.ports = [globalObj.__port];
         Object.freeze(event.ports);

@@ -14,7 +14,18 @@ function DedicatedWorkerGlobalScope (global, name, WorkerInfo) {
         * @id DedicatedWorkerGlobalSelf
         */
         get: function(){
-            return this;
+            return scope;
+        },
+        set: function(v){
+            console.log('self object readonly');
+        }
+    });
+    Object.defineProperty(scope, 'self', {
+        /*
+        * @id DedicatedWorkerScopeSelf
+        */
+        get: function(){
+            return global.self;
         }
     });
     Object.defineProperty(global, 'onmessage', {
@@ -22,10 +33,28 @@ function DedicatedWorkerGlobalScope (global, name, WorkerInfo) {
         * @id DedicatedWorkerGlobalScopeOnMessage
         */
         set: function(f){
-            scope.__port.__Enabled = true;
-            if(scope.__port.__onmessagehandler) scope.__port.removeEventListener('message', scope.__port.__onmessagehandler);
-            scope.__port.__onmessagehandler = f;
-            scope.__port.addEventListener('message', f);
+            if(typeof f === 'function' || typeof f === 'object') {
+              scope.__port.__Enabled = true;
+              if(scope.__port.__onmessagehandler) scope.__port.removeEventListener('message', scope.__port.__onmessagehandler);
+              scope.__port.__onmessagehandler = f;
+              scope.__port.addEventListener('message', f);
+              //TODOMP: check what should happen here
+              scope.addEventListener('message', f);
+            }
+        },
+        get: function(){
+            return scope.__port.__onmessagehandler ? scope.__port.__onmessagehandler : null;
+        }
+    });
+    Object.defineProperty(scope, 'onmessage', {
+        /*
+        * @id DedicatedWorkerScopeOnMessage
+        */
+        set: function(f){
+            global.onmessage = f;
+        },
+        get: function(){
+            return global.onmessage
         }
     });
     Object.defineProperty(global, 'onerror', {
@@ -57,7 +86,7 @@ function DedicatedWorkerGlobalScope (global, name, WorkerInfo) {
         * @id DedicatedWorkerGlobalScopeAddEventListener
         */
         get: function(){
-          return scope.__port.addEventListener.bind(scope.__port);
+          return scope.addEventListener.bind(scope);
         }
     });
     Object.defineProperty(global, 'removeEventListener', {
@@ -65,7 +94,7 @@ function DedicatedWorkerGlobalScope (global, name, WorkerInfo) {
         * @id DedicatedWorkerGlobalScopeRemoveEventListener
         */
         get: function(f){
-            return scope.__port.removeEventListener.bind(scope.__port);
+            return scope.removeEventListener.bind(scope);
         }
     });
     Object.defineProperty(global, 'dispatchEvent', {
@@ -73,7 +102,7 @@ function DedicatedWorkerGlobalScope (global, name, WorkerInfo) {
         * @id DedicatedWorkerGlobalScopeDispatchEvent
         */
         get: function(f){
-            return scope.__port.dispatchEvent;
+            return scope.dispatchEvent;
         }
     });
 
@@ -94,13 +123,22 @@ function DedicatedWorkerGlobalScope (global, name, WorkerInfo) {
             //console.log('Going to postMessage from worker. Do I have port? '+this.__port);
             if(!scope.__postMessage){
                 var port = scope.__port;
-                return port.postMessage.bind(port);
+                function postMessageInternal(){
+                    port.postMessage.apply(port, arguments);
+                }
+                return postMessageInternal
             } else{
                 return scope.__postMessage;
             }
         },
         set: function(f){
             scope.__postMessage = f;
+        }
+    });
+
+    Object.defineProperty(scope, 'DedicatedWorkerGlobalScope', {
+        get: function(){
+            return DedicatedWorkerGlobalScope;
         }
     });
 

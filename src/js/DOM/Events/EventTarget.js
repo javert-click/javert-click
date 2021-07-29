@@ -458,12 +458,17 @@ function execCallBack(callback, opName, event, currentTarget){
             * @id execListenersFindListener
             */
             function execListenersFindListener(l){
-                l.type === "error"
+                return l.type === "error"
             })){
             var errorEvent = new scopeEvents.Event.Event("error");//window.document.createEvent("error");
             errorEvent.initEvent("error", true, true);
             errorEvent.error = e;
             window.dispatchEvent(errorEvent);
+        } else {
+            if(self['onerror']){
+                var errorEvent = new scopeEvents.Event.Event("error");
+                self.dispatchEvent(errorEvent);
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ const MPSemantics       = require('../../MessagePassing/Common/MPSemantics');
 const MessagePort       = require('../../MessagePassing/PostMessage/MessagePort');
 const HTMLElement       = require('./HTMLElement');
 const Window            = require('./Window');
+const Event             = require('./Event');
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
 
@@ -39,6 +40,14 @@ HTMLIFrameElement.prototype = Object.create(HTMLElement.HTMLElement.prototype);
 Object.defineProperty(HTMLIFrameElement.prototype, "src", {
     set: function(url){
         this.contentWindow.createCommunicationPoint(MessagePort.PublicMessagePort, url, MPSem);
+        var loadEvent = new Event.Event('load');
+        this.dispatchEvent(loadEvent);
+    }
+});
+
+Object.defineProperty(HTMLIFrameElement.prototype, "onload", {
+    set: function(f){
+        this.addEventListener('load', f);
     }
 });
 

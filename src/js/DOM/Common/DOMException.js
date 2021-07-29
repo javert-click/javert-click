@@ -2,14 +2,6 @@
 /* INTERFACE DOMException */
 /**************************/
 
-
-/*
-* @id DOMException
-*/
-function DOMException(code){
-  this.code = code;        
-};
-
 const INDEX_SIZE_ERR               = 1;
 const DOMSTRING_SIZE_ERR           = 2; 
 const HIERARCHY_REQUEST_ERR        = 3; 
@@ -23,6 +15,14 @@ const INUSE_ATTRIBUTE_ERR          = 10;
 const INVALID_STATE_ERR            = 11; 
 const SYNTAX_ERR                   = 12;
 const DATA_CLONE_ERR               = 25;
+
+/*
+* @id DOMException
+*/
+function DOMException(code){
+  this.code = code;   
+  this.DATA_CLONE_ERR = DATA_CLONE_ERR; 
+};
 
 exports.DOMException                = DOMException;
 exports.INDEX_SIZE_ERR              = INDEX_SIZE_ERR;

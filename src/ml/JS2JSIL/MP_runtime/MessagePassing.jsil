@@ -15,9 +15,32 @@ proc MessageEvent_construct(xsc, vthis, obj){
     return
 };
 
+proc setPlatform(){
+    (* Navigator setter does nothing *)
+    ret := undefined;
+    return
+};
+
+proc getPlatform(){
+    ret := true;
+    return
+};
+
+proc getHardwareConcurrency(){
+    ret := 1;
+    return
+};
+
 proc Navigator_construct(){
     ret := "create_default_object_concrete" ($lnavigator, $lobj_proto, "Object", true);
-    result := "put" ($lnavigator, "__platform", true);
+    platform := "Object_construct" ();
+    res := "defineOwnProperty" (platform, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (platform, "get", {{ "d", $lgetplatform, true, true, true}}, false);
+    hardwareConcurrency := "Object_construct" ();
+    res := "defineOwnProperty" (hardwareConcurrency, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (hardwareConcurrency, "get", {{ "d", $lgethardwareconcurrency, true, true, true}}, false);
+    result := "Object_defineProperty" (undefined, undefined, $lnavigator, "__platform", platform);
+    result := "Object_defineProperty" (undefined, undefined, $lnavigator, "hardwareConcurrency", hardwareConcurrency);
     ret := $lnavigator;
     return
 };

@@ -255,6 +255,9 @@ proc setupInitialHeap () {
       [$lg, "URL_construct"]              	          := {{ "d", $lurlconstruct, true, false, true }};
 
       [$lg, "navigator"]             		  		  := {{ "d", $lnavigator, true, false, true }};
+	  [$lg, "setPlatform"]                            := {{ "d", $lsetplatform, true, false, true }};
+	  [$lg, "getPlatform"]                            := {{ "d", $lgetplatform, true, false, true }};
+      [$lg, "getHardwareConcurrency"]                 := {{ "d", $lgethardwareconcurrency, true, false, true }};
 
 	  (* JS2JSIL List *)
 	  [$lg, "initJS2JSILList"]                        := {{ "d", $linitjsillist, true, false, true }};
@@ -887,10 +890,12 @@ proc setTimeout(_scope, _this, fname, time){
 };
 
 proc setInterval(_scope, _this, fname, time){
-    ret := "setTimeout"(_scope, _this, fname, time) with elab;
-	return;
-	
-    elab: throw
+	  i := 0;
+	  goto [i < 5] call end;
+call: ret := "setTimeout"(_scope, _this, fname, time) with elab;
+	  i := i+1;
+end:  return;
+elab: throw
 };
 
 proc clearTimeout(xsc, vthis, eid){
@@ -982,7 +987,10 @@ proc setupInitialMP(){
 	ret := "create_object_with_call_construct_concrete"($lworkerconstruct, "Worker_construct", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lmessageeventconstruct, "MessageEvent_construct", empty, 1);
     ret := "create_object_with_call_construct_concrete"($lnavigatorconstruct, "Navigator_construct", empty, 1);
-    ret := "create_object_with_call_construct_concrete"($lurlconstruct, "URL_construct", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lsetplatform, "setPlatform", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lgetplatform, "getPlatform", empty, 1);
+    ret := "create_object_with_call_construct_concrete"($lgethardwareconcurrency, "getHardwareConcurrency", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lurlconstruct, "URL_construct", empty, 1);
 	ret := "Navigator_construct"();
 	ret := empty;
 	return
