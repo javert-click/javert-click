@@ -100,5 +100,9 @@ module type M = sig
   val add_spec_var : string list -> cconf_t -> cconf_t
 
   val assume_type : string -> Type.t -> cconf_t -> cconf_t
+
+  val assert_formula_from_conf : Formula.t -> cconf_t -> cconf_t list
+
+  val is_conf_finish : cconf_t -> bool
   
 end

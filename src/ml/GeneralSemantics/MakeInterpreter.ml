@@ -1105,6 +1105,7 @@ let new_conf (url: string) (setup_fid: string) (args: vt list) ((conf, _): econf
   | _ -> raise (Failure "Program could not be initialised")
 
 let add_spec_var (x:string list) (conf: cconf_t) : cconf_t =
+  L.log L.Normal (lazy (Printf.sprintf "add_spec_var"));
   let state     = get_state conf in
   let state'    = State.add_spec_vars state (Var.Set.of_list x) in
   set_state conf state'
@@ -1130,5 +1131,19 @@ let fresh_lvar (x: string) (s:string) (conf: cconf_t) (vart: Type.t) : cconf_t *
                     let state'' = update_store state'' x v in
                     set_state conf state'', v 
   | None -> raise (Failure "Cannot create fresh lvar")
+
+let assert_formula_from_conf (f:Formula.t) (conf: cconf_t) : cconf_t list  =
+  let state = get_state conf in
+  (try
+        let states = assert_formula f state in
+        List.map (fun s -> set_state conf s) states
+    with
+    | State_error (errs, state)
+    | State.Internal_State_Error (errs, state) -> [set_state conf state])
+
+let is_conf_finish (conf: cconf_t) : bool =
+  match conf with
+  | ConfFinish _ -> true
+  | _ -> false
 
 end

@@ -410,4 +410,19 @@ module M
     let ((conf, prog), ehs, hq, n) = state in
     ((Interpreter.assume_type x t conf), prog), ehs, hq, n
 
+  let assert_formula (f:Formula.t) (state: state_t) : state_t list =
+    let (conf, prog), ehs, hq, n = state in
+    let confs = Interpreter.assert_formula_from_conf f conf in
+    List.map (fun c -> (c, prog), ehs, hq, n) confs
+
+  let is_awaiting (state: state_t) : bool =
+    let (conf, _), _, hq, _ = state in
+    Interpreter.is_conf_finish conf && 
+    List.length hq > 0 &&
+    (List.for_all (
+      fun hq_elem -> match hq_elem with
+      | Scheduler.CondConf _ -> true
+      | _ -> false
+    ) hq)
+
 end 

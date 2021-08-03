@@ -52,5 +52,9 @@ module type M = sig
   val add_spec_var : string list -> state_t -> state_t
 
   val assume_type : string -> Type.t -> state_t -> state_t
+
+  val assert_formula : Formula.t -> state_t -> state_t list
+
+  val is_awaiting : state_t -> bool
   
 end

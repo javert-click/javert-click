@@ -143,6 +143,7 @@ module M
 
   (* Updates the configuration queue based on the result of running a single configuration *)
   let update_full_conf_from_reduced_conf (cq_pre: cq_t) (cq_pos: cq_t) (mq: mq_t) (pc: pc_map_t) (pp:pp_map_t) (lead_conf: cid_t option) (new_reduced_conf: reduced_mp_conf_t) : mp_conf_t list =
+    L.log L.Normal (lazy (Printf.sprintf "update_full_conf_from_reduced_conf"));
     let (econf, mq', pc', pp', o_action, f) = new_reduced_conf in
     let cq' = cq_pre @ [econf] @ cq_pos in
     let cq_list, lead_conf' =
@@ -155,18 +156,20 @@ module M
       | Some cid' when cid' = cid -> [cq'], None
       | _ -> [cq'], lead_conf)
     | Some AddSpecVar x -> 
-      (List.map (fun (cid, conf) -> 
-        (*Printf.printf "\nAdding specvar %s to conf %d\n" (String.concat "," (List.map (fun v -> v) x)) cid;*)
-        [cid, EventSemantics.add_spec_var x conf]) cq'), lead_conf
+      [(List.map (fun (cid, conf) -> 
+        cid, EventSemantics.add_spec_var x conf) cq')], lead_conf
     | Some Notify (msg, event, cid_orig) -> 
       let cqs = notify cq' msg event cid_orig in
       cqs, lead_conf
     | None -> [cq'], lead_conf) in
     let new_cq_list = 
     match f with
-    | None -> cq_list
+    | None -> L.log L.Normal (lazy (Printf.sprintf "Formula is none, cq length: %d" (List.length cq_list))); cq_list
     | Some f -> 
-      List.map (fun cq -> assume cq f) cq_list in 
+      (*L.log L.Normal (lazy (Printf.sprintf "Before assume(%s): cq length: %d" (Formula.str f) (List.length cq_list)));*)
+      let new_cq = List.map (fun cq -> assume cq f) cq_list in 
+      (*L.log L.Normal (lazy (Printf.sprintf "After assume(%s): cq length: %d" (Formula.str f) (List.length new_cq)));*)
+      new_cq in
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
     (*List.iter (fun (cid, econf) -> L.log L.Normal (lazy (Printf.sprintf "\nCID: %d, CONF: \n%s\n" cid (EventSemantics.state_str econf)))) new_cq;*)
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
@@ -291,6 +294,7 @@ module M
    (*Printf.printf "\nProcessing message %s sent to port %s\n" (String.concat ", " (List.map Val.str vs))  (Literal.str port);*)
     (* TODOMP: FIX THIS *)
    let cid = Hashtbl.find pc port in
+   L.log L.Normal (lazy (Printf.sprintf "Trying to find conf %d" cid));
     (*Printf.printf "\nFound %d conf for port %s" cid (Literal.str port);*)
     let pc' = redirect plist cid pc in
     (match get_conf cid cq with
@@ -405,37 +409,50 @@ module M
   let make_step (conf : mp_conf_t) : (mp_conf_t list) * (mp_conf_t list) = 
     print_mpconf conf;
     let cq, mq, pc, pp, lead_conf = conf in
-    match lead_conf with
-    | Some cid -> 
-      L.log L.Normal (lazy (Printf.sprintf "\nRunning lead conf %d\n" cid));
-      (match break_cq_on_cid cq cid [] with
-      | cq_pre, Some c, cq_post -> 
-        let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
-        let cids, _ = List.split cq in
-        (match run_conf cids c mq pc pp with
-        | [], Some fconf -> [], update fconf
-        | new_reduced_confs, _ ->
-          List.concat (List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs), [])
-      | _, None, _ -> [], []) (*raise (Failure "Configuration not found")*) 
-    | None ->
-      (* Scheduler decides if a configuration or a message is scheduled *)
-      (match Scheduler.schedule cq mq final ready_to_process_msg has_transfer with
-      (* There is nothing left to do *)
-      | None -> L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose none")); [], [conf]
-      (* Configuration is scheduled *)
-      | Some (Conf (cq_pre, c, cq_post)) -> 
-        L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose conf"));
-        let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
-        let cids, _ = List.split cq in
-        (match run_conf cids c mq pc pp with
-        | [], Some fconf -> [], update fconf
-        | new_reduced_confs, _ -> List.concat (List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs), [])
-      (* Message is scheduled from message queue *)
-      | Some (Message (mq, mq')) -> 
-        L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose msg"));
-        let (msg, port) = mq in
-        let cqs, pc' = process_message msg port cq pc in
-        List.map (fun cq -> cq, mq', pc', pp, lead_conf) cqs, [])
+    let all_confs_awaiting = List.exists (
+      fun (_, conf) -> EventSemantics.is_awaiting conf
+    ) cq && List.for_all (
+      fun (_, conf) -> EventSemantics.is_awaiting conf || EventSemantics.final conf
+    ) cq in
+    if(List.length mq = 0 && List.length cq > 0 && all_confs_awaiting) then (
+      Printf.printf "\nPending promise!\n";
+      let (cid, econf) = List.hd cq in
+      let econfs' = EventSemantics.assert_formula Formula.False econf in
+      [], List.map (fun econf' -> (cid, econf') :: (List.tl cq), mq, pc, pp, lead_conf) econfs'
+    ) else (
+      match lead_conf with
+      | Some cid -> 
+        L.log L.Normal (lazy (Printf.sprintf "\nRunning lead conf %d\n" cid));
+        (match break_cq_on_cid cq cid [] with
+        | cq_pre, Some c, cq_post -> 
+          let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
+          let cids, _ = List.split cq in
+          (match run_conf cids c mq pc pp with
+          | [], Some fconf -> [], update fconf
+          | new_reduced_confs, _ ->
+            List.concat (List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs), [])
+        | _, None, _ -> [], []) (*raise (Failure "Configuration not found")*) 
+      | None ->
+        (* Scheduler decides if a configuration or a message is scheduled *)
+        (match Scheduler.schedule cq mq final ready_to_process_msg has_transfer with
+        (* There is nothing left to do *)
+        | None -> L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose none")); [], [conf]
+        (* Configuration is scheduled *)
+        | Some (Conf (cq_pre, c, cq_post)) -> 
+          L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose conf"));
+          let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
+          let cids, _ = List.split cq in
+          (match run_conf cids c mq pc pp with
+          | [], Some fconf -> [], update fconf
+          | new_reduced_confs, _ -> List.concat (List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs), [])
+        (* Message is scheduled from message queue *)
+        | Some (Message (mq, mq')) -> 
+          L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose msg"));
+          let (msg, port) = mq in
+          let cqs, pc' = process_message msg port cq pc in
+          List.map (fun cq -> cq, mq', pc', pp, lead_conf) cqs, [])
+    )
+    
       
 
   let rec make_steps (mpconfs: mp_conf_t list) : mp_conf_t list = 
