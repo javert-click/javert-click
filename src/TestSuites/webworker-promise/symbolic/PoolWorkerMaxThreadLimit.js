@@ -22,7 +22,7 @@ const pool = WorkerPool.create({
     // or
     create: () => { return new Worker('poolworker.js') },
     maxThreads: maxthreads, // optional, default is 2, max numbers of workers to create if necessary
-    maxConcurrentPerWorker: 1 // optional, default is 1
+    maxConcurrentPerWorker: 0 // optional, default is 1
 });
 
 console.log('MAIN: posting message to pool');
@@ -32,7 +32,7 @@ pool.postMessage(msg)
     var poolLimit = pool._workers.length <= maxthreads;
     JavertAssert (poolLimit);
 });
-/*pool.postMessage(msg)
+pool.postMessage(msg)
 .then(() => {
     console.log('finished 2nd message, pool length: '+pool._workers.length);
     var poolLimit = pool._workers.length <= maxthreads;
@@ -43,7 +43,7 @@ pool.postMessage(msg)
     console.log('finished 3rd message, pool length: '+pool._workers.length);
     var poolLimit = pool._workers.length <= maxthreads;
     JavertAssert (poolLimit);
-});*/
+});
 
 /*
 Time:

@@ -50,10 +50,11 @@ WebworkerPromise.prototype.jobsLength = function() {
 WebworkerPromise.prototype.exec = function(operationName, data, transferable, onEvent) {
   data = (data !== undefined) ? data : null;
   transferable = transferable || [];
+  var webworkerpromise = this;
   return new Promise.Promise((res, rej) => {
-    const messageId = this._messageId++;
-    this._messages.set(messageId, [res, rej, onEvent]);
-    this._worker.postMessage([messageId, data, operationName], transferable || []);
+    const messageId = webworkerpromise._messageId++;
+    webworkerpromise._messages.set(messageId, [res, rej, onEvent]);
+    webworkerpromise._worker.postMessage([messageId, data, operationName], transferable || []);
   });
 }
 
