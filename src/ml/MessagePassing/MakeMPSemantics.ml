@@ -415,11 +415,11 @@ module M
       fun (_, conf) -> EventSemantics.is_awaiting conf || EventSemantics.final conf
     ) cq in
     if(List.length mq = 0 && List.length cq > 0 && all_confs_awaiting) then (
-      Printf.printf "\nPending promise!\n";
+      Printf.printf "\nERROR: There is at least a pending promise that will never be resolved\n";
       let (cid, econf) = List.hd cq in
       let econfs' = EventSemantics.assert_formula Formula.False econf in
       [], List.map (fun econf' -> (cid, econf') :: (List.tl cq), mq, pc, pp, lead_conf) econfs'
-    ) else (
+    ) else ( 
       match lead_conf with
       | Some cid -> 
         L.log L.Normal (lazy (Printf.sprintf "\nRunning lead conf %d\n" cid));
