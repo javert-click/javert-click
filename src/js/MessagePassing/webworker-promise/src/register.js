@@ -28,19 +28,31 @@ function RegisterPromise(fn) {
 
   WorkerRegister.prototype = Object.create(TinyEmitter.TinyEmitter.prototype);
     
-  WorkerRegister.prototype.emit = function(eventName, xargs) {
+  /*
+  * @id WorkerRegisterEmit
+  */
+  WorkerRegister.prototype.emit = function() {
+    var xargs = Array.prototype.slice.call(arguments);
+    var eventName = xargs[0];
+    xargs = xargs.slice(1);
     if (xargs.length == 1 && xargs[0] instanceof TransferableResponse) {
-      sendPostMessage({eventName, args: xargs}, xargs[0].transferable);
+      sendPostMessage({eventName: eventName, args: xargs}, xargs[0].transferable);
     } else {
-      sendPostMessage({eventName, args: xargs});
+      sendPostMessage({eventName: eventName, args: xargs});
     }
     return this;
   }
 
+  /*
+  * @id WorkerRegisterEmitLocally
+  */
   WorkerRegister.prototype.emitLocally = function(eventName, xargs) {
     TinyEmitter.TinyEmitter.prototype.emit.call(this, eventName, xargs);
   }
 
+  /*
+  * @id WorkerRegisterOperation
+  */
   WorkerRegister.prototype.operation = function(name, handler) {
     handlers[name] = handler;
     return this;
@@ -135,6 +147,7 @@ function RegisterPromise(fn) {
     if(Array.isArray(data)) {
       run(data);
     } else if(data && data.eventName) {
+      console.log('Going to emit locally, eventName: '+data.eventName);
       server.emitLocally(data.eventName, data.args);
     }
   };

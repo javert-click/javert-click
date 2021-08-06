@@ -6,7 +6,7 @@ console.log('MAIN: going to create worker pool');
 
 var maxconcurrency = symb_number(maxconcurrency);
 
-maxconcurrencybounds = maxconcurrency >= 0 && maxconcurrency <= 2;
+var maxconcurrencybounds = maxconcurrency >= 0 && maxconcurrency <= 2;
 
 JavertAssume (maxconcurrencybounds);
 
@@ -23,32 +23,26 @@ const pool = WorkerPool.create({
 console.log('MAIN: posting message to pool');
 pool.postMessage(msg)
 .then(() => {
-    console.log('finished 1st message, pool length: '+pool._workers.length);
-    var poolLimit = pool._workers.jobsLength() <= maxconcurrency;
-    JavertAssert (poolLimit);
+    console.log('finished 1st message, queue: '+pool._queue.length);
 });
-/*
-pool.postMessage(msg)
-.then(() => {
-    console.log('finished 2nd message, pool length: '+pool._workers.length);
-    var poolLimit = pool._workers.length <= maxthreads;
-    JavertAssert (poolLimit);
-});
-pool.postMessage(msg)
-.then(() => {
-    console.log('finished 3rd message, pool length: '+pool._workers.length);
-    var poolLimit = pool._workers.length <= maxthreads;
-    JavertAssert (poolLimit);
-});
-*/
-/*
-Time:
-real	17m31.478s
-user	16m35.943s
-sys	0m8.038s
 
-Failing Models:
-[(maxthreads: 0), (msg: "")], [(maxthreads: 0), (msg: #msg)], [(maxthreads: 0.5), (msg:"")], [(maxthreads: 0.5), (msg: #msg)]
-*/
+pool.postMessage(msg)
+.then(() => {
+    console.log('finished 2nd message, queue: '+pool._queue.length);
+});
+pool.postMessage(msg)
+.then(() => {
+    var queueLength = pool._queue.length === 0;
+    JavertAssert (queueLength);
+});
+
+var expectedLength = 3 - (pool._maxThreads * maxconcurrency); 
+var queueLength = expectedLength >= 0 ? pool._queue.length === expectedLength : pool._queue.length === 0;
+JavertAssert (queueLength);
 
 console.log('MAIN: finsihed executing script')
+
+/*
+Failing Models:
+[(#maxconcurrency: 0.)], [(#maxconcurrency: 1.5)], [(#maxconcurrency: 0.5)]
+*/

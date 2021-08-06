@@ -76,15 +76,19 @@ WebworkerPromise.prototype.postMessage = function(data, transferable, onEvent) {
 * @id WebworkerPromiseEmit
 */
 WebworkerPromise.prototype.emit = function() {
-  var eventName = arguments[0][0];
-  var realArgs = arguments[0].slice(1);
-  this._worker.postMessage({eventName, realArgs});
+  var xargs = Array.prototype.slice.call(arguments);
+  var eventName = xargs[0];
+  var realArgs = xargs.slice(1);
+  this._worker.postMessage({eventName: eventName, args: realArgs});
 }
 
 /**
 * @id WebworkerPromiseOnMessage
 */
 WebworkerPromise.prototype._onMessage = function(vthis) {
+  /*
+  * @id WebWorkerPromiseOnMessageHandler
+  */
   return function(e){
     //if we got usual event, just emit it locally
     if(!Array.isArray(e.data) && e.data.eventName) {
