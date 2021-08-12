@@ -6,13 +6,15 @@ const Promise = require('../../../../Promises/Promise');
 Worker = Worker.Worker;
 Promise = Promise.Promise;
 
-var exp1 = symb(exp1);
-var exp1typ = typeof exp1 === 'object';
-JavertAssume(exp1typ);
+//var exp1 = symb(exp1);
+//var exp1typ = typeof exp1 === 'object';
+//JavertAssume(exp1typ);
+var exp1 = {name: 'IS_PRIME', number: 37};
 
-var exp2 = symb(exp2);
-var exp2typ = typeof exp2 === 'object';
-JavertAssume(exp2typ);
+//var exp2 = symb(exp2);
+//var exp2typ = typeof exp2 === 'object';
+//JavertAssume(exp2typ);
+var exp2 = {name: 'FIBONACCI', number: 6};
 
 console.log('Main: Going to create worker')
 var w = new Worker('StackOverflowAdaptedWorker.js');
@@ -35,6 +37,6 @@ var wf = async(op) => {
     console.log('MAIN: sending FIBONACCI msg');
     //var f2 = await wf({name: 'FIBONACCI', number: 5});
     var f2 = await wf(exp2);
-    console.log('Fibonacci of 5 is '+f2.data);
+    console.log('Fibonacci of 6 is '+f2.data);
 })();
 

@@ -24,13 +24,12 @@ worker.postMessage(msg)
 });
 
 /*
-Failing Models:
-[(maxthreads: 0), (msg: "")], [(maxthreads: 0), (msg: #msg)], [(maxthreads: 0.5), (msg:"")], [(maxthreads: 0.5), (msg: #msg)]
+Failing Model:
+[(#msg: null)]
 
-Time:
-real	3m27.319s
-user	3m25.265s
-sys	0m2.484s
+real	7m5.494s
+user	6m48.629s
+sys	0m6.880s
 */
 
 console.log('MAIN: finsihed executing script')

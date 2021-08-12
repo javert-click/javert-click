@@ -4,6 +4,7 @@
 function TinyEmitter() {
   Object.defineProperty(this, '__listeners', {
     value: {},
+    //value: Object.create(null),
     enumerable: false,
     writable: false
   });
@@ -45,7 +46,6 @@ TinyEmitter.prototype.on = function(eventName, handler) {
     this.__listeners[eventName] = [];
 
   this.__listeners[eventName].push(handler);
-
   return this;
 }
 
