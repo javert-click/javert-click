@@ -41,9 +41,9 @@ echo "Compiling resulting file to JSIL"
 ./js2jsil.native -file $name -mp -cosette
 #cp -R "$dir/$base.jsil" .
 echo -e "running $base.jsil"
-./cosette.native -file "$base.jsil" -mp -js -pbn #-silent
+./cosette.native -file "$base.jsil" -mp -js -silent #-pbn
 
-echo -e "removing log_verboser.log"
-rm "log_verboser.log"
+#echo -e "removing log_verboser.log"
+#rm "log_verboser.log"
 
 

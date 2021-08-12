@@ -52,7 +52,8 @@ cp $setupconffilejsil .
 ./js2jsil.native -file $name -mp
 #cp -R "$dir/$base.jsil" .
 echo -e "-----Running $base.jsil-----"
-./jsil.native -file "$base.jsil" -pbn -mp
+#./jsil.native -file "$base.jsil" -pbn -mp -js2jsil
+./jsil.native -file $name -pbn -mp -js2jsil
 
 declare nasserts=`grep -c "TestHarnessAssert.*: 0" $log_test_file`
 declare nasserts_passed=`grep -c "CMD: return" $log_test_file`
