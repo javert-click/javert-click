@@ -6,14 +6,9 @@ console.log('MAIN: going to create worker pool');
 
 var maxthreads = symb_number(maxthreads);
 
-var maxthreadsbounds = maxthreads >= 0 && maxthreads <= 2;
-
-//var maxconcurrency = symb_number(maxconcurrency);
-
-//maxconcurrencybounds = maxconcurrency >= 0 && maxconcurrency <= 2;
+var maxthreadsbounds = maxthreads >= 0 && maxthreads <= 1;
 
 JavertAssume (maxthreadsbounds);
-//JavertAssume (maxconcurrencybounds);
 
 var msg = symb_string(msg);
 
@@ -32,7 +27,7 @@ pool.postMessage(msg)
     var poolLimit = pool._workers.length <= maxthreads;
     JavertAssert (poolLimit);
 });
-pool.postMessage(msg)
+/*pool.postMessage(msg)
 .then(() => {
     console.log('finished 2nd message, pool length: '+pool._workers.length);
     var poolLimit = pool._workers.length <= maxthreads;
@@ -43,7 +38,7 @@ pool.postMessage(msg)
     console.log('finished 3rd message, pool length: '+pool._workers.length);
     var poolLimit = pool._workers.length <= maxthreads;
     JavertAssert (poolLimit);
-});
+});*/
 
 /*
 Time:

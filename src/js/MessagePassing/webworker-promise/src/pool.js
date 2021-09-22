@@ -123,11 +123,11 @@ WorkerPool.prototype._onWorkDone = function() {
 WorkerPool.prototype._waitAndRemoveWorkers = function(workers) {
   var vthis = this;
   console.log('Calling setTimeout with time '+vthis._terminateAfterDelay);
-  setTimeout(() => {
+  /*setTimeout(() => {
     // only one worker should be alive always
     workers = workers.filter(w => { return w.isFree() }).slice(0, vthis._workers.length - 1);
     workers.forEach(worker => vthis._removeWorker(worker));
-  }, vthis._terminateAfterDelay);
+  }, vthis._terminateAfterDelay);*/
 }
 
 /*

@@ -1,3 +1,4 @@
+console.log('WORKER: running script');
 (function f() {
     console.log('Worker: sending message to main');
     postMessage(1);

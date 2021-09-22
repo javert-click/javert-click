@@ -6,9 +6,12 @@ import {assert_object_equals} from '../../../js/DOM/Events/Testharness';
 
 console.log('MAIN: creating worker');
 
-var msg = symb(msg);
-var isobj = typeof msg === 'object';
-JavertAssume (isobj);
+var v1 = symb_string(v1);
+var v2 = symb_string(v2);
+var v3 = symb_string(v3);
+console.log('going to create obj with symb str');
+var msg = {p1: v1, p2: v2, p3: v3};
+console.log('obj created, now creating worker');
 
 const worker = new WebworkerPromise(new Worker('basicworker.js'));
 
