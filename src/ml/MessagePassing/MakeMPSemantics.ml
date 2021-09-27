@@ -17,7 +17,7 @@ module M
   type port_t = Literal.t
 
   (* Configuration Identifiers *)
-  type cid_t = int
+  type cid_t = string
 
   (* Event Configurations are opaque to the MPSemantics *)
   type event_conf_t = (cid_t * EventSemantics.state_t * bool)
@@ -100,7 +100,7 @@ module M
   (* Returns true if all configurations in the list cs are final, false otherwise *)
   let final (cq: cq_t) : bool = 
     List.fold_left (fun final_so_far (cid, e_conf, blocked) -> 
-    L.log L.Normal (lazy (Printf.sprintf "MPSem: checking if conf %d is final" cid));
+    L.log L.Normal (lazy (Printf.sprintf "MPSem: checking if conf %s is final" cid));
     final_so_far && (EventSemantics.final e_conf || blocked)) true cq
 
   let count_msgs_for_conf (conf: event_conf_t) (mq: mq_t) : int =
@@ -118,7 +118,7 @@ module M
   (* Generates port id randomly making sure that port does not exist yet *)
   let rec generate_new_conf_id (cids: cid_t list) : cid_t =
     Random.self_init ();
-    let cid = Random.int 1000 in
+    let cid = string_of_int (Random.int 1000) in
     if (List.mem cid cids) then (generate_new_conf_id cids) else cid
 
   (* Generates port id randomly making sure that port does not exist yet *)
@@ -163,7 +163,7 @@ module M
     let cq_list, lead_conf' =
     (match o_action with  
     | Some AddConf new_conf -> let new_cid, _, _ = new_conf in 
-      L.log L.Normal (lazy (Printf.sprintf "Adding conf %d" new_cid)); 
+      L.log L.Normal (lazy (Printf.sprintf "Adding conf %s" new_cid)); 
       [new_conf :: cq'], lead_conf
     | Some RemConf cid -> [List.filter (fun (cid', c', _) -> cid <> cid') cq'], lead_conf
     | Some HoldConf cid -> [cq'], Some cid
@@ -192,11 +192,11 @@ module M
     List.map (fun new_cq -> new_cq, mq', pc', pp', lead_conf') new_cq_list
 
 
-  let compute_int_from_val (v: vt) : int =
+  let compute_string_from_val (v: vt) : string =
     let lit = Val.to_literal v in
     match lit with
-    | Some Num n -> int_of_float n
-    | _ -> raise (Failure ("Val could not be converted to int."))
+    | Some String v -> v
+    | _ -> raise (Failure ("Val could not be converted to string."))
 
   let compute_num_from_val (v:vt) : Literal.t =
     let lit = Val.to_literal v in
@@ -230,7 +230,7 @@ module M
   let new_execution (xvar: string) (url: string) (setup_fid: string) (args: vt list) (cids: cid_t list) (conf: event_conf_t) : event_conf_t * event_conf_t =
     let cid, econf, blocked = conf in
     let new_cid = generate_new_conf_id cids in
-    let conf' = EventSemantics.set_var xvar (Val.from_literal (Num (float_of_int new_cid))) econf in
+    let conf' = EventSemantics.set_var xvar (Val.from_literal (String (new_cid))) econf in
     let new_conf = EventSemantics.new_conf url setup_fid args econf in
     (cid, conf', blocked), (new_cid, new_conf, false)
 
@@ -303,7 +303,7 @@ module M
       String.concat "\n" (List.map (
         fun econf -> 
           let cid, conf, _ = econf in
-          Printf.sprintf "\n-----Event Conf-----: \n--CID: %d\n--E-Conf: \n\t\t%s" cid (EventSemantics.state_str conf)
+          Printf.sprintf "\n-----Event Conf-----: \n--CID: %s\n--E-Conf: \n\t\t%s" cid (EventSemantics.state_str conf)
       ) cq)
 
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
@@ -312,7 +312,7 @@ module M
    (*Printf.printf "\nProcessing message %s sent to port %s\n" (String.concat ", " (List.map Val.str vs))  (Literal.str port);*)
     (* TODOMP: FIX THIS *)
    let cid = Hashtbl.find pc port in
-   L.log L.Normal (lazy (Printf.sprintf "Trying to find conf %d" cid));
+   L.log L.Normal (lazy (Printf.sprintf "Trying to find conf %s" cid));
     (*Printf.printf "\nFound %d conf for port %s" cid (Literal.str port);*)
     let pc' = redirect plist cid pc in
     (match get_conf cid cq with
@@ -344,7 +344,7 @@ module M
         [conf'', mq, pc, pp, Some (AddConf new_conf), None] 
       | Terminate (xvar, cid') -> 
         (*Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');*)
-        let cid' = compute_int_from_val cid' in
+        let cid' = compute_string_from_val cid' in
         (*Printf.printf "\nComputed cid: %d\n" cid'; *)
         let plist = Hashtbl.fold (fun port' cid' acc -> if (cid = cid') then acc @ [port'] else acc) pc [] in
         let mq', pc', pp' = terminate plist mq pc pp in
@@ -382,7 +382,7 @@ module M
   (* Runs a step of the current e-configuration *)
   let run_conf (cids: cid_t list) (econf: event_conf_t) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : reduced_mp_conf_t list * reduced_mp_conf_t option = 
     let cid, conf, blocked = econf in
-    L.log L.Normal (lazy (Printf.sprintf "\nCurrent conf: %d\n" cid));
+    L.log L.Normal (lazy (Printf.sprintf "\nCurrent conf: %s\n" cid));
     match EventSemantics.make_step conf (Some (MPInterceptor.intercept)) with
     | [], Some fconf -> [], Some ((cid, fconf, blocked), mq, pc, pp, None, None) 
     | confs, _ ->
@@ -402,7 +402,7 @@ module M
   let map_str map (v_to_string : 'b -> string) = ("" ^ (Hashtbl.fold (fun k v acc -> acc ^ Printf.sprintf "\n\t Key: %s, \n\t Val: %s " (Literal.str k) (v_to_string v)) map " "))
       
   let pc_str pc = 
-    Printf.sprintf "\nPort-Confs map: %s" (map_str pc string_of_int)
+    Printf.sprintf "\nPort-Confs map: %s" (map_str pc (fun cid -> cid))
   
   let pp_str pp =
     Printf.sprintf "\nPort-Port map: %s\n" (map_str pp (fun ports -> String.concat ", " (List.map Literal.str ports)))
@@ -420,7 +420,7 @@ module M
         let (erets, mq, pc, pp) = ret in
           let erets_str = String.concat "\n" 
             (List.map (
-              fun (cid, eret) -> "\n----Event Configuration (Cid: " ^ string_of_int cid ^ ")----" ^ EventSemantics.string_of_result [eret]
+              fun (cid, eret) -> "\n----Event Configuration (Cid: " ^ cid ^ ")----" ^ EventSemantics.string_of_result [eret]
             ) erets) in
             erets_str ^ mq_str mq ^ pc_str pc ^ pp_str pp
       ) rets) 
@@ -441,7 +441,7 @@ module M
     ) else ( 
       match lead_conf with
       | Some cid -> 
-        L.log L.Normal (lazy (Printf.sprintf "\nRunning lead conf %d\n" cid));
+        L.log L.Normal (lazy (Printf.sprintf "\nRunning lead conf %s\n" cid));
         (match break_cq_on_cid cq cid [] with
         | cq_pre, Some c, cq_post -> 
           let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
