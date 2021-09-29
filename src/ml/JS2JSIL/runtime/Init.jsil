@@ -218,6 +218,7 @@ proc setupInitialHeap () {
 	  [$lg, "setImmediate"]                           := {{ "d", $lsetImmediate, true, false, true }};
 	  [$lg, "setTimeout"]                             := {{ "d", $lsetTimeout, true, false, true }};
 	  [$lg, "setInterval"]                            := {{ "d", $lsetInterval, true, false, true }};
+	  [$lg, "setIntervalCounter"]                     := 0;
 	  [$lg, "clearTimeout"]                           := {{ "d", $lclearTimeout, true, false, true }};
 	  [$lg, "clearInterval"]                          := {{ "d", $lclearInterval, true, false, true }};
 	  (* Events *)
@@ -892,9 +893,12 @@ proc setTimeout(_scope, _this, fname, time){
 };
 
 proc setInterval(_scope, _this, fname, time){
+	  counter := [$lg, "setIntervalCounter"];
+	  [$lg, "setIntervalCounter"] := counter+1;
 	  i := 0;
 	  goto [i < 5] call end;
 call: ret := "setTimeout"(_scope, _this, fname, time) with elab;
+      ret := counter+1;
 	  i := i+1;
 end:  return;
 elab: throw

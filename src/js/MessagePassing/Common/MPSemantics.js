@@ -104,7 +104,11 @@ MPSemantics.prototype.getAllPairedPorts = function(portId){
 * @id MPSemanticsTerminate
 */
 MPSemantics.prototype.terminate = function(confId){
-    return __MP__wrapper__terminate(confId);
+    console.log('Going to call MPWrapperTerminate, confId: '+confId);
+    if(confId)
+      return __MP__wrapper__terminate(confId);
+    else 
+      return __MP__wrapper__terminate();
 }
 
 /*

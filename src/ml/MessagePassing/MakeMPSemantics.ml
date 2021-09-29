@@ -377,7 +377,9 @@ module M
         [conf'', mq, pc, pp, oaction, None] 
       | Terminate (xvar, cid') -> 
         (*Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');*)
-        let cid' = compute_string_from_val cid' in
+        let cid' = match cid' with
+        | Some cid' -> compute_string_from_val cid'
+        | None -> cid in
         (*Printf.printf "\nComputed cid: %d\n" cid'; *)
         let plist = Hashtbl.fold (fun port' cid' acc -> if (cid = cid') then acc @ [port'] else acc) pc [] in
         let mq', pc', pp' = terminate plist mq pc pp in

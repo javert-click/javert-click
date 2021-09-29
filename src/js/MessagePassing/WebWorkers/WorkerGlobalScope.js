@@ -92,7 +92,14 @@ function WorkerGlobalScope(name, global, WorkerInfo){
         }
     });
     Object.defineProperty(global, 'location', {});
-    Object.defineProperty(global, 'close', {});
+    Object.defineProperty(global, 'close', {
+        get: function(){
+            console.log('Close called, mpsem? '+global.MPSemantics);
+            return function(){
+                __ES__schedule(global.MPSemantics.getMPSemanticsInstance().terminate);
+            }
+        }
+    });
     Object.defineProperty(global, 'XMLHttpRequest', {});
     Object.defineProperty(global, 'WebSocket', {});
     Object.defineProperty(global, 'EventSource', {});
