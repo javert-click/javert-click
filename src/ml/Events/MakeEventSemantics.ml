@@ -377,6 +377,11 @@ module M
     let econf' = Interpreter.new_conf url setup_fid args econf in
     econf', SymbMap.init (), [], 0
 
+  let restart_conf (setup_fid: string) (args: vt list) (state: state_t) : state_t =
+    let (econf, ehs, hq, n) = state in
+    let econf' = Interpreter.add_setup_proc setup_fid args econf in
+    econf', ehs, hq, n
+
   let set_var (xvar: Var.t) (v: vt) (state: state_t) : state_t = 
     let ((c, prog), h, q, n) = state in
     ((Interpreter.set_var xvar v c, prog), h, q, n)

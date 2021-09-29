@@ -50,6 +50,18 @@ MPSemantics.prototype.create = function(url, setup_fid, xargs){
     return __MP__wrapper__create(url, setup_fid, argslist);
 }
 
+MPSemantics.prototype.create_with_id = function(name, url, setup_fid, xargs){
+    console.log('MPSemantics.create_with_id: '+name);
+    var main_fid = "main"+url.substring(0, url.length - 3);
+    xargs.push(main_fid);
+    var argslist = JS2JSILList.JS2JSILList(xargs); 
+    return __MP__wrapper__create_with_id(name, url, setup_fid, argslist);
+}
+
+MPSemantics.prototype.conf_exists = function(id){
+    return __MP__wrapper__confExists(id);
+}
+
 /*
 * @id MPSemanticsPairPorts
 */

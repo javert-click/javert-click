@@ -939,6 +939,29 @@ let final (econf : econf_t) : bool =
 let eval_expr (cconf: cconf_t) (expr: Expr.t) : vt = 
     make_eval_expr (get_state cconf) expr 
 
+let add_setup_proc (fid: string) (args: vt list) (econf: econf_t) : econf_t =
+  let (cconf, prog) = econf in
+  let proc   = Prog.get_proc prog.prog fid in
+  let params =
+    (match proc with
+    | Some proc -> Proc.get_params proc
+    | _ -> let msg = Printf.sprintf "Procedure %s not found" fid in
+        raise (Failure msg)) in
+  match cconf with
+  | ConfCont (state, cs, i, prev, b_counter, a_conf) ->
+    let old_store = State.get_store state in
+    let new_store  = Store.init (List.combine params args) in
+    let state'     = State.set_store state new_store in
+    let cs'        = (fid, args, Some old_store, "out", i, i+1, Some (-1)) :: cs in
+    ConfCont (state', cs', i, prev, b_counter, a_conf), prog
+  | ConfFinish (fl, v, state, _) -> 
+    (*let old_store = State.get_store state in*)
+    let new_store  = Store.init (List.combine params args) in
+    let state'     = State.set_store state new_store in
+    let cs        = [(fid, args, None, "out", -1, -1, Some (-1))] in
+    ConfCont (state', cs, -1, 0, 0, None), prog
+  | _ -> raise (Failure (Printf.sprintf "Not possible to execute proc %s" fid))
+
 let continue_with_conf_info (econf: econf_t) (conf_info: conf_info_t) : econf_t =
     (*  This is the case where we need to merge two configurations. We take the non-control flow part of conf' and the rest comes from the current conf. **)
     let (store, cs, i, j, b_counter) = conf_info in

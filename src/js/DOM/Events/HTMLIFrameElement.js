@@ -41,6 +41,7 @@ Object.defineProperty(HTMLIFrameElement.prototype, "src", {
     set: function(url){
         this.contentWindow.createCommunicationPoint(MessagePort.PublicMessagePort, url, MPSem);
         var loadEvent = new Event.Event('load');
+        //console.log('Iframe.src: going to dispatch load event');
         this.dispatchEvent(loadEvent);
     }
 });

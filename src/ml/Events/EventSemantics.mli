@@ -31,6 +31,8 @@ module type M = sig
 
   val new_conf : string -> string -> vt list -> state_t -> state_t
 
+  val restart_conf : string -> vt list -> state_t -> state_t
+  
   val set_var : Var.t -> vt -> state_t -> state_t  
 
   val create_initial_state : UP.prog -> state_t

@@ -14,7 +14,7 @@ function SharedWorker(scriptURL, options){
     //1. (NOT SUPPORTED) Optionally, throw a "SecurityError" DOMException if the request violates a policy decision 
      //(e.g. if the user agent is configured to not allow the page to start shared workers).
     //2. If options is a DOMString, set options to a new WorkerOptions dictionary whose name member is set to the value of options and whose other members are set to their default values.
-    if(!options || typeof(options) !== 'object') options = {name: String(options || "")};
+    if(!options || typeof(options) !== 'object') options = {name: String(options || "Standard")};
     if(options === undefined) options = {};
     var datacloneerr = new DOMException.DOMException(DOMException.DATA_CLONE_ERR);
     var optionsSerialized = StructuredSerializeInternal(options, false, datacloneerr);
@@ -34,12 +34,23 @@ function SharedWorker(scriptURL, options){
     worker.__port = outsidePort;
     //10. (NOT SUPPORTED) Let callerIsSecureContext be true if outside settings is a secure context; otherwise, false.
     //11. Enqueue the following steps to the shared worker manager:
-    worker.__id = MPSem.create(urlRecord, "__setupConf", [urlRecord, outsidePort.__id, true, optionsSerialized]);
+    if(options.name){ 
+        var conf_exists = MPSem.conf_exists(options.name);
+        //console.log('Conf exists? '+conf_exists);
+        if(conf_exists)
+          worker.__id = MPSem.create_with_id(options.name, urlRecord, "__rerunConf", [urlRecord, outsidePort.__id, true, optionsSerialized]);
+        else
+          worker.__id = MPSem.create_with_id(options.name, urlRecord, "__setupConf", [urlRecord, outsidePort.__id, true, optionsSerialized]);
+    } else {
+        worker.__id = MPSem.create(urlRecord, "__setupConf", [urlRecord, outsidePort.__id, true, optionsSerialized])
+    }
     //12. Return worker.
     return worker;
 }
 
 SharedWorker.prototype = Object.create(EventTarget.EventTarget.prototype);
+
+SharedWorker.prototype.ids = {};
 
 Object.defineProperty(SharedWorker.prototype, 'onmessage', {
     /*

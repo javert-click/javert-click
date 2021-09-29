@@ -73,6 +73,8 @@ module type M = sig
 
   val continue_with_h : econf_t -> string -> fid_t -> vt list -> econf_t list
 
+  val add_setup_proc : string -> vt list -> econf_t -> econf_t
+
   val str_cconf : cconf_t -> string
 
   val valid_result : result_t list -> bool

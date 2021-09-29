@@ -57,6 +57,8 @@ module M
                            | FreeConf of cid_t
                            | AddSpecVar of string list
                            | Notify of vt list * vt * cid_t
+                           | RunSetup of cid_t * string * vt list
+                           | ConfExists of string * cid_t
 
   (* Most of the operations will manipulate a single configuration. There is then a function to update the mp_conf based on the new reduced conf and the optional action *)
   type reduced_mp_conf_t = event_conf_t * mq_t * pc_map_t * pp_map_t * optional_action_t option * Formula.t option
@@ -177,6 +179,20 @@ module M
     | Some Notify (msg, event, cid_orig) -> 
       let cqs = notify cq' msg event cid_orig in
       cqs, lead_conf
+    | Some RunSetup (cid, setup_fid, args) ->
+      (* 1. Get conf with id cid *)
+      let econf' = List.find (fun (cid', _, _) -> cid = cid') cq' in
+      (* 2. Ask ESem to run setup_fid *)
+      let (cid, econf', blocked) = econf' in
+      let econf'' = EventSemantics.restart_conf setup_fid args econf' in
+      (* 3. Put it in the beginning of the list, to give priority *)
+      let cq'' = (cid, econf'', blocked) :: List.filter (fun (cid', _, _) -> cid <> cid') cq' in
+      [cq''], lead_conf
+    | Some ConfExists (xvar, id) ->
+      let exists = List.exists (fun (cid, _, _) -> cid = id) cq' in
+      let (cid, econf, blocked) = econf in
+      let econf' = EventSemantics.set_var xvar (Val.from_literal (Bool exists)) econf in
+      [cq_pre @ [(cid, econf', blocked)] @ cq_pos], lead_conf
     | None -> [cq'], lead_conf) in
     let new_cq_list = 
     match f with
@@ -227,12 +243,29 @@ module M
     else econf, mq
 
   (* Creates new configuration and also sets return variable to new configuration identifier *)
-  let new_execution (xvar: string) (url: string) (setup_fid: string) (args: vt list) (cids: cid_t list) (conf: event_conf_t) : event_conf_t * event_conf_t =
+  let new_execution (id: string option) (xvar: string) (url: string) (setup_fid: string) (args: vt list) (cids: cid_t list) (conf: event_conf_t) : event_conf_t * event_conf_t option * optional_action_t option =
     let cid, econf, blocked = conf in
-    let new_cid = generate_new_conf_id cids in
-    let conf' = EventSemantics.set_var xvar (Val.from_literal (String (new_cid))) econf in
-    let new_conf = EventSemantics.new_conf url setup_fid args econf in
-    (cid, conf', blocked), (new_cid, new_conf, false)
+    match id with
+    (* No identifier is given, so we simply create a new conf *)
+    | None ->
+      let new_cid = generate_new_conf_id cids in
+      let conf' = EventSemantics.set_var xvar (Val.from_literal (String (new_cid))) econf in
+      let new_econf = EventSemantics.new_conf url setup_fid args econf in
+      let new_conf = (new_cid, new_econf, false) in
+      (cid, conf', blocked), Some new_conf, Some (AddConf new_conf)
+    (* If id is given, check if conf already exists with same id. *)
+    | Some id ->
+      let conf' = EventSemantics.set_var xvar (Val.from_literal (String (id))) econf in
+      (* Conf already exists with same id. In this case, simply return the conf *)
+      if (List.mem id cids) then (
+        (cid, conf', blocked), None, Some (RunSetup (id, setup_fid, args))
+      (* Conf with given id does not exist yet. In this case, create new one *)
+      ) else (
+        let new_econf = EventSemantics.new_conf url setup_fid args econf in
+        let new_conf = (id, new_econf, false) in
+        (cid, conf', blocked), Some new_conf, Some (AddConf new_conf)
+      )
+      
 
   (* Unpairs a port. Unpair means removing both p and port paired with p in pp map. We assume that the map is bi-directional *)
   let unpair_port (port: port_t) (pp: pp_map_t) : pp_map_t =
@@ -338,10 +371,10 @@ module M
         (*let dest_ports = Hashtbl.fold (fun p _ acc -> acc @ [p]) pc [] in
         let mq' = mq @ [Sync (msg, event, cid), dest_ports] in
         [(cid, conf), mq', pc, pp, None, None]*)
-      | Create (xvar, url, setup_fid, args) -> 
+      | Create (id, xvar, url, setup_fid, args) -> 
         (*Printf.printf "\nMP-Semantics: Processing create label, setup_fid: %s" (setup_fid);*)
-        let conf'', new_conf = new_execution xvar url setup_fid args  cids econf in
-        [conf'', mq, pc, pp, Some (AddConf new_conf), None] 
+        let conf'', new_conf, oaction = new_execution id xvar url setup_fid args  cids econf in
+        [conf'', mq, pc, pp, oaction, None] 
       | Terminate (xvar, cid') -> 
         (*Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');*)
         let cid' = compute_string_from_val cid' in
@@ -374,6 +407,8 @@ module M
         let f = Formula.Eq (UnOp (TypeOf, (LVar x)), Lit (Type t)) in
         [econf, mq, pc, pp, None, Some f]
       | SpecVar x -> [econf, mq, pc, pp, Some (AddSpecVar x), None]
+      | ConfExists (xvar, id) -> 
+        [econf, mq, pc, pp, Some (ConfExists (xvar, id)), None]
       | GroupLabel (ls) ->
         (match ls with
         | [] -> [econf, mq, pc, pp, None, None]
