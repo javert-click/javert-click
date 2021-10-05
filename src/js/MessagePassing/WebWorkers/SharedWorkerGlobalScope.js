@@ -3,8 +3,8 @@ const WorkerGlobalScope = require('./WorkerGlobalScope');
 /*
 * @id SharedWorkerGlobalScope
 */
-function SharedWorkerGlobalScope(global, name, WorkerInfo){
-    WorkerGlobalScope.WorkerGlobalScope.call(this, name, global, WorkerInfo);
+function SharedWorkerGlobalScope(global, options, WorkerInfo){
+    WorkerGlobalScope.WorkerGlobalScope.call(this, options, global, WorkerInfo);
 
     var scope = this;
 
@@ -35,7 +35,7 @@ function SharedWorkerGlobalScope(global, name, WorkerInfo){
         set: function(f){
             global.onconnect = f;
         }
-    })
+    });
 
     Object.defineProperty(global, 'self', {
         /*

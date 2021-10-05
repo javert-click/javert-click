@@ -12,6 +12,9 @@ var MPSem = MPSemantics.getMPSemanticsInstance();
 */
 function Worker(scriptURL, options){
     EventTarget.EventTarget.call(this);
+    if(Worker.prototype.creating === true) throw new RangeError("Workers cannot be created recursively");
+    Worker.prototype.creating = true;
+    if(options && (options.type === '' ||  options.type === 'unknown')) throw new TypeError("Invalid type for worker");
     // 1. The user agent may throw a "SecurityError" DOMException if the request violates a policy decision.
     // 2. Let outside settings be the current settings object.
     var outsideSettings = null;
@@ -25,16 +28,30 @@ function Worker(scriptURL, options){
     // 5. let worker URL be the resulting URL record.
     //var workerURL = url.urlRecord;
     var workerURL = String(scriptURL);
-    if(workerURL.length < 3 || workerURL.substring(workerURL.length - 3, workerURL.length) !== ".js"){
-        console.log('substr? '+workerURL.substring(workerURL.length - 3, workerURL.length));
+    var lastescape = workerURL.lastIndexOf('/');
+    if(lastescape !== -1){
+        workerURL = workerURL.substring(lastescape+1, workerURL.length);
+    }
+    if(workerURL.indexOf('.js') === -1){
+        //console.log('substr? '+workerURL.substring(workerURL.length - 3, workerURL.length));
         workerURL = workerURL + ".js";
     }
+    var hash = "";
+    var hashindex = workerURL.lastIndexOf("#");
+    if(hashindex !== -1){
+        hash = workerURL.substring(hashindex, workerURL.length);
+        workerURL = workerURL.substring(0, hashindex);
+        console.log('Worker, found hash: '+hash);
+    }
+    if(!options) options = {};
+    options.hash = hash;
     // 6. Let worker be a new Worker object. 
     var worker = Worker_construct(this);
     // 7. Create a new MessagePort object whose owner is outside settings. Let this be the outside port
     var outsidePort = new MessagePort.PublicMessagePort();
     // 8. Associate the outside port with worker
     worker.__port = outsidePort;
+    Worker.prototype.creating = false;
     // 9. Run this step in parallel: Run a worker given worker, worker URL, outside settings, outside port, and options.
     runWorker(worker, workerURL, outsideSettings, outsidePort, options);
     // 10. Return worker.
@@ -42,6 +59,8 @@ function Worker(scriptURL, options){
 }
 
 Worker.prototype = Object.create(EventTarget.EventTarget.prototype);
+
+Worker.prototype.creating = false;
 
 Object.defineProperty(Worker.prototype, 'onmessage', {
     /*

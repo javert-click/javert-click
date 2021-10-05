@@ -20,7 +20,8 @@ onmessage = function(evt) {
         }
     } else if (evt.data == "spam") {
         //for (var i = 0 ; i < 1000 ; i++) {
-        for (var i = 0 ; i < 10 ; i++) {
+        for (var i = 0 ; i < 4 ; i++) {
+            console.log('Worker: sending spam to main');
             evt.ports[0].postMessage(i);
         }
         postMessage("spamDone");

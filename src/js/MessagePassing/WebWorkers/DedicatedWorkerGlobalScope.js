@@ -3,9 +3,9 @@ const WorkerGlobalScope = require('./WorkerGlobalScope');
 /*
 * @id DedicatedWorkerGlobalScope
 */
-function DedicatedWorkerGlobalScope (global, name, WorkerInfo) {
+function DedicatedWorkerGlobalScope (global, options, WorkerInfo) {
 
-    WorkerGlobalScope.WorkerGlobalScope.call(this, name, global, WorkerInfo);
+    WorkerGlobalScope.WorkerGlobalScope.call(this, options, global, WorkerInfo);
 
     var scope = this;
 

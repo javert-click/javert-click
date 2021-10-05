@@ -788,7 +788,7 @@ proc setupInitialHeap () {
 			(* Native errors *)
 
 			ret := "create_object_with_call_construct_concrete" ($leerr,  "EvalError_call",      "Error_construct", 1);
-			ret := "create_object_with_call_construct_concrete" ($lrgerr, "RangeError_call",     "Error_construct", 1);
+			ret := "create_object_with_call_construct_concrete_with_proto" ($lrgerr, "RangeError_call",     "Error_construct", 1, $lerr);
 			ret := "create_object_with_call_construct_concrete" ($lrferr, "ReferenceError_call", "Error_construct", 1);
 			ret := "create_object_with_call_construct_concrete" ($lserr,  "SyntaxError_call",    "Error_construct", 1);
 		    (*ret := "create_object_with_call_construct_concrete" ($lterr,  "TypeError_call",      "Error_construct", 1);*)
@@ -973,7 +973,6 @@ thrw: ret := "EVENTS SEMANTICS ERROR: AddHandler called with non-callable object
 
 (* Message Passing *)
 proc setupInitialMP(){
-
 	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $lserializeinternal, "StructuredSerializeInternal", empty, 1);
 	ret := "create_object_with_call_construct_concrete_xsc"({{ $lg }}, $ldeserialize, "StructuredDeserialize", empty, 1);
 

@@ -50,6 +50,9 @@ MPSemantics.prototype.create = function(url, setup_fid, xargs){
     return __MP__wrapper__create(url, setup_fid, argslist);
 }
 
+/*
+* @id MPSemanticsCreateWithId
+*/
 MPSemantics.prototype.create_with_id = function(name, url, setup_fid, xargs){
     console.log('MPSemantics.create_with_id: '+name);
     var main_fid = "main"+url.substring(0, url.length - 3);

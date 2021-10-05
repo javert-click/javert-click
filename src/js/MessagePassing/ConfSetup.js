@@ -8,8 +8,8 @@ const MessageEvent               = require('../DOM/Events/MessageEvent');
 const Window                     = require('../DOM/Events/Window');
 const WorkerInfo                 = require('./WebWorkers/Worker');
 
-JSILSetGlobalObjProp("DedicatedWorkerGlobalScope", DedicatedWorkerGlobalScope);
-JSILSetGlobalObjProp("SharedWorkerGlobalScope", SharedWorkerGlobalScope);
+JSILSetGlobalObjProp("DedicatedWorkerGlobalScope", DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope);
+JSILSetGlobalObjProp("SharedWorkerGlobalScope", SharedWorkerGlobalScope.SharedWorkerGlobalScope);
 JSILSetGlobalObjProp("IFrameGlobalScope", IFrameGlobalScope);
 JSILSetGlobalObjProp("MessagePort", MessagePort);
 //JSILSetGlobalObjProp("MessageEvent", MessageEvent.MessageEvent);
@@ -28,9 +28,11 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
     executeJSILProc("mainConfSetup");
     var global = executeJSILProc("JSILGetGlobal");
     var optionsDeserialized = StructuredDeserialize(options);  
-    var globalObj = isShared ? new global.SharedWorkerGlobalScope.SharedWorkerGlobalScope(global, optionsDeserialized.name, global.WorkerInfo) : new global.DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope(global, workerURL, global.WorkerInfo) ;
+    var globalObj = isShared ? new global.SharedWorkerGlobalScope(global, optionsDeserialized, global.WorkerInfo) : new global.DedicatedWorkerGlobalScope(global, optionsDeserialized, global.WorkerInfo) ;
     global.globalObj = globalObj;
-    console.log('Running __setupConf');
+    console.log('Running __setupConf, isShared: '+isShared);
+    //globalObj.location = global.location;
+    //globalObj.location.hash = optionsDeserialized.hash;
     // Create inside port and associate it with global object
     // 16. Let inside port be a new MessagePort object in inside settings's Realm.
     //console.log('WORKER: Going to create inside port');

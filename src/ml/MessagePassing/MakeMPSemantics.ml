@@ -233,14 +233,15 @@ module M
   (* Updates mp conf based on new message msg sent to the specified port *)
   let send (econf: event_conf_t) (msg: vt list) (plist: port_t list) (port_1: port_t) (port_2: port_t) (event: vt) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : event_conf_t * mq_t =
     let cid, conf, blocked = econf in
-    (*Printf.printf "\nFound msg: %s\n" (String.concat "," (List.map Val.str msg));*)
+    (*Printf.printf "\nSend, Found msg: %s\n" (String.concat "," (List.map Val.str msg));*)
     (*Printf.printf "\nDest port: %s\n" (Literal.str port_2);*)
     (*let port_2 = Hashtbl.find pp port_1 in*)
     (* We need to guarantee that the sender belongs to the current configuration *)
-    let port_belongs_to_curr_conf = Hashtbl.fold (fun port' cid' acc -> if (cid = cid' && port_1 = port') then true else acc) pc false in 
+    (*let port_belongs_to_curr_conf = Hashtbl.fold (fun port' cid' acc -> if (cid = cid' && port_1 = port') then true else acc) pc false in *)
     if (count_msgs_for_conf econf mq >= msgs_limit_per_conf) then (cid, conf, true), mq
-    else if (port_belongs_to_curr_conf) then econf, enqueue cid msg plist port_2 event mq 
-    else econf, mq
+    (*else if (port_belongs_to_curr_conf) then econf, enqueue cid msg plist port_2 event mq 
+    else econf, mq*)
+    else econf, enqueue cid msg plist port_2 event mq
 
   (* Creates new configuration and also sets return variable to new configuration identifier *)
   let new_execution (id: string option) (xvar: string) (url: string) (setup_fid: string) (args: vt list) (cids: cid_t list) (conf: event_conf_t) : event_conf_t * event_conf_t option * optional_action_t option =

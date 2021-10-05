@@ -19,9 +19,12 @@ const PromiseInfo = require('../../Promises/Promise');
 const Promise = PromiseInfo.Promise;
 const DOMException = require('../../DOM/Common/DOMException');
 const StringUtils = require('../../Utils/StringUtils');
+const SharedWorkerInfo = require('../../MessagePassing/WebWorkers/SharedWorker');
+const SharedWorker = SharedWorkerInfo.SharedWorker;
 
 //TODOMP: check if this solution can work!
 var global_scope = executeJSILProc("JSILGetGlobal");
+var self = global_scope;
 
 var debug = false;
 // default timeout is 10 seconds, test can override if needed
@@ -530,7 +533,8 @@ function create_test_environment() {
 var test_environment = create_test_environment();
 
 function is_shared_worker(worker) {
-    return 'SharedWorker' in global_scope && worker instanceof SharedWorker;
+    //return 'SharedWorker' in global_scope && 
+    return worker instanceof SharedWorker;
 }
 
 function is_service_worker(worker) {
@@ -2786,7 +2790,7 @@ Tests.prototype.notify_complete = function() {
 Tests.prototype.create_remote_worker = function(worker) {
     var message_port;
 
-    if (is_service_worker(worker)) {
+    /*if (is_service_worker(worker)) {
         if (window.MessageChannel) {
             // The ServiceWorker's implicit MessagePort is currently not
             // reliably accessible from the ServiceWorkerGlobalScope due to
@@ -2805,7 +2809,8 @@ Tests.prototype.create_remote_worker = function(worker) {
             message_port = navigator.serviceWorker;
             worker.postMessage({type: "connect"});
         }
-    } else if (is_shared_worker(worker)) {
+    } else */
+    if (is_shared_worker(worker)) {
         message_port = worker.port;
         message_port.start();
     } else {
@@ -3691,6 +3696,7 @@ export { test, assert_equals,
             assert_unreached,
             assert_array_equals,
             assert_object_equals,
+            assert_greater_than,
             assert_greater_than_equal,
             assert_less_than,
             assert_less_than_equal,
@@ -3700,4 +3706,4 @@ export { test, assert_equals,
             promise_test,
             format_value,
             setup,
-            done };
+            done, fetch_tests_from_worker };

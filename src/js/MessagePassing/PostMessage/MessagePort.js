@@ -54,10 +54,17 @@ Object.defineProperty(MessagePort.prototype, 'onmessage', {
     * @id MessagePortOnMessage
     */
     set: function(f){
-        this.__Enabled = true;
-        if(this.__onmessagehandler) this.removeEventListener('message', __onmessagehandler);
-        this.addEventListener('message', f);
-        this.__onmessagehandler = f;
+        if(typeof f === 'function' || typeof f === 'object'){
+          this.__Enabled = true;
+          if(this.__onmessagehandler) this.removeEventListener('message', this.__onmessagehandler);
+          this.addEventListener('message', f);
+          this.__onmessagehandler = f;
+        }else{
+            this.__onmessagehandler = null;
+        }
+    },
+    get: function(){
+        return this.__onmessagehandler;
     }
 });
 
@@ -161,7 +168,7 @@ function postMessageSteps(origPort, targetPort, message, options){
     // 7. Add a task that runs the following steps to the port message queue of targetPort:
     // Note: This call to 'send' will enable our MessagePassing semantics, which will then  trigger the processMessageSteps function.
     var includeUserActivation = (options && typeof options === "object") ? options['includeUserActivation'] : undefined;
-    MPSem.send([serializeWithTransferResult, targetPort, false, undefined, undefined, undefined, includeUserActivation],transferIds, origPort.__id, targetPort, "ProcessMessage");
+    MPSem.send([serializeWithTransferResult, targetPort, false, undefined, undefined, undefined, includeUserActivation, false],transferIds, origPort.__id, targetPort, "ProcessMessage");
 }
 
 var scopeMP = {};
@@ -170,7 +177,7 @@ var scopeMP = {};
 * @JSIL
 * @id processMessageSteps
 */
-function processMessageSteps(global, message, targetPortId, isWindow, originWindowId, targetOrigin, targetWindowId, includeUserActivation, transferIds){
+function processMessageSteps(global, message, targetPortId, isWindow, originWindowId, targetOrigin, targetWindowId, includeUserActivation, retry, transferIds){
     // Initial setup
     //debugger;
     var scopeMP = global.__scopeMP;
@@ -180,19 +187,23 @@ function processMessageSteps(global, message, targetPortId, isWindow, originWind
         scopeMP.origin = global.origin;
         (scopeMP.windowProcessMessageSteps(scopeMP, message, transferIds, originWindowId, targetWindow, targetOrigin, false))();
     } else {
-        scopeMP.messagePortProcessMessageSteps(scopeMP, message, targetPortId, transferIds, includeUserActivation);
+        scopeMP.messagePortProcessMessageSteps(scopeMP, message, targetPortId, transferIds, includeUserActivation, retry);
     }
 }
 
 /*
 * @id MessagePortProcessMessageSteps
 */
-function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transferIds, includeUserActivation){
+function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transferIds, includeUserActivation, retry){
     // 1. Let finalTargetPort be the MessagePort in whose port message queue the task now finds itself.
     var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
     // 2. (NOT SUPPORTED) Let targetRealm be finalTargetPort's relevant Realm.
     // As we model the message queue via MP Semantics, we add this step here to make sure the target port is enabled
     //console.log('Found target port: '+finalTargetPort.__Enabled);
+    if (finalTargetPort && !finalTargetPort.__Enabled && !retry){
+        var origPortId = scopeMP.MPSem.getPairedPort(targetPortId);
+        scopeMP.MPSem.send([message, targetPortId, false, undefined, undefined, undefined, includeUserActivation, true],transferIds, origPortId, targetPortId, "ProcessMessage");
+    }
     if(!finalTargetPort || !finalTargetPort.__Enabled) return;
     // 3. Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(message, transferIds, scopeMP.MessagePort);
@@ -214,7 +225,6 @@ function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transfer
     } else {
         event.userActivation = null;
     }
-    //console.log('processMessageSteps, dispatching event on port '+finalTargetPort.__id+', listeners: '+finalTargetPort.listeners.length);
     finalTargetPort.dispatchEvent(event, undefined, true);
 }
 
@@ -247,13 +257,9 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
     // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
     // If window has port associated, the message may be sent to another window
     var currWindow = WindowInfo.getInstance();
-    console.log('originWindow.__port: '+originWindow.__port);
-    console.log('postMessageWindow, originWindowId: '+originWindow.__id)
-    console.log('postMessageWindow, targetWindowId: '+targetWindow.__id)
-    console.log('targetPort: '+targetPort);
     if(originWindow.__port && targetPort) {
       var includeUserActivation = (options && typeof options === "object") ? options['includeUserActivation'] : undefined;
-      MPSem.send([serializeWithTransferResult, targetPort, true, originWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation],transferIds, originWindow.__port.__id, targetPort, "ProcessMessage");
+      MPSem.send([serializeWithTransferResult, targetPort, true, originWindow.__id, targetOrigin, targetWindow.__id, includeUserActivation, false],transferIds, originWindow.__port.__id, targetPort, "ProcessMessage");
     }
     // Otherwise, message is processed locally
     else {
@@ -313,6 +319,7 @@ scopeMP.WindowInfo                     = WindowInfo;
 scopeMP.location                       = location
 scopeMP.windowProcessMessageSteps      = windowProcessMessageSteps;
 scopeMP.messagePortProcessMessageSteps = messagePortProcessMessageSteps;
+scopeMP.MPSem                          = MPSem;
 
 JSILSetGlobalObjProp("__scopeMP", scopeMP);
 

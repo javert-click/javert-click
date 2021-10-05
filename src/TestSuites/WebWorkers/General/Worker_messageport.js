@@ -3,7 +3,7 @@
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
 import { Worker } from '../../../js/MessagePassing/WebWorkers/Worker';
 import { async_test, assert_equals } from '../../../js/DOM/Events/Testharness';
-
+/*
 async_test(function(t) {
     var worker = new Worker("Worker-messageport.js");
 
@@ -60,7 +60,7 @@ async_test(function(t) {
 /*
 * TODOMP: I don't understand why the spam messages must arrive before the 'spamdone' message!
 */
-/*
+
 async_test(function(t) {
     var worker = new Worker("Worker-messageport.js");
     var channel = new MessageChannel();
@@ -75,9 +75,9 @@ async_test(function(t) {
         assert_equals(evt.data, spamCount);
         spamCount++;
         //if (spamCount == 1000) {
-        if (spamCount == 10) {
+        if (spamCount == 4) {
           t.done();
         }
       });
     }
-}, 'Test sending many messages to workers using ports.');*/
+}, 'Test sending many messages to workers using ports.');

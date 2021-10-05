@@ -3,13 +3,14 @@ const MessageChannelInfo = require('../PostMessage/MessageChannel');
 const SharedWorkerInfo   = require('./SharedWorker');
 const DOMException       = require('../../DOM/Common/DOMException');
 const MessageEventInfo   = require('../../DOM/Events/MessageEvent');
+const __location           = require('../PostMessage/Location');
 
 /*
 * @id WorkerGlobalScope
 */
-function WorkerGlobalScope(name, global, WorkerInfo){
+function WorkerGlobalScope(options, global, WorkerInfo){
     EventTarget.EventTarget.call(this);
-    this.__name = name;
+    global.__name = options.name;
 
     Object.defineProperty(global, 'MessageChannel', {
         /*
@@ -59,6 +60,15 @@ function WorkerGlobalScope(name, global, WorkerInfo){
         }
     });
 
+    Object.defineProperty(global, 'name', {
+        get: function(){
+            return global.__name;
+        },
+        set: function(newName){
+            global.__name = newName;
+        }
+    });
+
     function replicatePropInScope(xsc, prop){
         function getter(){
             return global[prop];
@@ -79,7 +89,11 @@ function WorkerGlobalScope(name, global, WorkerInfo){
         }
     }
 
-    Object.defineProperty(global, 'importScripts', {});
+    Object.defineProperty(global, 'importScripts', {
+        get: function(){
+            return function(){}
+        }
+    });
     Object.defineProperty(global, 'navigator', {});
     Object.defineProperty(global, 'btoa', {
         get: function(){
@@ -91,7 +105,20 @@ function WorkerGlobalScope(name, global, WorkerInfo){
             return function(){};
         }
     });
-    Object.defineProperty(global, 'location', {});
+    //Object.defineProperty(global, 'location', {});
+    Object.defineProperty(global, 'location', {
+        get: function(){
+            return {
+                protocol: __location.protocol,
+                host: __location.host,
+                origin: __location.origin,
+                href: __location.href,
+                pathname: options.pathname,
+                hash: options.hash,
+
+            };
+        }
+    });
     Object.defineProperty(global, 'close', {
         get: function(){
             console.log('Close called, mpsem? '+global.MPSemantics);
@@ -167,6 +194,15 @@ function WorkerGlobalScope(name, global, WorkerInfo){
     Object.defineProperty(this, 'IDBCursorWithValue', {});
     Object.defineProperty(this, 'IDBTransaction', {});
 
+    /*Object.defineProperty(import.meta, 'url', {
+        get: function(){
+            return options.url;
+        }/*,
+        set: function(f){
+            global.onconnect = f;
+        }*/
+    //});
+
 
     replicatePropInScope(this, 'MessageChannel');
     replicatePropInScope(this, 'Worker');
@@ -183,6 +219,7 @@ function WorkerGlobalScope(name, global, WorkerInfo){
     replicatePropInScope(this, 'EventSource');
     replicatePropInScope(this, 'MessagePort');
     replicatePropInScope(this, 'MessageEvent');
+    replicatePropInScope(this, 'name');
 
 
     this.setTimeout = global.setTimeout;
@@ -195,11 +232,5 @@ function WorkerGlobalScope(name, global, WorkerInfo){
 // TODO: this interface has a lot more than this.
 
 WorkerGlobalScope.prototype = Object.create(EventTarget.EventTarget.prototype);
-
-Object.defineProperty(WorkerGlobalScope.prototype, 'name', {
-    get: function(){
-        return this.__name;
-    }
-})
 
 exports.WorkerGlobalScope = WorkerGlobalScope;
