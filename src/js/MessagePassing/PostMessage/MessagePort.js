@@ -225,7 +225,13 @@ function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transfer
     } else {
         event.userActivation = null;
     }
-    finalTargetPort.dispatchEvent(event, undefined, true);
+    if(typeof messageClone === 'object' && messageClone !== null && messageClone['ERROR_MSG']){
+      console.log('GOT Error when processing message!!!');
+      var e = new scopeMP.Event.Event('error');
+      finalTargetPort.dispatchEvent(e);
+    } else {
+      finalTargetPort.dispatchEvent(event, undefined, true);
+    }
 }
 
 /*
@@ -311,6 +317,7 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
 }
 
 scopeMP.MessagePort                    = PublicMessagePort;
+scopeMP.Event                          = Event;
 scopeMP.MessageEvent                   = MessageEvent;
 scopeMP.JS2JSILList                    = JS2JSILList;
 scopeMP.ArrayUtils                     = ArrayUtils;

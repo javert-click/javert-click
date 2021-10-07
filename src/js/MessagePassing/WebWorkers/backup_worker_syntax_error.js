@@ -1,0 +1,1 @@
+throw new SyntaxError("SyntaxError in worker");

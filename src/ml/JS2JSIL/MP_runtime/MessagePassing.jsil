@@ -32,16 +32,31 @@ proc getHardwareConcurrency(){
 };
 
 proc Navigator_construct(){
-    ret := "create_default_object_concrete" ($lnavigator, $lobj_proto, "Object", true);
+    ret := "create_default_object" ($lnav_proto, "WorkerNavigator", true);
     platform := "Object_construct" ();
     res := "defineOwnProperty" (platform, "set", {{ "d", $lsetplatform, true, true, true}}, false);
     res := "defineOwnProperty" (platform, "get", {{ "d", $lgetplatform, true, true, true}}, false);
     hardwareConcurrency := "Object_construct" ();
     res := "defineOwnProperty" (hardwareConcurrency, "set", {{ "d", $lsetplatform, true, true, true}}, false);
     res := "defineOwnProperty" (hardwareConcurrency, "get", {{ "d", $lgethardwareconcurrency, true, true, true}}, false);
-    result := "Object_defineProperty" (undefined, undefined, $lnavigator, "__platform", platform);
-    result := "Object_defineProperty" (undefined, undefined, $lnavigator, "hardwareConcurrency", hardwareConcurrency);
-    ret := $lnavigator;
+    result := "Object_defineProperty" (undefined, undefined, ret, "__platform", platform);
+    result := "Object_defineProperty" (undefined, undefined, ret, "hardwareConcurrency", hardwareConcurrency);
+    res := "defineOwnProperty" (ret, "appName", {{ "d", "Netscape", true, true, true}}, false);
+    res := "defineOwnProperty" (ret, "appVersion", {{ "d", "AppleWebKit", true, true, true}}, false);
+    res := "defineOwnProperty" (ret, "userAgent", {{ "d", "AppleWebKit", true, true, true}}, false);
+    res := "defineOwnProperty" (ret, "onLine", {{ "d", false, true, true, true}}, false);
+    res := "defineOwnProperty" (ret, "appCodeName", {{ "d", "Mozilla", true, true, true}}, false);
+    res := "defineOwnProperty" (ret, "product", {{ "d", "Gecko", true, true, true}}, false);
+    res := "defineOwnProperty" (ret, "platform", {{ "d", "MacIntel", true, true, true}}, false);
+    return
+};
+
+proc Location_construct(){
+    ret := "create_default_object_concrete" ($llocation, $lobj_proto, "Object", true);
+    pathname := "";
+    ret := "defineOwnProperty" ($llocation, "pathname", {{ "d", pathname, true, false, true }}, false);
+    ret := "defineOwnProperty" ($llocation, "href", {{ "d", pathname, true, false, true }}, false);
+    ret := $llocation;
     return
 };
 

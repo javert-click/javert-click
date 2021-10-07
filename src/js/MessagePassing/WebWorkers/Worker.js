@@ -12,6 +12,7 @@ var MPSem = MPSemantics.getMPSemanticsInstance();
 */
 function Worker(scriptURL, options){
     EventTarget.EventTarget.call(this);
+    var pathname = scriptURL.substring(scriptURL.indexOf('/'), scriptURL.length);
     if(Worker.prototype.creating === true) throw new RangeError("Workers cannot be created recursively");
     Worker.prototype.creating = true;
     if(options && (options.type === '' ||  options.type === 'unknown')) throw new TypeError("Invalid type for worker");
@@ -27,6 +28,7 @@ function Worker(scriptURL, options){
     }
     // 5. let worker URL be the resulting URL record.
     //var workerURL = url.urlRecord;
+    if(!options) options = {};
     var workerURL = String(scriptURL);
     var lastescape = workerURL.lastIndexOf('/');
     if(lastescape !== -1){
@@ -43,8 +45,17 @@ function Worker(scriptURL, options){
         workerURL = workerURL.substring(0, hashindex);
         console.log('Worker, found hash: '+hash);
     }
-    if(!options) options = {};
+    var search = "";
+    var searchindex = workerURL.lastIndexOf("?");
+    if(searchindex !== -1){
+        search = workerURL.substring(searchindex, workerURL.length);
+        workerURL = workerURL.substring(0, searchindex);
+        console.log('Worker, found search: '+search);
+    }
+    options.pathname = pathname;
+    options.href = pathname;
     options.hash = hash;
+    options.search = search !== "?" ? search : "";
     // 6. Let worker be a new Worker object. 
     var worker = Worker_construct(this);
     // 7. Create a new MessagePort object whose owner is outside settings. Let this be the outside port
@@ -79,6 +90,7 @@ Object.defineProperty(Worker.prototype, 'onerror', {
     * @id WorkerOnError
     */
     set: function(f){
+        this.__port.__Enabled = true;
         this.__port.addEventListener('error', f);
     }
 });

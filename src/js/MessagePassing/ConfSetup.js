@@ -50,9 +50,13 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
     //console.log('WORKER: just paired ports '+outsidePortId+' and '+insidePort.__id);
     // 23. If script is a classic script, then run the classic script script. Otherwise, it is a module script; run the module script script.
     try{
-        executeJSILProc(main_fid);
+        wrapperExecJSILProc(main_fid);
     } catch (e){
         console.log('Got error from script!'+e);
+        var error_msg = {'ERROR_MSG':e};
+        console.log('Going to send error message to main thread');
+        postMessage(error_msg);
+        console.log('Error msg sent back to main thread');
     }
     //console.log('WORKER: going to add handler for process message event');
     //EventsSemantics.addHandler("ProcessMessage", "processMessageSteps");
@@ -71,6 +75,13 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
         globalObj.dispatchEvent(event);
     }
     console.log('Finished running __setupConf');
+}
+
+/*
+* @id wrapperExecJSILProc
+*/
+function wrapperExecJSILProc(main_fid){
+    executeJSILProc(main_fid);
 }
 
 /*

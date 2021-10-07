@@ -1,10 +1,10 @@
-var result = "Fail";
+/*var result = "Fail";
 
 onmessage = function(evt)
 {
     result = "Pass";
     postMessage(result);
-}
+}*/
 
 function s(){
     var result = "Fail";
@@ -15,4 +15,5 @@ function s(){
       postMessage(result);
     }
 }
+s();
 module.exports = s;

@@ -254,10 +254,13 @@ proc setupInitialHeap () {
 
 	  [$lg, "Worker_construct"]              		  := {{ "d", $lworkerconstruct, true, false, true }};
 	  [$lg, "MessageEvent_construct"]              	  := {{ "d", $lmessageeventconstruct, true, false, true }};
-      [$lg, "Navigator_construct"]              	  := {{ "d", $lnavigatorconstruct, true, false, true }};
-      [$lg, "URL_construct"]              	          := {{ "d", $lurlconstruct, true, false, true }};
+      [$lg, "WorkerNavigator"]              	      := {{ "d", $lnav, true, false, true }};
+	  [$lg, "Navigator_construct"]              	  := {{ "d", $lnavigatorconstruct, true, false, true }};
+	  [$lg, "Location_construct"]              	      := {{ "d", $llocationconstruct, true, false, true }};
+	  [$lg, "URL_construct"]              	          := {{ "d", $lurlconstruct, true, false, true }};
 
-      [$lg, "navigator"]             		  		  := {{ "d", $lnavigator, true, false, true }};
+      (*[$lg, "navigator"]             		  		  := {{ "d", $lnavigator, true, false, true }};*)
+	  [$lg, "location"]             		  		  := {{ "d", $llocation, true, false, true }};
 	  [$lg, "setPlatform"]                            := {{ "d", $lsetplatform, true, false, true }};
 	  [$lg, "getPlatform"]                            := {{ "d", $lgetplatform, true, false, true }};
       [$lg, "getHardwareConcurrency"]                 := {{ "d", $lgethardwareconcurrency, true, false, true }};
@@ -998,7 +1001,14 @@ proc setupInitialMP(){
 	ret := "create_object_with_call_construct_concrete"($lgetplatform, "getPlatform", empty, 1);
     ret := "create_object_with_call_construct_concrete"($lgethardwareconcurrency, "getHardwareConcurrency", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lurlconstruct, "URL_construct", empty, 1);
-	ret := "Navigator_construct"();
+	
+	(* NAVIGATOR *)
+	ret := "create_object_with_call_construct_concrete" ($lnav, empty, "Navigator_construct", 1);
+	[$lnav, "prototype"] := {{ "d", $lnav_proto, false, false, false }};
+	ret := "create_default_object_concrete" ($lnav_proto, $lobj_proto, "WorkerNavigator", true);
+    nav := "Navigator_construct"();
+	[$lg, "navigator"] := {{ "d", nav, true, false, true }};
+	ret := "Location_construct"();
 	ret := empty;
 	return
 };

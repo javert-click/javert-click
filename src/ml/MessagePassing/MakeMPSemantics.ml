@@ -471,12 +471,12 @@ module M
     ) cq && List.for_all (
       fun (_, conf, _) -> EventSemantics.is_awaiting conf || EventSemantics.final conf
     ) cq in
-    if(List.length mq = 0 && List.length cq > 0 && all_confs_awaiting) then (
+    (*if(List.length mq = 0 && List.length cq > 0 && all_confs_awaiting) then (
       Printf.printf "\nERROR: There is at least a pending promise that will never be resolved\n";
       let cid, econf, blocked = List.hd cq in
       let econfs' = EventSemantics.assert_formula Formula.False econf in
       [], List.map (fun econf' -> (cid, econf', blocked) :: (List.tl cq), mq, pc, pp, lead_conf) econfs'
-    ) else ( 
+    ) else ( *)
       match lead_conf with
       | Some cid -> 
         L.log L.Normal (lazy (Printf.sprintf "\nRunning lead conf %s\n" cid));
@@ -510,7 +510,7 @@ module M
           let (_, msg, port) = mq in
           let cqs, pc' = process_message msg port cq pc in
           List.map (fun cq -> cq, mq', pc', pp, lead_conf) cqs, [])
-    )
+    (*))*)
     
       
 

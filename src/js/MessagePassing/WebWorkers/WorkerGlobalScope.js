@@ -61,12 +61,29 @@ function WorkerGlobalScope(options, global, WorkerInfo){
     });
 
     Object.defineProperty(global, 'name', {
-        get: function(){
+        value: global.__name,
+        writable: true,
+        configurable: true,
+        enumerable: true
+        /*get: function(){
             return global.__name;
         },
         set: function(newName){
             global.__name = newName;
-        }
+        }*/
+    });
+
+    Object.defineProperty(this, 'name', {
+        value: global.__name,
+        writable: true,
+        configurable: true,
+        enumerable: true
+        /*get: function(){
+            return global.__name;
+        },
+        set: function(newName){
+            global.__name = newName;
+        }*/
     });
 
     function replicatePropInScope(xsc, prop){
@@ -112,10 +129,10 @@ function WorkerGlobalScope(options, global, WorkerInfo){
                 protocol: __location.protocol,
                 host: __location.host,
                 origin: __location.origin,
-                href: __location.href,
+                href: options.href,
                 pathname: options.pathname,
                 hash: options.hash,
-
+                search: options.search
             };
         }
     });
@@ -219,7 +236,7 @@ function WorkerGlobalScope(options, global, WorkerInfo){
     replicatePropInScope(this, 'EventSource');
     replicatePropInScope(this, 'MessagePort');
     replicatePropInScope(this, 'MessageEvent');
-    replicatePropInScope(this, 'name');
+    //replicatePropInScope(this, 'name');
 
 
     this.setTimeout = global.setTimeout;
