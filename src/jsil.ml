@@ -53,7 +53,7 @@ let heap_file = ref ""
         "-events", Arg.Unit(fun () -> events := true), "include event model";
 
         (** print heap as program *)
-        "-printheap",  Arg.String(fun f -> heap_file := f), "file to hold the heap";
+        "-printheap",  Arg.String(fun f -> heap_file := f), "file to hold the heap as json";
 
         (* promises *)
         "-promises", Arg.Unit(fun () -> events := true; promises := true), "include promises model";
@@ -73,9 +73,23 @@ let init_prog (prog: Prog.t) =
   let prog    = UP.init_prog prog in 
   (match prog with | Ok prog -> prog | _ -> raise (Failure "Program could not be initialised"))
 
+let print_heap_to_json (result: CInterpreter.M.result_t list) : unit =
+    if ((!heap_file) <> "") then (
+      match result with
+      | [] -> raise (Failure "print_heap_to_json does not accept empty result list")
+      | res :: _ -> 
+        match res with
+        | RSucc (fl, v, state) -> 
+          let (heap, _, _) = state in
+          let heap_json_str = CHeap.to_json heap in
+          L.log L.Normal (lazy (Printf.sprintf "print_heap_to_json: found heap %s" heap_json_str));
+          burn_to_disk (!heap_file) heap_json_str
+        | RFail _ -> raise (Failure "print_heap_to_json does not accept failing result")
+    )
+
 let print_heap_as_prog (rets : CInterpreter.M.result_t list) : unit = 
   if ((!heap_file) <> "") then (
-    let ih_ext_prog = Parsing_Utils.parse_eprog_from_file "initial_heap.jsil" in
+    let ih_ext_prog = Parsing_Utils.parse_eprog_from_file "initialheap.jsil" in
     let ih_prog = Parsing_Utils.eprog_to_prog ih_ext_prog in
     L.log L.Normal (lazy (Printf.sprintf "print_heap_as_prog"));
     let res_ih_prog = CInterpreter.M.evaluate_prog (init_prog ih_prog) in
@@ -100,6 +114,7 @@ let print_heap_as_prog (rets : CInterpreter.M.result_t list) : unit =
                 | Some (Loc loc) -> loc 
                 | _              -> raise (Failure "print_heap_as_prog: no location returned") in 
             let heap_prog = heap2prog name heap loc found_locs in 
+            Printf.printf "\nPrinting heap to %s\n" name;
             burn_to_disk (name ^ ".jsil") (EProg.str heap_prog) 
           )
     )
@@ -123,7 +138,10 @@ let run (prog : Prog.t) : unit =
     return_to_exit (EventCSemantics.M.valid_result ret)
   ) else if (!mp) then (
     let ret = MPCSemantics.M.evaluate_prog prog in
-    L.log L.Normal (lazy( Printf.sprintf "---------------Final MP State---------------\n\t%s\n" (MPCSemantics.M.string_of_result ret)));
+    CCommon.print_by_need := false;
+    L.log L.Normal (lazy( Printf.sprintf "---------------Final MP State---------------\n\t%s\n" (MPCSemantics.M.string_of_result ret))); 
+    let lret = EventCSemantics.M.from_esem_result_to_lsem_result (MPCSemantics.M.from_mp_result_to_esem_result ret) in
+    print_heap_to_json lret;
     return_to_exit (MPCSemantics.M.valid_result ret)
   ) else (
     let ret = CInterpreter.M.evaluate_prog prog in 

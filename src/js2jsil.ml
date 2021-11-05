@@ -36,10 +36,10 @@ let arguments () =
       "-events", Arg.Unit(fun () -> events := true), "importing dom core level 1 files";
       (* promises *)
       "-promises", Arg.Unit(fun () -> events := true; promises := true), "include promises model";
-      (* import message passing files *)
-      "-mp", Arg.Unit(fun () -> mp := true), "importing postMessage/Workers files";
       (* no call to initial heap in main procedure *)
       "-noinitialheap", Arg.Unit(fun () -> noinitialheap := true), "not including call to setupheap";
+      (* main does not call setupInitialHeap and loads heap from json instead *)
+      "-loadheapfromjson", Arg.String(fun f -> heap_json_file := f), "not including call to setupheap";
     ]
     (fun s -> Format.eprintf "WARNING: Ignored argument %s.@." s)
     usage_msg
