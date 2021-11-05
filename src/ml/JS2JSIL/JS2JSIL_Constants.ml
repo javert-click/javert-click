@@ -86,8 +86,9 @@ let js2jsil_imports_bi = [
 ]
 
 
-let setupHeapName     = "setupInitialHeap"
-let execute_jsil_proc = "executeJSILProc"
+let setupHeapName        = "setupInitialHeap"
+let loadHeapfromJSONName = "LoadHeapFromJson"
+let execute_jsil_proc    = "executeJSILProc"
 
 let _callPropName              = "@call"
 let _constructPropName         = "@construct"

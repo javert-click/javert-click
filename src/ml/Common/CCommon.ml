@@ -34,6 +34,7 @@ let events               = ref false
 let promises             = ref false
 let mp                   = ref false
 let noinitialheap        = ref false
+let heap_json_file       = ref ""
 
 (* Maximum branching *)
 let max_branching = ref 50

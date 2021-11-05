@@ -4676,7 +4676,8 @@ let generate_main offset_converter e spec main_name : EProc.t =
     cmds in
 
   let new_var = fresh_var () in
-  let setup_heap_ass =  annotate_cmd (LCall (new_var, Lit (String setupHeapName), [ ], None, None)) None in
+  let setup_heap_ass =  if (!heap_json_file <> "") then annotate_cmd (LECall (new_var, (PVar loadHeapfromJSONName), [Lit (String !heap_json_file)], None)) None
+                        else annotate_cmd (LCall (new_var, Lit (String setupHeapName), [ ], None, None)) None in
   let sc_var_main = JS2JSIL_Constants.var_scope in
 
   (* x_sc := {{ $lg }} *)
