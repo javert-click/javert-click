@@ -542,4 +542,13 @@ module M
         let (_, erets) = List.split erets_with_cids in 
         valid_so_far && EventSemantics.valid_result erets) true rets
 
+  let from_mp_result_to_esem_result (rets : result_t list) : EventSemantics.result_t list =
+    List.fold_left 
+      (fun acc ret ->
+        let (esemres, _, _, _) = ret in
+        let (_, esemres) = List.split esemres in
+        acc @ esemres
+    ) [] rets
+
+
 end

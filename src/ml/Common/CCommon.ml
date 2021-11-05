@@ -52,7 +52,7 @@ let output_verification = ref false
 let debug        = ref false
 let sanity       = ref true
 
-let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoading"; "i__getValue" ]
+let forbidden_prints = [ "initDOMHeap"; "initUIEventsFiles"; "initDocumentLoading"](*); "i__getValue" ]*)
 let assert_fun_names = ["TestHarnessAssertEquals"; "TestHarnessAssertNotEquals"; "TestHarnessAssertTrue"; "TestHarnessAssertFalse"; 
   "TestHarnessAssertThrows"; "TestHarnessAssertThrowsJs"; "TestHarnessAssertThrowsExactly"; "TestHarnessAssertThrowsDom";
   "TestHarnessAssertUnreached"; "TestHarnessAssertArrayEquals"; "TestHarnessAssertGreaterThanEqual"; "TestHarnessAssertGreaterThan"; "TestHarnessAssertLessThanEqual";

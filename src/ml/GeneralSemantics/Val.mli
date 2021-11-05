@@ -13,6 +13,8 @@ module type M =
 
     val full_str : t -> string 
 
+    val to_json : t -> string
+
     (** Convert a value to a literal, if possible *)
     val to_literal : t -> Literal.t option
 

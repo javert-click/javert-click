@@ -13,6 +13,8 @@ module type M = sig
 
   type result_t
 
+  type interp_result_t
+
   type conf_info_t
 
   type await_conf_t
@@ -50,6 +52,8 @@ module type M = sig
   val string_of_result : result_t list -> string
 
   val valid_result : result_t list -> bool
+
+  val from_esem_result_to_lsem_result : result_t list -> interp_result_t list
 
   val add_spec_var : string list -> state_t -> state_t
 

@@ -22,4 +22,5 @@ depends: [
   "ppx_compare"
   "JS_Parser"
   "ounit"
+  "yojson"
 ]

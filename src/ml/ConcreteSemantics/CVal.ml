@@ -9,6 +9,8 @@ module rec M : (Val.M with type st = CSubst.t and type t = Literal.t) = struct
   type st = CSubst.t 
 
   let str = Literal.str
+
+  let to_json = Literal.to_json
  
   let full_str = Literal.str
 

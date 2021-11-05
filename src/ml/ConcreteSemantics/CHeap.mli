@@ -2,6 +2,8 @@ type t
 
 val str : ?which:CCommon.SS.t option -> t -> string
 
+val to_json : t -> string
+
 val init : unit -> t
 
 val get : t -> string -> (CObject.t * CVal.M.t) option

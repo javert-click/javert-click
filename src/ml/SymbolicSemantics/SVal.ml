@@ -19,6 +19,8 @@ module rec M : (Val.M with type t = Expr.t and type st = SSubst.t) = struct
 
   let full_str = Expr.full_str 
 
+  let to_json = Expr.str
+
   let to_literal le = 
     (match (le : Expr.t) with 
     | Lit lit -> Some lit

@@ -4,6 +4,9 @@ let str (loc : string) (obj : t) (metadata : CVal.M.t) : string =
   let prop_vals_str_lst = Hashtbl.fold (fun prop p_val lst -> (prop ^ ": " ^ (CVal.M.str p_val)) :: lst) obj [] in 
   loc ^ "|-> [ " ^ (String.concat ", " prop_vals_str_lst) ^ " ], " ^ (CVal.M.str metadata)
 
+let to_json (obj: t) : string =
+  (Hashtbl.fold (fun prop p_val ac -> (if ac <> "{ " then ac ^ ", " else ac) ^ (Printf.sprintf "\"%s\": %s" prop (CVal.M.to_json p_val))) obj "{ ") ^ " }"
+
 let init () : t =
   Hashtbl.create CCommon.medium_tbl_size
 

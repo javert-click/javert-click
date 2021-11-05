@@ -15,6 +15,11 @@ proc MessageEvent_construct(xsc, vthis, obj){
     return
 };
 
+proc ErrEvent_construct(xsc, vthis, obj){
+    ret := "setClassAttr"(obj, "ErrorEvent");
+    return
+};
+
 proc setPlatform(){
     (* Navigator setter does nothing *)
     ret := undefined;

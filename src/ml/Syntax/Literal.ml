@@ -31,6 +31,22 @@ let rec str (x : t) =
   	| Type t     -> Type.str t
   	| LList ll   -> Printf.sprintf "{{ %s }}" (String.concat ", " (List.map str ll))
 
+let rec to_json (x : t) =
+  	match x with
+  	| Undefined  -> Printf.sprintf "{ \"type\" : \"Undefined\", \"value\" : \"undefined\" }"
+  	| Null       -> Printf.sprintf "{ \"type\" : \"Null\", \"value\" : null }"
+  	| Empty      -> Printf.sprintf "{ \"type\" : \"Empty\", \"value\" : \"Empty\" }"
+  	| Constant c -> Printf.sprintf "{ \"type\" : \"Constant\", \"value\" : %s }" (Constant.str c)
+  	| Bool b     -> Printf.sprintf "{ \"type\" : \"Bool\", \"value\" : %s }" (string_of_bool b) 
+  	| Num n      -> 
+	    let n_str = string_of_float n in
+	    if (List.mem n_str ["-inf"; "inf"; "nan"]) then Printf.sprintf "{ \"type\" : \"Num\", \"value\" : \"%s\" }" n_str
+	    else Printf.sprintf "{ \"type\" : \"Num\", \"value\" : %f }" n  
+  	| String x   -> Printf.sprintf "{ \"type\" : \"String\", \"value\" : \"%s\" }" x
+  	| Loc loc    -> Printf.sprintf "{ \"type\" : \"Loc\", \"value\" : \"%s\" }" loc
+  	| Type t     -> Printf.sprintf "{ \"type\" : \"Type\", \"value\" : \"%s\" }" (Type.str t)
+  	| LList ll   -> Printf.sprintf "{ \"type\" : \"List\", \"value\" : [ %s ] }" (String.concat ", " (List.map to_json ll))
+
 (** Typing *)
 let type_of (x : t) : Type.t =
 	match x with

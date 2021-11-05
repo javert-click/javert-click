@@ -10,7 +10,7 @@ module M
   (Error         : Error.M with type vt = Val.t and type event_t = string)
   (Interpreter   : Interpreter.M with type vt = Val.t and type err_t = Error.t) 
   (Scheduler     : EventScheduler.M)
-    : EventSemantics.M with type vt = Val.t and type await_conf_t = Interpreter.cconf_t and type conf_info_t = Interpreter.conf_info_t = struct
+    : EventSemantics.M with type vt = Val.t and type await_conf_t = Interpreter.cconf_t and type conf_info_t = Interpreter.conf_info_t and type interp_result_t = Interpreter.result_t = struct
 
   type vt = Val.t 
 
@@ -21,6 +21,8 @@ module M
   type fid_t = Interpreter.fid_t
 
   type await_conf_t = Interpreter.cconf_t
+
+  type interp_result_t = Interpreter.result_t
   
   type conf_info_t = Interpreter.store_t * Interpreter.call_stack_t * int * int * int
 
@@ -406,6 +408,10 @@ module M
   let valid_result (rets: result_t list) : bool =
     let lrets = List.map (fun (lret, _, _) -> lret) rets in
     Interpreter.valid_result lrets
+
+  let from_esem_result_to_lsem_result (rets: result_t list) : Interpreter.result_t list =
+    List.map (fun (lret, _, _) -> lret) rets
+     
 
   let add_spec_var (x:string list) (state: state_t) : state_t =
     let ((conf, prog), ehs, hq, n) = state in

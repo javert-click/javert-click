@@ -253,6 +253,7 @@ proc setupInitialHeap () {
 	  [$lg, "__MP__wrapper__endAtomic"]			      := {{ "d", $lsmpendatomic, true, false, true }};
 
 	  [$lg, "Worker_construct"]              		  := {{ "d", $lworkerconstruct, true, false, true }};
+	  [$lg, "ErrEvent_construct"]              		  := {{ "d", $lerreventconstruct, true, false, true }};
 	  [$lg, "MessageEvent_construct"]              	  := {{ "d", $lmessageeventconstruct, true, false, true }};
       [$lg, "WorkerNavigator"]              	      := {{ "d", $lnav, true, false, true }};
 	  [$lg, "Navigator_construct"]              	  := {{ "d", $lnavigatorconstruct, true, false, true }};
@@ -995,8 +996,9 @@ proc setupInitialMP(){
 	ret := "create_object_with_call_construct_concrete"($lsmpendatomic, "__MP__wrapper__endAtomic", empty, 1);
 
 	ret := "create_object_with_call_construct_concrete"($lworkerconstruct, "Worker_construct", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lerreventconstruct, "ErrEvent_construct", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lmessageeventconstruct, "MessageEvent_construct", empty, 1);
-    ret := "create_object_with_call_construct_concrete"($lnavigatorconstruct, "Navigator_construct", empty, 1);
+    (*ret := "create_object_with_call_construct_concrete"($lnavigatorconstruct, "Navigator_construct", empty, 1);*)
 	ret := "create_object_with_call_construct_concrete"($lsetplatform, "setPlatform", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lgetplatform, "getPlatform", empty, 1);
     ret := "create_object_with_call_construct_concrete"($lgethardwareconcurrency, "getHardwareConcurrency", empty, 1);

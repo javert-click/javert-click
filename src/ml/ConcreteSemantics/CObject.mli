@@ -1,6 +1,7 @@
 type t
 
 val str : string -> t -> CVal.M.t -> string
+val to_json : t -> string
 
 val init : unit -> t
 

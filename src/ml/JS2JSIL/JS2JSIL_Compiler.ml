@@ -1577,9 +1577,9 @@ let rec translate_expr tr_ctx e : ((Annot.t * (string option) * LabCmd.t) list) 
       | [arg] -> 
         let x_v, cmd_gv_x, errs_x_v = make_get_value_call arg tr_ctx.tr_err_lab in
         let new_var = fresh_var () in
-        let call_main_cmd = (None, LApply (new_var, EList ([PVar x_v]), Some tr_ctx.tr_err_lab)) in
-        let cmds = annotate_first_cmd (cmds_args @ (annotate_cmds [call_main_cmd])) in
-        cmds, (PVar new_var), errs_args
+        let call_main_cmd = None, LApply (new_var, EList ([PVar x_v]), Some tr_ctx.tr_err_lab) in
+        let cmds = cmds_args @  (annotate_cmds [call_main_cmd]) in
+        cmds, (PVar new_var), errs_args @ [new_var]
       | _ -> raise (Failure "Invalid executeJSILProc"))
 
   | JSParserSyntax.Call (e_f, xes)

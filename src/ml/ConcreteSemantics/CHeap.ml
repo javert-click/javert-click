@@ -33,3 +33,10 @@ let str ?(which = None) (heap : t) : string =
   let sorted_locs_with_vals = List.map (fun loc -> (loc, Option.get (get heap loc))) sorted_locs in  
   let objs_str_lst = List.map (fun (loc, (obj, metadata)) -> CObject.str loc obj metadata) sorted_locs_with_vals in 
   String.concat "\n" objs_str_lst
+
+let to_json (heap : t) : string =
+  "{ " ^ (
+    String.concat
+      ",\n "
+      (Hashtbl.fold (fun loc (obj, metadata) acc -> (Printf.sprintf "\"%s\": {\n\t\"properties\": %s, \n\t\"metadata\": %s}" loc (CObject.to_json obj) (CVal.M.to_json metadata))::acc) heap [])
+  ) ^ " }"
