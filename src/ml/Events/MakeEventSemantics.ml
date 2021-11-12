@@ -102,6 +102,7 @@ module M
     ) else ( false )
 
   let assume (state: state_t) (f: Formula.t) : state_t option =
+    L.log L.Normal (lazy (Printf.sprintf "Event Semantics: assuming formula %s" (Formula.str f)));
     let (conf, prog), ehs, hq, n = state in
     Option.map (fun conf' -> (conf', prog), ehs, hq, n) (Interpreter.assume conf [f])
 

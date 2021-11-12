@@ -5039,6 +5039,7 @@ let js2jsil_function_constructor_prop (prog : Prog.t) fid_parent params e =
 
 let compute_imports (for_verification : bool) : string list =
   if for_verification        then js2jsil_logic_imports
+  else if !(CCommon.noimports) then []
   else if !(SCommon.bi)      then js2jsil_imports_bi
   else if !dom               then js2jsil_imports @ dom_imports
   else if !dom_level1        then js2jsil_imports @ dom_imports_level1

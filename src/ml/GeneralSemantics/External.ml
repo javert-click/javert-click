@@ -194,6 +194,30 @@ module M
           | _ -> raise (Failure "Not possible to parse URL."))
       | _ -> raise (Failure "Not possible to parse URL."))
 
+  let load_heap_from_json_file prog state cs i x v_args j =
+    match v_args with 
+    | [json_file_str] -> 
+      (match Val.to_literal json_file_str with 
+      | Some (String json_file) -> 
+        let heap = ParseHeap.parse_heap_from_json json_file in
+        let state = List.fold_left (
+          fun state (loc, fvl, meta) ->
+            let loc', state' = State.alloc state (Some (Val.from_literal (Loc loc))) (Val.from_literal meta) in
+            List.fold_left (
+              fun state (prop, v) ->
+               State.set_cell state loc' (Val.from_literal (Literal.String prop)) (Some (Val.from_literal v))
+            ) state' fvl
+        ) state heap in
+        Printf.printf "Setting heap_min to %d" ((List.length heap) + 1);
+        let heap_curr_size = List.length heap in
+        if (!CCommon.heap_min < heap_curr_size) then (CCommon.heap_min := heap_curr_size + 1);
+        update_store state x (Val.from_literal (Loc (JS2JSIL_Constants.locGlobName)));
+        [ state, cs, i, i+1 ]
+      | _ -> raise (Failure "LoadHeapFromJson argument not a literal string"))
+    | _ -> raise (Failure "Not possible to load heap from json")
+      
+
+
   (** 
     General External Procedure Treatment
 
@@ -222,6 +246,7 @@ module M
     | "ExecuteFunctionConstructor"   -> execute_function_constructor prog state cs i x v_args j
     | "ExecuteHTMLParsing"           -> execute_html_parsing prog state cs i x v_args j
     | "ExecuteURLParsing"            -> execute_url_parsing prog state cs i x v_args j
+    | "LoadHeapFromJson"             -> load_heap_from_json_file prog state cs i x v_args j
     | _ -> raise (Failure ("Unsupported external procedure call: " ^ pid)))
 
 end

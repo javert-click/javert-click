@@ -65,7 +65,7 @@ let dom_imports = dom_imports_level1 @ dom_imports_events_full
 
 let imports_events = dom_imports_level1 @ dom_imports_events 
 
-let message_passing_imports = ["ConfSetup.jsil"; "Serialization.jsil"; "MessagePassing.jsil"]
+let message_passing_imports = ["Serialization.jsil"; "MessagePassing.jsil"]
 
 
 let js2jsil_imports_cosette = [

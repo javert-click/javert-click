@@ -53,6 +53,7 @@ module M
   (* Used for configuration addition/removal *)
   type optional_action_t = | AddConf of event_conf_t 
                            | RemConf of cid_t 
+                           | Assume of Formula.t * cid_t
                            | HoldConf of cid_t
                            | FreeConf of cid_t
                            | AddSpecVar of string list
@@ -131,11 +132,13 @@ module M
 
   (* Adds a constraint f to the path condition of each configuration in cq *)
   let assume (cq: cq_t) (f: Formula.t) : cq_t =
+  L.log L.Normal (lazy (Printf.sprintf "\nGoing to do Assume. CQ length: %d \n" (List.length cq)));
     let cq' = List.fold_left (fun acc (cid, conf, blocked) -> 
       (*L.log L.Normal (lazy (Printf.sprintf "\nASSUME: conf: %s" (EventSemantics.state_str conf)));*)
       match EventSemantics.assume conf f with
       | Some conf' -> acc @ [cid, conf', blocked] 
       | None -> acc) [] cq in
+    L.log L.Normal (lazy (Printf.sprintf "\nAssume done. New CQ length: %d \n" (List.length cq')));
     cq'
 
   let notify (cq: cq_t) (msg: vt list) (event: vt) (cid_orig : cid_t) : cq_t list =
@@ -193,19 +196,28 @@ module M
       let (cid, econf, blocked) = econf in
       let econf' = EventSemantics.set_var xvar (Val.from_literal (Bool exists)) econf in
       [cq_pre @ [(cid, econf', blocked)] @ cq_pos], lead_conf
+    | Some Assume (f, cid_orig) -> 
+      let cq'' = List.fold_left (fun acc (cid, conf, blocked) -> 
+        if (cid_orig = cid) then acc @ [(cid, conf, blocked)] 
+        else (
+          match EventSemantics.assume conf f with
+          | Some conf' -> acc @ [cid, conf', blocked] 
+          | None -> acc)
+        ) [] cq' in
+        [cq''], lead_conf
     | None -> [cq'], lead_conf) in
-    let new_cq_list = 
+    (*let new_cq_list = 
     match f with
     | None -> L.log L.Normal (lazy (Printf.sprintf "Formula is none, cq length: %d" (List.length cq_list))); cq_list
     | Some f -> 
-      (*L.log L.Normal (lazy (Printf.sprintf "Before assume(%s): cq length: %d" (Formula.str f) (List.length cq_list)));*)
+      L.log L.Normal (lazy (Printf.sprintf "Before assume(%s): cq list length: %d" (Formula.str f) (List.length cq_list)));
       let new_cq = List.map (fun cq -> assume cq f) cq_list in 
-      (*L.log L.Normal (lazy (Printf.sprintf "After assume(%s): cq length: %d" (Formula.str f) (List.length new_cq)));*)
-      new_cq in
+      L.log L.Normal (lazy (Printf.sprintf "After assume(%s): cq list length: %d" (Formula.str f) (List.length new_cq)));
+      new_cq in*)
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
     (*List.iter (fun (cid, econf) -> L.log L.Normal (lazy (Printf.sprintf "\nCID: %d, CONF: \n%s\n" cid (EventSemantics.state_str econf)))) new_cq;*)
     (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
-    List.map (fun new_cq -> new_cq, mq', pc', pp', lead_conf') new_cq_list
+    List.map (fun new_cq -> new_cq, mq', pc', pp', lead_conf') cq_list
 
 
   let compute_string_from_val (v: vt) : string =
@@ -405,7 +417,7 @@ module M
         [econf, mq, pc, pp, Some (HoldConf cid), None] 
       | EndAtomic -> L.log L.Normal (lazy "\nFound endAtomic\n");
         [econf, mq, pc, pp, Some (FreeConf cid), None]
-      | Assume (f) -> [econf, mq, pc, pp, None, Some f]
+      | Assume (f) -> [econf, mq, pc, pp, Some (Assume (f, cid)), None]
       | AssumeType (x, t) -> 
         let f = Formula.Eq (UnOp (TypeOf, (LVar x)), Lit (Type t)) in
         [econf, mq, pc, pp, None, Some f]

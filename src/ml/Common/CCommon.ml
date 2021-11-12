@@ -35,6 +35,8 @@ let promises             = ref false
 let mp                   = ref false
 let noinitialheap        = ref false
 let heap_json_file       = ref ""
+let heap_min             = ref 0
+let noimports            = ref false
 
 (* Maximum branching *)
 let max_branching = ref 50
@@ -167,6 +169,13 @@ let fresh_sth (name : string) : (unit -> string) =
   let rec f () =
     let v = name ^ (string_of_int !counter) in
     counter := !counter + 1;
+    v
+  in f
+
+let fresh_location (name : string) : (unit -> string) =
+  let rec f () =
+    let v = name ^ (string_of_int !heap_min) in
+    heap_min := !heap_min + 1;
     v
   in f
 

@@ -21,35 +21,36 @@ let rec parse_property_from_json (json: Yojson.Basic.t) : Literal.t =
         (match s with
         |"-inf" -> Num (float_of_string "-infinity")
         |"inf" -> Num (float_of_string "infinity")
-        |"nan" -> Num (float_of_string "nan"))  
-      | `String x -> Printf.printf "Invalid json heap! type: %s" x; raise (Failure "Invalid json heap!")
+        |"nan" -> Num (float_of_string "nan")
+        | _ -> raise (Failure "Invalid json heap!"))
       | _ -> raise (Failure "Invalid json heap!"))
   | _ -> raise (Failure "Invalid property")
 
 
-let parse_properties_from_json (props_json: Yojson.Basic.t) : CObject.t =
-  let obj = CObject.init () in
+let parse_properties_from_json (props_json: Yojson.Basic.t) : (string * Literal.t) list =
+  (*let obj = CObject.init () in*)
   (match props_json with
   | `Assoc fvl ->  
-        List.iter (fun (pname, jsonval) -> 
+        List.map (fun (pname, jsonval) -> 
         let pval = parse_property_from_json jsonval in
-        CObject.set obj pname pval) fvl;
-        obj 
+        pname, pval) fvl
+        (*CObject.set obj pname pval) fvl;
+        obj *)
   | _ -> raise (Failure "Properties need to be a list"))
 
-let parse_heap_from_json (json_file : string) : CHeap.t =
+let parse_heap_from_json (json_file : string) : (string * (string * Literal.t) list * Literal.t) list =
   let data = Yojson.Basic.from_file json_file in
-  let heap = CHeap.init () in
+  (*let heap = CHeap.init () in*)
   match data with
   | `Assoc heap_global -> 
-    List.iter (fun (loc, data_json) -> 
+    List.map (fun (loc, data_json) -> 
       let props_json = data_json |> member "properties" in
-      let obj = parse_properties_from_json props_json in
+      let props_vals = parse_properties_from_json props_json in
       let meta_json = data_json |> member "metadata" in
       let meta_lit = parse_property_from_json meta_json in
-      CHeap.set heap loc (obj, meta_lit)) heap_global;
-      Printf.printf "\nHEAP_TO_JSON: %s\n" (CHeap.to_json heap);
-      heap
+      loc, props_vals, meta_lit
+      (*CHeap.set heap loc (obj, meta_lit)*)
+      ) heap_global;
   | _ -> raise (Failure "Unexpected heap file format. Expecting a JSON object.")
   
   

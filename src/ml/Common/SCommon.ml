@@ -25,7 +25,7 @@ let dashes         = "-----------------------------------------\n"
 let lloc_prefix = "$l"                  (* Literal location prefix  *)
 let pvar_prefix = "_pvar_"              (* Program variable prefix  *)
 
-let fresh_loc   = fresh_sth lloc_prefix (* Literal location counter *)
+let fresh_loc   = fresh_location lloc_prefix (* Literal location counter *)
 let fresh_pvar  = fresh_sth pvar_prefix (* Program variable counter *)
 
 (* Program variable recogniser *)

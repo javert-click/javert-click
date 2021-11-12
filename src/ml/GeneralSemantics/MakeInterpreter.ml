@@ -206,11 +206,17 @@ let assert_formula (f: Formula.t) (state: State.t) : State.t list =
       L.log L.Normal (lazy msg);
       raise (State_error ([ err ], state)))
 
-let assume_formula (formulas: Formula.t list) (state: state_t) : state_t option =
+let assume_formula (formulas: Formula.t list) (state: state_t) : state_t option * Formula.t list =
+  L.log L.Normal (lazy (Printf.sprintf "Trying to assume that %s" (String.concat ", " (List.map Formula.str formulas))));
+  L.log L.Normal (lazy (Printf.sprintf "STORE: %s" (Store.str (State.get_store state))));
+  L.log L.Normal (lazy (Printf.sprintf "Going to call to_ssubts"));
   let store_subst = Store.to_ssubst (State.get_store state) in
+  L.log L.Normal (lazy (Printf.sprintf "Going to do substitution in formula"));
   let formulas = List.map (fun f -> Formula.substitution store_subst true f) formulas in
+  L.log L.Normal (lazy (Printf.sprintf "Going to call simplify formula"));
   let formulas = List.map (fun f -> State.simplify_formula state f) formulas in
-  State.assume_a state formulas
+  L.log L.Normal (lazy (Printf.sprintf "Going to call State.assume_a"));
+  State.assume_a state formulas, formulas
 
 (* ************** *
  * Main Functions *
@@ -247,7 +253,7 @@ let assume_formula (formulas: Formula.t list) (state: state_t) : state_t option 
 
     | Assume f ->
         (match assume_formula [f] state with
-          | Some state' -> [ state', [MPInterceptor.Assume (f)] ]
+          | Some state', fs -> [ state', [MPInterceptor.Assume (List.hd fs)] ]
           | _ -> (* Printf.printf "WARNING: ASSUMING FALSE\n"; *) [])
 
     | SpecVar xs -> [ State.add_spec_vars state (Var.Set.of_list xs), [MPInterceptor.SpecVar xs] ]
@@ -919,14 +925,15 @@ let conf_to_result (confs: cconf_t ) : result_t =
 
 let assume (conf: cconf_t) (formulas: Formula.t list) : cconf_t option =
   let state = State.copy (get_state conf) in
+  L.log L.Normal (lazy (Printf.sprintf "Interpreter: assuming formulas %s" (String.concat ", " (List.map Formula.str formulas))));
   match assume_formula formulas state with
-  | Some new_state ->
+  | Some new_state, _ ->
       (match conf with
       | ConfErr  (proc, i, state, errs) -> Some (ConfErr (proc, i, new_state , errs))
       | ConfCont (state, cs, i, prev, b_counter, _) -> Some (ConfCont (new_state, cs, i, prev, b_counter, None))
       | ConfFinish (fl, v, state, _) -> Some (ConfFinish (fl, v, new_state, None))
       | ConfSusp (pid, state, cs, prev, i, b_counter) -> Some (ConfSusp (pid, new_state, cs, prev, i, b_counter)))
-  | None -> None
+  | None, _ -> None
 
 
 (** Event Interface *)

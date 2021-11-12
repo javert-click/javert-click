@@ -177,8 +177,11 @@ let rec reduce_formula ?(no_timing: unit option) ?(gamma : TypEnv.t option) ?(pf
 
    
   | Eq (e1, e2) ->
+    L.log L.Normal (lazy (Printf.sprintf "I am on the equal case. e1:%s, e2:%s " (Expr.str e1) (Expr.str e2)));
     let re1 = fe e1 in
+    L.log L.Normal (lazy (Printf.sprintf "Reduced e1"));
     let re2 = fe e2 in
+    L.log L.Normal (lazy (Printf.sprintf "Reduced e2"));
     (* Warning - NaNs, infinities, this and that, this is not good enough *)
     let eq = (re1 = re2) in
     if eq then True

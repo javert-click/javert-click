@@ -125,9 +125,12 @@ let set_fv_pair (heap : t) (loc : string) (field : Expr.t) (value : Expr.t) : un
 
 let init_object (heap : t) (loc : string) (mtdt : Expr.t) : unit = 
   if (Hashtbl.mem heap.cfvl loc || Hashtbl.mem heap.sfvl loc) then (
-    Printf.printf "Location: %s, mem: %b" loc (Hashtbl.mem heap.sfvl loc);
+    let new_loc = fresh_loc () in
+    Printf.printf "Location: %s, new_loc: %s, mem: %b" loc new_loc (Hashtbl.mem heap.sfvl loc);
     raise (Failure "Illegal init_object")
   ) else (
+    (*if(loc = "$l3601") then (let new_loc = fresh_loc() in Printf.printf "\nAllocating $l3601, new_loc: %s\n" new_loc; raise (Failure "lascou"));*)
+    L.log L.Normal (lazy (Printf.sprintf "Allocating loc %s" loc));
     set heap loc SFVL.empty (Some (ESet [])) (Some mtdt)
   )
 

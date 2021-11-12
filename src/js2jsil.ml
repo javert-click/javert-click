@@ -40,6 +40,8 @@ let arguments () =
       "-noinitialheap", Arg.Unit(fun () -> noinitialheap := true), "not including call to setupheap";
       (* main does not call setupInitialHeap and loads heap from json instead *)
       "-loadheapfromjson", Arg.String(fun f -> heap_json_file := f), "not including call to setupheap";
+      (* compile without imports *)
+      "-noimports", Arg.Unit(fun () -> CCommon.noimports := true), "not including call to setupheap";
     ]
     (fun s -> Format.eprintf "WARNING: Ignored argument %s.@." s)
     usage_msg
