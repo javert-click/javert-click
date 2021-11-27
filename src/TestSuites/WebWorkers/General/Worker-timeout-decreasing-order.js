@@ -9,7 +9,9 @@ promise_test (t => {
   
     return new Promise(resolve => {
       worker = new Worker('Worker-timeout-decreasing-order-worker.js');
+      console.log('Sending message "start" to worker');
       worker.postMessage('start');
+      console.log('Assigning onmessage handler to worker');
       worker.onmessage = resolve;
     }).then(evt => {
       console.log('Checking if '+evt.data+' is equal to 1');

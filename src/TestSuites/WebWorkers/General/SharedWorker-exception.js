@@ -1,4 +1,4 @@
-import { async_test } from '../../../js/DOM/Events/Testharness';
+import { async_test, setup } from '../../../js/DOM/Events/Testharness';
 import { createWorker } from './support/SharedWorker-create-common';
 
 setup({ allow_uncaught_exception: true });

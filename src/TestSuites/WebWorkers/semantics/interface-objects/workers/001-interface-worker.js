@@ -77,6 +77,7 @@ var expected = [
 ];
 for (var i = 0; i < expected.length; ++i) {
 test(function () {
+    console.log('going to assert that '+expected[i]+' is in self');
     assert_own_property(self, expected[i]);
 }, "The " + expected[i] + " interface object should be exposed.");
 }

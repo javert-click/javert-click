@@ -1,11 +1,12 @@
 const JS2JSILList = require('../../Utils/JS2JSILList');
-const EventsSemantics = require('../../DOM/Events/EventsSemantics');
+const EventsSemanticsInfo = require('../../DOM/Events/EventsSemantics');
+const EventsSemantics = EventsSemanticsInfo.EventsSemantics;
 
 /*
 * @id MPSemantics
 */
 function MPSemantics(){
-    this.ESem = new EventsSemantics.EventsSemantics();
+    this.ESem = new EventsSemantics();
     this.ESem.addHandler("Message", "ProcessMessage", "processMessageSteps");
 }
 
@@ -109,9 +110,20 @@ MPSemantics.prototype.getAllPairedPorts = function(portId){
 MPSemantics.prototype.terminate = function(confId){
     console.log('Going to call MPWrapperTerminate, confId: '+confId);
     if(confId)
-      return __MP__wrapper__terminate(confId);
+      return __MP__wrapper__terminate(true, confId);
     else 
-      return __MP__wrapper__terminate();
+      return __MP__wrapper__terminate(true);
+}
+
+/*
+* @id MPSemanticsTerminate
+*/
+MPSemantics.prototype.close = function(confId){
+    console.log('Going to call MPWrapperTerminate, confId: '+confId);
+    if(confId)
+      return __MP__wrapper__terminate(false, confId);
+    else 
+      return __MP__wrapper__terminate(false);
 }
 
 /*

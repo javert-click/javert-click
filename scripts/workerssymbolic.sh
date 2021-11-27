@@ -29,7 +29,7 @@ done
 
 echo "compiling setupConf file"
 npx webpack --config ../webpack.config.js --env entry=$setupconffilejs --env out=$setupconffilejs
-./js2jsil.native -file $setupconffilejs -cosette #-noinitialheap
+./js2jsil.native -file $setupconffilejs -cosette #-noinitialheap 
 #mv "webpack_ConfSetup.jsil" "ConfSetup.jsil"
 cp $setupconffilejsil .
 
@@ -41,7 +41,7 @@ echo "Compiling resulting file to JSIL"
 ./js2jsil.native -file $name -mp -cosette
 #cp -R "$dir/$base.jsil" .
 echo -e "running $base.jsil"
-./cosette.native -file "$base.jsil" -mp -js -silent #-pbn
+./cosette.native -file "$base.jsil" -mp -js -silent -stats #-pbn
 
 #echo -e "removing log_verboser.log"
 #rm "log_verboser.log"

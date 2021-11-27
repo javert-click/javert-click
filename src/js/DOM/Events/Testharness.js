@@ -760,7 +760,7 @@ function EventWatcher(test, watchedNode, eventTypes, timeoutPromise)
 
     return this;
 }
-expose(EventWatcher, 'EventWatcher');
+//expose(EventWatcher, 'EventWatcher');
 
 function setup(func_or_properties, maybe_properties)
 {
@@ -776,6 +776,44 @@ function setup(func_or_properties, maybe_properties)
     }
     tests.setup(func, properties);
     test_environment.on_new_harness_properties(properties);
+}
+
+function promise_setup(func, maybe_properties)
+{
+    if (typeof func !== "function") {
+        tests.set_status(tests.status.ERROR,
+                            "promise_test invoked without a function");
+        tests.complete();
+        return;
+    }
+    tests.promise_setup_called = true;
+
+    if (!tests.promise_tests) {
+        tests.promise_tests = Promise.resolve();
+    }
+
+    tests.promise_tests = tests.promise_tests
+        .then(function()
+                {
+                    var properties = maybe_properties || {};
+                    var result;
+
+                    tests.setup(null, properties);
+                    result = func();
+                    test_environment.on_new_harness_properties(properties);
+
+                    if (!result || typeof result.then !== "function") {
+                        throw "Non-thenable returned by function passed to `promise_setup`";
+                    }
+                    return result;
+                })
+        .catch(function(e)
+                {
+                    tests.set_status(tests.status.ERROR,
+                                    String(e),
+                                    e && e.stack);
+                    tests.complete();
+                });
 }
 
 function done() {
@@ -816,15 +854,15 @@ function step_timeout(f, t) {
     }, t * tests.timeout_multiplier);
 }
 
-expose(test, 'test');
-expose(async_test, 'async_test');
-expose(promise_test, 'promise_test');
-expose(promise_rejects, 'promise_rejects');
-expose(generate_tests, 'generate_tests');
-expose(setup, 'setup');
-expose(done, 'done');
-expose(on_event, 'on_event');
-expose(step_timeout, 'step_timeout');
+//expose(test, 'test');
+//expose(async_test, 'async_test');
+//expose(promise_test, 'promise_test');
+//expose(promise_rejects, 'promise_rejects');
+//expose(generate_tests, 'generate_tests');
+//expose(setup, 'setup');
+//expose(done, 'done');
+//expose(on_event, 'on_event');
+//expose(step_timeout, 'step_timeout');
 
 /*
 * Return a string truncated to the given length, with ... added at the end
@@ -982,7 +1020,7 @@ function format_value(val, seen)
         }
     }
 }
-expose(format_value, "format_value");
+//expose(format_value, "format_value");
 
 /*
 * @id TestHarnessAssertTrue
@@ -992,7 +1030,7 @@ function assert_true(actual, description)
     assert(actual === true, "assert_true", description,
                             "expected true got ${actual}", {actual:actual});
 }
-expose(assert_true, "assert_true");
+//expose(assert_true, "assert_true");
 
 /*
 * @id TestHarnessAssertFalse
@@ -1002,7 +1040,7 @@ function assert_false(actual, description)
     assert(actual === false, "assert_false", description,
                             "expected false got ${actual}", {actual:actual});
 }
-expose(assert_false, "assert_false");
+//expose(assert_false, "assert_false");
 
 function same_value(x, y) {
     if (y !== y) {
@@ -1035,7 +1073,7 @@ function assert_equals(actual, expected, description)
                                         "expected ${expected} but got ${actual}",
                                         {expected:expected, actual:actual});
 }
-expose(assert_equals, "assert_equals");
+//expose(assert_equals, "assert_equals");
 
 /*
 * @id TestHarnessAssertNotEquals
@@ -1050,7 +1088,7 @@ function assert_not_equals(actual, expected, description)
                                         "got disallowed value ${actual}",
                                         {actual:actual});
 }
-expose(assert_not_equals, "assert_not_equals");
+//expose(assert_not_equals, "assert_not_equals");
 
 function assert_in_array(actual, expected, description)
 {
@@ -1058,7 +1096,7 @@ function assert_in_array(actual, expected, description)
                                         "value ${actual} not in array ${expected}",
                                         {actual:actual, expected:expected});
 }
-expose(assert_in_array, "assert_in_array");
+//expose(assert_in_array, "assert_in_array");
 
 /*
 * @id TestHarnessAssertObjectEquals
@@ -1097,7 +1135,7 @@ function assert_object_equals(actual, expected, description)
     }
     check_equal(actual, expected, []);
 }
-expose(assert_object_equals, "assert_object_equals");
+//expose(assert_object_equals, "assert_object_equals");
 
 /*
 * @id TestHarnessAssertArrayEquals
@@ -1125,7 +1163,7 @@ function assert_array_equals(actual, expected, description)
             {i:i, expected:expected[i], actual:actual[i]});
     }
 }
-expose(assert_array_equals, "assert_array_equals");
+//expose(assert_array_equals, "assert_array_equals");
 
 function assert_array_approx_equals(actual, expected, epsilon, description)
 {
@@ -1153,7 +1191,7 @@ function assert_array_approx_equals(actual, expected, epsilon, description)
             {i:i, expected:expected[i], actual:actual[i], epsilon:epsilon});
     }
 }
-expose(assert_array_approx_equals, "assert_array_approx_equals");
+////expose(assert_array_approx_equals, "assert_array_approx_equals");
 
 function assert_approx_equals(actual, expected, epsilon, description)
 {
@@ -1170,7 +1208,7 @@ function assert_approx_equals(actual, expected, epsilon, description)
         "expected ${expected} +/- ${epsilon} but got ${actual}",
         {expected:expected, actual:actual, epsilon:epsilon});
 }
-expose(assert_approx_equals, "assert_approx_equals");
+//expose(assert_approx_equals, "assert_approx_equals");
 
 /*
 * @id TestHarnessAssertLessThan
@@ -1190,7 +1228,7 @@ function assert_less_than(actual, expected, description)
         "expected a number less than ${expected} but got ${actual}",
         {expected:expected, actual:actual});
 }
-expose(assert_less_than, "assert_less_than");
+//expose(assert_less_than, "assert_less_than");
 
 /*
 * @id TestHarnessAssertGreaterThan
@@ -1210,7 +1248,7 @@ function assert_greater_than(actual, expected, description)
         "expected a number greater than ${expected} but got ${actual}",
         {expected:expected, actual:actual});
 }
-expose(assert_greater_than, "assert_greater_than");
+//expose(assert_greater_than, "assert_greater_than");
 
 function assert_between_exclusive(actual, lower, upper, description)
 {
@@ -1228,7 +1266,7 @@ function assert_between_exclusive(actual, lower, upper, description)
         "and less than ${upper} but got ${actual}",
         {lower:lower, upper:upper, actual:actual});
 }
-expose(assert_between_exclusive, "assert_between_exclusive");
+//expose(assert_between_exclusive, "assert_between_exclusive");
 
 /*
 * @id TestHarnessAssertLessThanEqual
@@ -1248,7 +1286,7 @@ function assert_less_than_equal(actual, expected, description)
         "expected a number less than or equal to ${expected} but got ${actual}",
         {expected:expected, actual:actual});
 }
-expose(assert_less_than_equal, "assert_less_than_equal");
+//expose(assert_less_than_equal, "assert_less_than_equal");
 
 /*
 * @id TestHarnessAssertGreaterThanEqual
@@ -1268,7 +1306,7 @@ function assert_greater_than_equal(actual, expected, description)
         "expected a number greater than or equal to ${expected} but got ${actual}",
         {expected:expected, actual:actual});
 }
-expose(assert_greater_than_equal, "assert_greater_than_equal");
+//expose(assert_greater_than_equal, "assert_greater_than_equal");
 
 function assert_between_inclusive(actual, lower, upper, description)
 {
@@ -1286,7 +1324,7 @@ function assert_between_inclusive(actual, lower, upper, description)
         "and less than or equal to ${upper} but got ${actual}",
         {lower:lower, upper:upper, actual:actual});
 }
-expose(assert_between_inclusive, "assert_between_inclusive");
+//expose(assert_between_inclusive, "assert_between_inclusive");
 
 function assert_regexp_match(actual, expected, description) {
     /*
@@ -1297,7 +1335,7 @@ function assert_regexp_match(actual, expected, description) {
         "expected ${expected} but got ${actual}",
         {expected:expected, actual:actual});
 }
-expose(assert_regexp_match, "assert_regexp_match");
+//expose(assert_regexp_match, "assert_regexp_match");
 
 /*
 * @id TestHarnessAssertClassString
@@ -1306,7 +1344,7 @@ function assert_class_string(object, class_string, description) {
     assert_equals({}.toString.call(object), "[object " + class_string + "]",
                 description);
 }
-expose(assert_class_string, "assert_class_string");
+//expose(assert_class_string, "assert_class_string");
 
 /*
 * @id TestHarnessAssertOwnProperty
@@ -1316,14 +1354,14 @@ function assert_own_property(object, property_name, description) {
         "assert_own_property", description,
         "expected property ${p} missing", {p:property_name});
 }
-expose(assert_own_property, "assert_own_property");
+//expose(assert_own_property, "assert_own_property");
 
 function assert_not_own_property(object, property_name, description) {
     assert(!object.hasOwnProperty(property_name),
         "assert_not_own_property", description,
         "unexpected property ${p} is found on object", {p:property_name});
 }
-expose(assert_not_own_property, "assert_not_own_property");
+//expose(assert_not_own_property, "assert_not_own_property");
 
 function assert_inherits(name) {
     return function (object, property_name, description)
@@ -1347,8 +1385,8 @@ function assert_inherits(name) {
             {p:property_name});
     };
 }
-expose(assert_inherits("assert_inherits"), "assert_inherits");
-expose(assert_inherits("assert_idl_attribute"), "assert_idl_attribute");
+//expose(assert_inherits("assert_inherits"), "assert_inherits");
+//expose(assert_inherits("assert_idl_attribute"), "assert_idl_attribute");
 
 function assert_readonly(object, property_name, description)
 {
@@ -1365,7 +1403,7 @@ function assert_readonly(object, property_name, description)
         object[property_name] = initial_value;
     }
 }
-expose(assert_readonly, "assert_readonly");
+//expose(assert_readonly, "assert_readonly");
 
 /**
  * @id TestHarnessAssertThrows
@@ -1494,7 +1532,7 @@ function assert_throws(code, func, description)
         }
     }
 }
-expose(assert_throws, "assert_throws");
+//expose(assert_throws, "assert_throws");
 
     /**
      * @id TestHarnessAssertThrowsExactly
@@ -1772,7 +1810,7 @@ function assert_unreached(description) {
     assert(false, "assert_unreached", description,
             "Reached unreachable code");
 }
-expose(assert_unreached, "assert_unreached");
+//expose(assert_unreached, "assert_unreached");
 
 function assert_any(assert_func, actual, expected_array)
 {
@@ -1793,7 +1831,44 @@ function assert_any(assert_func, actual, expected_array)
         throw new AssertionError(errors.join(", "));
     }
 }
-expose(assert_any, "assert_any");
+//expose(assert_any, "assert_any");
+
+/**
+ * Assert that a feature is implemented, based on a 'truthy' condition.
+ *
+ * This function should be used to early-exit from tests in which there is
+ * no point continuing without support for a non-optional spec or spec
+ * feature. For example:
+ *
+ *     assert_implements(window.Foo, 'Foo is not supported');
+ *
+ * @param {object} condition The truthy value to test
+ * @param {string} description Error description for the case that the condition is not truthy.
+ */
+function assert_implements(condition, description) {
+    assert(!!condition, "assert_implements", description);
+}
+//expose_assert(assert_implements, "assert_implements")
+
+/**
+ * Assert that an optional feature is implemented, based on a 'truthy' condition.
+ *
+ * This function should be used to early-exit from tests in which there is
+ * no point continuing without support for an explicitly optional spec or
+ * spec feature. For example:
+ *
+ *     assert_implements_optional(video.canPlayType("video/webm"),
+ *                                "webm video playback not supported");
+ *
+ * @param {object} condition The truthy value to test
+ * @param {string} description Error description for the case that the condition is not truthy.
+ */
+function assert_implements_optional(condition, description) {
+    if (!condition) {
+        throw new OptionalFeatureUnsupportedError(description);
+    }
+}
+//expose_assert(assert_implements_optional, "assert_implements_optional")
 
 /*
 * @id TestharnessTestConstructor
@@ -2847,7 +2922,7 @@ Tests.prototype.fetch_tests_from_worker = function(worker) {
 function fetch_tests_from_worker(port) {
     return tests.fetch_tests_from_worker(port);
 }
-expose(fetch_tests_from_worker, 'fetch_tests_from_worker');
+//expose(fetch_tests_from_worker, 'fetch_tests_from_worker');
 
 Tests.prototype.fetch_tests_from_window = function(remote) {
     if (this.phase >= this.phases.COMPLETE) {
@@ -2860,14 +2935,14 @@ Tests.prototype.fetch_tests_from_window = function(remote) {
 function fetch_tests_from_window(window) {
     tests.fetch_tests_from_window(window);
 }
-expose(fetch_tests_from_window, 'fetch_tests_from_window');
+//expose(fetch_tests_from_window, 'fetch_tests_from_window');
 
 function timeout() {
     if (tests.timeout_length === null) {
         tests.timeout();
     }
 }
-expose(timeout, 'timeout');
+//expose(timeout, 'timeout');
 
 function add_start_callback(callback) {
     tests.start_callbacks.push(callback);
@@ -2885,10 +2960,10 @@ function add_completion_callback(callback) {
     tests.all_done_callbacks.push(callback);
 }
 
-expose(add_start_callback, 'add_start_callback');
-expose(add_test_state_callback, 'add_test_state_callback');
-expose(add_result_callback, 'add_result_callback');
-expose(add_completion_callback, 'add_completion_callback');
+//expose(add_start_callback, 'add_start_callback');
+//expose(add_test_state_callback, 'add_test_state_callback');
+//expose(add_result_callback, 'add_result_callback');
+//expose(add_completion_callback, 'add_completion_callback');
 
 function remove(array, item) {
     var index = array.indexOf(item);
@@ -3409,7 +3484,7 @@ function AssertionError(message)
     this.message = message;
     this.stack = this.get_stack();
 }
-expose(AssertionError, "AssertionError");
+//expose(AssertionError, "AssertionError");
 
 AssertionError.prototype = Object.create(Error.prototype);
 
@@ -3430,6 +3505,13 @@ AssertionError.prototype.get_stack = function() {
     }
     return [];
 }
+
+function OptionalFeatureUnsupportedError(message)
+{
+    AssertionError.call(this, message);
+}
+OptionalFeatureUnsupportedError.prototype = Object.create(AssertionError.prototype);
+//expose(OptionalFeatureUnsupportedError, "OptionalFeatureUnsupportedError");
 
 function make_message(function_name, description, errorobj, substitutions)
 {
@@ -3549,22 +3631,6 @@ function merge(a,b)
         rv[p] = b[p];
     }
     return rv;
-}
-
-/*
-* @id TestharnessExpose
-*/
-function expose(object, name)
-{
-    var components = name.split(".");
-    var target = global_scope;
-    for (var i = 0; i < components.length - 1; i++) {
-        if (!(components[i] in target)) {
-            target[components[i]] = {};
-        }
-        target = target[components[i]];
-    }
-    target[components[components.length - 1]] = object;
 }
 
 function is_same_origin(w) {
@@ -3702,8 +3768,10 @@ export { test, assert_equals,
             assert_less_than_equal,
             assert_own_property,
             assert_class_string,
+            assert_implements,
             async_test,
             promise_test,
             format_value,
             setup,
+            promise_setup,
             done, fetch_tests_from_worker };

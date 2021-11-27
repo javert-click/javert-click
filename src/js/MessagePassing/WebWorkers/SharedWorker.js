@@ -10,6 +10,8 @@ var MPSem = MPSemantics.getMPSemanticsInstance();
 * @id SharedWorker
 */
 function SharedWorker(scriptURL, options){
+    SharedWorker.prototype.creating = true;
+    //debugger;
     if(arguments.length === 0) throw new TypeError("TypeError in SharedWorker. 1 argument required, 0 provided.");
     EventTarget.EventTarget.call(this);
     if(options && (options.type === '' ||  options.type === 'unknown')) throw new TypeError("Invalid type for worker");
@@ -17,7 +19,7 @@ function SharedWorker(scriptURL, options){
      //(e.g. if the user agent is configured to not allow the page to start shared workers).
     //2. If options is a DOMString, set options to a new WorkerOptions dictionary whose name member is set to the value of options and whose other members are set to their default values.
     if(!options || typeof(options) !== 'object'){
-        var name = options === undefined ? "Standard" : options;
+        var name = (options === undefined || options === null) ? "" : options;
         options = { name: String(name) };
     } 
     if(options === undefined) options = {};
@@ -57,7 +59,7 @@ function SharedWorker(scriptURL, options){
     worker.__port = outsidePort;
     //10. (NOT SUPPORTED) Let callerIsSecureContext be true if outside settings is a secure context; otherwise, false.
     //11. Enqueue the following steps to the shared worker manager:
-    if (scriptURL.length > 3){
+    if (urlRecord.length > 3){
         if(options.name !== undefined){ 
             var conf_exists = MPSem.conf_exists(options.name);
             //console.log('Conf exists? '+conf_exists);
@@ -69,6 +71,7 @@ function SharedWorker(scriptURL, options){
             worker.__id = MPSem.create(urlRecord, "__setupConf", [urlRecord, outsidePort.__id, true, optionsSerialized])
         }
     }
+    SharedWorker.prototype.creating = false;
     //12. Return worker.
     return worker;
 }

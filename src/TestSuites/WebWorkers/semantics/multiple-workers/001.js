@@ -6,7 +6,7 @@ const SharedWorker = SharedWorkerInfo.SharedWorker;
 
 
 async_test(function() {
-  var worker = new Worker('001-worker.js');
+  var worker = new Worker('001-multiple-worker.js');
   worker.onmessage = this.step_func(function(e) {
     assert_equals(e.data, 'dedicated');
     this.done();
@@ -15,7 +15,7 @@ async_test(function() {
 }, 'dedicated');
 
 async_test(function() {
-  var shared = new SharedWorker('001-worker.js', '');
+  var shared = new SharedWorker('001-multiple-worker.js', '');
   shared.port.onmessage = this.step_func(function(e) {
     assert_equals(e.data, 'shared');
     this.done();

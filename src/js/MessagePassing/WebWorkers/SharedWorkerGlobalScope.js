@@ -8,6 +8,8 @@ function SharedWorkerGlobalScope(global, options, WorkerInfo){
 
     var scope = this;
 
+    console.log('Do I have MessagePort? '+scope.MessagePort);
+
     Object.defineProperty(global, 'onconnect', {
         /*
         * @id SharedWorkerGlobalScopeOnConnect
@@ -43,6 +45,15 @@ function SharedWorkerGlobalScope(global, options, WorkerInfo){
         */
         get: function(){
             return scope;
+        }
+    });
+
+    Object.defineProperty(scope, 'self', {
+        /*
+        * @id DedicatedWorkerScopeSelf
+        */
+        get: function(){
+            return global.self;
         }
     });
 
@@ -82,7 +93,7 @@ function SharedWorkerGlobalScope(global, options, WorkerInfo){
                 scope.removeEventListener('error', scope.__onerrorhandler);
             }
             scope.__onerrorhandler = f;
-            scope.addEventListener('error', f);
+            if(f) scope.addEventListener('error', f);
         },
         get: function(){
             return scope.__onerrorhandler;

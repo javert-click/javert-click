@@ -264,7 +264,14 @@ proc setupInitialHeap () {
 	  [$lg, "location"]             		  		  := {{ "d", $llocation, true, false, true }};
 	  [$lg, "setPlatform"]                            := {{ "d", $lsetplatform, true, false, true }};
 	  [$lg, "getPlatform"]                            := {{ "d", $lgetplatform, true, false, true }};
+	  [$lg, "getIsPlatform"]                          := {{ "d", $lgetisplatform, true, false, true }};
       [$lg, "getHardwareConcurrency"]                 := {{ "d", $lgethardwareconcurrency, true, false, true }};
+      [$lg, "getAppName"]                             := {{ "d", $lgetappname, true, false, true }};
+      [$lg, "getAppVersion"]                          := {{ "d", $lgetappversion, true, false, true }};
+	  [$lg, "getUserAgent"]                           := {{ "d", $lgetuseragent, true, false, true }};
+	  [$lg, "getOnLine"]                              := {{ "d", $lgetonline, true, false, true }};
+	  [$lg, "getAppCodeName"]                         := {{ "d", $lgetappcodename, true, false, true }};
+	  [$lg, "getProduct"]                             := {{ "d", $lgetproduct, true, false, true }};
 
 	  (* JS2JSIL List *)
 	  [$lg, "initJS2JSILList"]                        := {{ "d", $linitjsillist, true, false, true }};
@@ -874,6 +881,7 @@ proc setupInitialHeap () {
 proc i__consoleLog(_scope, _this, msg) {
 
         ret := "i__toString"(msg) with elab;
+		(* console.log temporarily disabled *)
         printout(ret);
         return;
 
@@ -896,13 +904,20 @@ proc setTimeout(_scope, _this, fname, time){
     elab: throw
 };
 
+proc setTimeoutWithId(_scope, _this, fname, time, id){
+      ret := "__ES__schedule"(_scope, _this, fname, time, id) with elab;
+	  return;
+elab: throw
+};
+
 proc setInterval(_scope, _this, fname, time){
 	  counter := [$lg, "setIntervalCounter"];
 	  [$lg, "setIntervalCounter"] := counter+1;
 	  i := 0;
 	  goto [i < 5] call end;
-call: ret := "setTimeout"(_scope, _this, fname, time) with elab;
-      ret := counter+1;
+call: id := counter+1;
+      ret := "setTimeoutWithId"(_scope, _this, fname, time, id) with elab;
+      ret := id;
 	  i := i+1;
 end:  return;
 elab: throw
@@ -940,7 +955,7 @@ proc setupEvents(){
 };
 
 (* Event Scheduler *)
-proc __ES__schedule (vscope, vthis, fid, time) {
+proc __ES__schedule (vscope, vthis, fid, time, id) {
          call := "i__isCallable" (fid);
 	     goto [call] cont thrw;
 
@@ -952,7 +967,10 @@ cont:     m := metadata(fid);
           goto [time = undefined] notime withtime;
 notime:   ret := "__ES__wrapper__schedule" (vscope, vthis, x_body, x_scope, undefined);
           return;
-withtime: ret := "__ES__wrapper__schedule_with_time" (vscope, vthis, time, x_body, x_scope, undefined);
+withtime: goto [id = undefined] noid withid;
+noid:     ret := "__ES__wrapper__schedule_with_time" (vscope, vthis, time, x_body, x_scope, undefined);
+          return;
+withid:   ret := "__ES__wrapper__schedule_with_time_and_id" (vscope, vthis, time, id, x_body, x_scope, undefined);
           return;
 thrw:     ret := "EVENTS SEMANTICS ERROR: Scheduler called with non-callable object";
           throw
@@ -1001,9 +1019,16 @@ proc setupInitialMP(){
     (*ret := "create_object_with_call_construct_concrete"($lnavigatorconstruct, "Navigator_construct", empty, 1);*)
 	ret := "create_object_with_call_construct_concrete"($lsetplatform, "setPlatform", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lgetplatform, "getPlatform", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lgetisplatform, "getIsPlatform", empty, 1);
     ret := "create_object_with_call_construct_concrete"($lgethardwareconcurrency, "getHardwareConcurrency", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lgetappname, "getAppName", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lgetappversion, "getAppVersion", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lgetuseragent, "getUserAgent", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lgetonline, "getOnLine", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lgetappcodename, "getAppCodeName", empty, 1);
+	ret := "create_object_with_call_construct_concrete"($lgetproduct, "getProduct", empty, 1);
 	ret := "create_object_with_call_construct_concrete"($lurlconstruct, "URL_construct", empty, 1);
-	
+
 	(* NAVIGATOR *)
 	ret := "create_object_with_call_construct_concrete" ($lnav, empty, "Navigator_construct", 1);
 	[$lnav, "prototype"] := {{ "d", $lnav_proto, false, false, false }};

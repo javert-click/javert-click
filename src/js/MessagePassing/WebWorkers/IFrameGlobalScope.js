@@ -1,4 +1,5 @@
-const WindowInfo = require('../../DOM/Events/Window');
+const WindowInfo  = require('../../DOM/Events/Window');
+const MPSemantics = require('../Common/MPSemantics');
 /*
 * @id IFrameGlobalScope
 */
@@ -80,6 +81,16 @@ function IFrameGlobalScope (global, mainWindowId, proxyIFrameId) {
             return function(message, options) { port.postMessageWindow(message, options)};
         }
     });
+
+    Object.defineProperty(global, 'MPSemantics', {
+        /*
+        * @id IFrameScopeMPSemantics
+        */
+        get: function(){
+            return MPSemantics;
+        }
+    });
+
     return global;
 }
 

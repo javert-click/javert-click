@@ -5,7 +5,7 @@ const WorkerInfo = require('../../../../js/MessagePassing/WebWorkers/Worker');
 const Worker = WorkerInfo.Worker;
 
 async_test(function() {
-  var worker = new Worker("gammasharedworker.py");
+  var worker = new Worker("gammasharedworker.js");
   worker.onmessage = this.step_func_done(function(e) {
     console.log('MAIN: got message '+e.data);
     assert_equals(e.data, "gamma");

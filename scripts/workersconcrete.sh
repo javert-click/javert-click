@@ -12,6 +12,7 @@ declare workersexamples="$dir/workers"
 declare promisesdir="js/Promises"
 
 declare url_parser_file="js/MessagePassing/URLParsing/URLParser.js"
+declare worker_syntax_error="./js/MessagePassing/WebWorkers/backup_worker_syntax_error.js"
 
 cp $url_parser_file .
 
@@ -29,10 +30,21 @@ cp $testfile .
 if [ -d $workersexamples ] && [[ $2 = "-workers" ]]
 then
   for filename in $workersexamples/*.js; do
-    npx webpack --config ../webpack.config.js --env entry=$filename --env out=$filename
-    cp $filename .
     declare workername=$(basename $filename)
-    ./js2jsil.native -file $workername -noinitialheap -mp
+    npx webpack --config ../webpack.config.js --env entry=$filename --env out=$filename > result.log
+    rc=$?;
+    if [[ $rc != 0 ]] || grep -q "Module parse failed" result.log; then
+    # Copy backup worker to worker used
+      echo "Found SyntaxError in worker, compiling backup worker"
+      npx webpack --config ../webpack.config.js --env entry=$worker_syntax_error --env out=$worker_syntax_error
+      cp $worker_syntax_error $workername
+      ./js2jsil.native -file $workername -noinitialheap -mp
+    else
+      cp $filename .
+  #    echo "Going to call js2jsil for worker $filename"
+      ./js2jsil.native -file $workername -noinitialheap -mp > result.log
+      #echo "Worker compiled"
+    fi
   done
 else
   echo "No worker found in this directory"
@@ -51,9 +63,9 @@ cp $setupconffilejsil .
 #echo "Compiling resulting file to JSIL"
 ./js2jsil.native -file $name -mp
 #cp -R "$dir/$base.jsil" .
-echo -e "-----Running $base.jsil-----"
+echo -e "-----Running $testfile-----"
 #./jsil.native -file "$base.jsil" -pbn -mp -js2jsil
-./jsil.native -file $name -pbn -mp -js2jsil
+./jsil.native -file $name -pbn -mp -js2jsil -stats
 
 declare nasserts=`grep -c "TestHarnessAssert.*: 0" $log_test_file`
 declare nasserts_passed=`grep -c "CMD: return" $log_test_file`

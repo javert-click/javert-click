@@ -20,7 +20,7 @@ var scopeEvents = {};
 * This function aims to avoid circular dependencies. Adding any of the dependencies below as a 'require' 
 * in this file would cause a circular dependency.
 */
-function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, Window, Event){
+function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, Window, Event, ErrorEvent){
     scopeEvents.Node             = Node;
     scopeEvents.ShadowRoot       = ShadowRoot;
     scopeEvents.DocumentFragment = DocumentFragment;
@@ -30,6 +30,7 @@ function initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element
     scopeEvents.window           = Window.getInstance();
     scopeEvents.Window           = Window;
     scopeEvents.Event            = Event;
+    scopeEvents.ErrorEvent       = ErrorEvent;
 }
 
 /*
@@ -64,7 +65,7 @@ function dispatch(scopeEvents, event, target, flags){
         //5.9 Updates propagation path
         actTarget = scopeEvents.updatePropagationPath(target, slotable, relatedTarget, event, touchTargets, actTarget, targetOverride, isActivationEvent);
         //5.10 Let clearTargetsStruct be the last struct in event’s path whose target is non-null
-        var clearTargetsStruct = event.getTheLastInPath();
+        var clearTargetsStruct = event.getTheLastInPath ? event.getTheLastInPath() : event.path[0];
         //5.11 Let clearTargets be true if clearTargetsStruct’s target, clearTargetsStruct’s relatedTarget, or an EventTarget object in clearTargetsStruct’s touch target list is a node and its root is a shadow root, and false otherwise.
         var clearTargetsEnabled = scopeEvents.clearTargets(clearTargetsStruct);
         //5.12 If activationTarget is non-null and activationTarget has legacy-pre-activation behavior, then run activationTarget’s legacy-pre-activation behavior.
@@ -349,7 +350,7 @@ function bubble(event, flags){
 */
 function invoke(struct, event, phase, legacyOutputDidListenersThrowFlag){
     //1. Set event’s target to the target of the last struct in event’s path, that is either struct or preceding struct, whose target is non-null
-    event.target = event.getTheLastInPath().target;
+    event.target = event.getTheLastInPath ? event.getTheLastInPath().target : event.path[0];
     //2. Set event’s relatedTarget to struct’s relatedTarget
     event.relatedTarget = struct.relatedTarget;
     //3. Set event's touch target list to struct's touch target list
@@ -403,7 +404,6 @@ function innerInvoke(event, listeners, phase, legacyOutputDidListenersThrowFlag)
         if((phase === event.CAPTURING_PHASE) && (listener.capture === false)) continue;
         // 2.4 If phase is "bubbling" and listeners' capture is true, then continue.
         if((phase === event.BUBBLING_PHASE) && (listener.capture === true)) continue;
-
         // 2.5 If listener's once is true, then remove listener from event's currentTarget attribute value's event listener list
         if(listener.once === true) event.currentTarget.removeEventListener(event.type, listener.callback, {capture: listener.capture, once: listener.once});
         // 2.6 Let global be listener callback's associated Realm's global object (ES FEATURES NOT SUPPORTED)
@@ -440,18 +440,22 @@ function execCallBack(callback, opName, event, currentTarget){
         if(event.type === "error"){
                 //console.log('Error event, window.onerror: '+window.onerror);
                 if(window.onerror){
+                    console.log('Going to call window error callback');
                     callback.apply(currentTarget,[event.error.message, event.error.fileName, event.error.lineNumber, event.error.columnNumber]);
                 }else{
+                    console.log('Going to call error callback: '+callback);
                     callback.apply(currentTarget, [event]);
                 }
         }else{
             if(typeof callback == 'function'){
+                console.log('Dispatching event ')
                 callback.apply(currentTarget,[event]);
             }
             else
                 callback['handleEvent'].apply(callback, [event]);
         }
     }catch(e){
+        //console.log('got error from event');
         // exceptions in handlers are not propagated. Here we deal with Window error events
         if (window.listeners && ArrayUtils.filter(window.listeners,
             /*
@@ -465,9 +469,29 @@ function execCallBack(callback, opName, event, currentTarget){
             errorEvent.error = e;
             window.dispatchEvent(errorEvent);
         } else {
-            if(self['onerror']){
-                var errorEvent = new scopeEvents.Event.Event("error");
-                self.dispatchEvent(errorEvent);
+            if(self['__onerrorhandler']){
+                console.log('GOT ERROR, __onerrorhandler defined');
+                const res = self.__onerrorhandler.apply(self, [e.message || "", location.href, -1, -1, e]);
+                console.log('got response from error handler: '+res);
+                if(!res){
+                    var event = new scopeEvents.ErrorEvent.ErrorEvent();
+                    event.error = e;
+                    event.message = e.message;
+                    var error_msg = {'ERROR_MSG':event};
+                    if(self.postMessage){
+                        console.log('sending back to main thread');
+                        self.postMessage(error_msg);  
+                    } else if(self.port && self.port.postMessage){
+                        console.log('shared worker case');
+                        self.port.postMessage(error_msg)
+                    }
+                    
+                }
+            }else{
+                console.log('GOT ERROR, __onerrorhandler undefined');
+                var event = new scopeEvents.ErrorEvent.ErrorEvent();
+                event.error = e;
+                self.dispatchEvent(event, undefined, true);
             }
         }
     }

@@ -1,5 +1,5 @@
 //Title: close() and setInterval
-import { setup, assert_unreached } from '../../../../../js/DOM/Events/Testharness';
+import { setup, assert_unreached, done } from '../../../../../js/DOM/Events/Testharness';
 
 const WorkerInfo = require('../../../../../js/MessagePassing/WebWorkers/Worker');
 const Worker = WorkerInfo.Worker;

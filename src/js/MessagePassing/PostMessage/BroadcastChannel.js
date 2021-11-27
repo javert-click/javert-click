@@ -14,8 +14,9 @@ const Element           = require('../../DOM/Events/Element');
 const Text              = require('../../DOM/Events/Text');
 const WindowInfo        = require('../../DOM/Events/Window');
 const Event             = require('../../DOM/Events/Event');
+const ErrorEvent        = require('../../DOM/Events/ErrEvent');
 
-EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo, Event);
+EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo, Event, ErrorEvent);
 
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
@@ -98,12 +99,16 @@ BroadcastChannel.prototype.postMessage = function(message){
  */
 function broadcastChannelProcessMessage(global, serialized, targetPort){
    var xsc = global.__scopeBC;
+   console.log('broadcastChannelProcessMessage, targetPortId: '+targetPort);
    var destination = xsc.BroadcastChannel.prototype.channels.find((c) => {return c.__id === targetPort});
+   console.log('Found destination? '+destination);
+   console.log('Destination closed? '+destination.closed);
    // 1. If destination's closed flag is true, then abort these steps.
    if (destination.closed === true) return;
    // 2. (NOT SUPPORTED) Let targetRealm be destination's relevant Realm.
    // 3. Let data be StructuredDeserialize(serialized, targetRealm).
    var data = StructuredDeserialize(serialized);
+   console.log('Msg deserialised: '+data);
    // If this throws an exception, catch it, fire an event named messageerror at destination, using MessageEvent, with the origin attribute initialized to the serialization of sourceOrigin, and then abort these steps.
    // 4. Fire an event named message at destination, using MessageEvent, with the data attribute initialized to data and the origin attribute initialized to the serialization of sourceOrigin.
    var event    = new xsc.MessageEvent.MessageEvent();

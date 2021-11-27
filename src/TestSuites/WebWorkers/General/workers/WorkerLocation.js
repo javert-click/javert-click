@@ -2,6 +2,7 @@
 
 var obj = new Object();
 obj.location = location.toString();
+console.log('Setting data.location to '+obj.location);
 obj.href     = location.href;
 obj.origin   = location.origin;
 obj.protocol = location.protocol;

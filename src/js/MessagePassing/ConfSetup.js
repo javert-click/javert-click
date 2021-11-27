@@ -2,21 +2,24 @@ const DedicatedWorkerGlobalScope = require('./WebWorkers/DedicatedWorkerGlobalSc
 const SharedWorkerGlobalScope    = require('./WebWorkers/SharedWorkerGlobalScope');
 const IFrameGlobalScope          = require('../MessagePassing/WebWorkers/IFrameGlobalScope');
 const MessagePort                = require('./PostMessage/MessagePort');
-const MPSemantics                = require('./Common/MPSemantics');
+//const MPSemantics                = require('./Common/MPSemantics');
 const EventSemantics             = require('../DOM/Events/EventsSemantics');
-const MessageEvent               = require('../DOM/Events/MessageEvent');
+//const MessageEvent               = require('../DOM/Events/MessageEvent');
 const Window                     = require('../DOM/Events/Window');
 const WorkerInfo                 = require('./WebWorkers/Worker');
+
 
 JSILSetGlobalObjProp("DedicatedWorkerGlobalScope", DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope);
 JSILSetGlobalObjProp("SharedWorkerGlobalScope", SharedWorkerGlobalScope.SharedWorkerGlobalScope);
 JSILSetGlobalObjProp("IFrameGlobalScope", IFrameGlobalScope);
 JSILSetGlobalObjProp("MessagePort", MessagePort);
 //JSILSetGlobalObjProp("MessageEvent", MessageEvent.MessageEvent);
-JSILSetGlobalObjProp("MPSemantics", MPSemantics);
+//JSILSetGlobalObjProp("MPSemantics", MPSemantics);
 JSILSetGlobalObjProp("EventSemantics", EventSemantics);
 JSILSetGlobalObjProp("Window", Window);
 JSILSetGlobalObjProp("WorkerInfo", WorkerInfo);
+JSILSetGlobalObjProp("wrapperExecJSILProc", wrapperExecJSILProc);
+
 
 
 /*
@@ -39,6 +42,7 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
     var insidePort = new global.MessagePort.PublicMessagePort();
     //TODOMP: check if this call to start() should be here!
     insidePort.start();
+    insidePort.__scope = globalObj;
     //console.log('WORKER: created inside port with id '+insidePort.__id);
     // 17. Associate inside port with worker global scope.
     globalObj.__port = insidePort;
@@ -50,13 +54,22 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
     //console.log('WORKER: just paired ports '+outsidePortId+' and '+insidePort.__id);
     // 23. If script is a classic script, then run the classic script script. Otherwise, it is a module script; run the module script script.
     try{
-        wrapperExecJSILProc(main_fid);
+        global.wrapperExecJSILProc(main_fid);
     } catch (e){
         console.log('Got error from script!'+e);
-        var error_msg = {'ERROR_MSG':e};
-        console.log('Going to send error message to main thread');
-        postMessage(error_msg);
-        console.log('Error msg sent back to main thread');
+        if(globalObj.__onerrorhandler){
+          //error handled locally
+          globalObj.__onerrorhandler.apply(self, [e.message || "", location.href, -1, -1, e])
+        }else{
+          //send back to main thread
+          e.filename = location.href;
+          console.log('error.message: '+e.message);
+          console.log('e.toString(): '+e.toString());
+          var error_msg = {'ERROR_MSG':e};
+          console.log('Going to send error message to main thread');
+          postMessage(error_msg);
+          console.log('Error msg sent back to main thread');
+        }
     }
     //console.log('WORKER: going to add handler for process message event');
     //EventsSemantics.addHandler("ProcessMessage", "processMessageSteps");
@@ -81,7 +94,7 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
 * @id wrapperExecJSILProc
 */
 function wrapperExecJSILProc(main_fid){
-    executeJSILProc(main_fid);
+    return executeJSILProc(main_fid);
 }
 
 /*

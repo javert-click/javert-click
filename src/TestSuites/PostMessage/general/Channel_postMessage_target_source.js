@@ -14,12 +14,14 @@ var channel = new MessageChannel();
 SOURCE = channel.port1;
 TARGET = channel.port2;
 TARGET.start();
+console.log('Target port has id '+TARGET.__id);
 TARGET.addEventListener("message", t.step_func(TestMessageEvent), true);
 
 SOURCE.postMessage("ping");
 
 function TestMessageEvent(evt)
 {
+    console.log('Event target has id '+evt.target.__id);
     console.log('Going to test if evt.target === target? '+(evt.target === TARGET));
     assert_equals(evt.target, TARGET);
     console.log('Going to test if evt.target !== SOURCE? '+(evt.target !== SOURCE));

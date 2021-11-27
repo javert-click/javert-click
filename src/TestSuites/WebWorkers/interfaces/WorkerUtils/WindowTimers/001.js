@@ -5,7 +5,7 @@ const WorkerInfo = require('../../../../../js/MessagePassing/WebWorkers/Worker')
 const Worker = WorkerInfo.Worker;
 
 async_test(function() {
-  var worker = new Worker('001-worker.js');
+  var worker = new Worker('001-timer-worker.js');
   worker.onmessage = this.step_func(function(e) {
     assert_equals(e.data, 1);
     this.done();

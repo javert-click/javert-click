@@ -267,7 +267,7 @@ module M
         let hq' = hq @ [ (CondConf (conf_info, pred, args)) ] in
           [ (conf, prog), ehs, hq', n ]
       
-    | Schedule (xvar, fid, args, time) -> 
+    | Schedule (xvar, fid, args, time, eid) -> 
         let (conf, ehs, hq, n) = state in
         let (cconf, prog) = conf' in
         let gen_event = GeneralEvent (Val.from_literal (String EventsConstants.schedule_event)) in
@@ -277,7 +277,11 @@ module M
           (match Val.to_literal time with
           | Some (Num time) -> 
           (*Printf.printf "\nAdding timing event with time %f\n" time;*)
-            let eid = create_event_id hq in
+            let eid = (match eid with
+            | Some eid -> (match Val.to_literal eid with
+               | Some (Num eid) -> int_of_float eid
+               | _ -> create_event_id hq)
+            | None -> create_event_id hq) in
             TimingEvent (eid, time), Interpreter.set_var xvar (Val.from_literal (Num (float_of_int eid))) cconf
           | _ -> gen_event, cconf)
         | None -> gen_event, cconf in

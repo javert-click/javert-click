@@ -14,7 +14,7 @@ var document = new HTMLDocument.HTMLDocument();
 var i = 0;
 var load_count = 0;
 
-var w1 = new SharedWorker('004-2.js', 'x');
+var w1 = new SharedWorker('004-2-multiple.js', 'x');
 console.log('MAIN: 1st shared worker created');
 w1.port.onmessage = function(e) {
   console.log('Main: received message from worker');
@@ -47,5 +47,5 @@ var iframe2 = document.createElement('iframe');
 iframe.appendChild(iframe2);
 iframe.onload = iframe_loaded;
 iframe2.onload = iframe_loaded;
-iframe.src = "004-1.js";
-iframe2.src = "004-1.js";
+iframe.src = "004-1-multiple.js";
+iframe2.src = "004-1-multiple.js";

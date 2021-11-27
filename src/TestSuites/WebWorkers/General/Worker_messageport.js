@@ -3,7 +3,7 @@
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
 import { Worker } from '../../../js/MessagePassing/WebWorkers/Worker';
 import { async_test, assert_equals } from '../../../js/DOM/Events/Testharness';
-/*
+
 async_test(function(t) {
     var worker = new Worker("Worker-messageport.js");
 

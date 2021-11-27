@@ -3,7 +3,10 @@ const MessageChannelInfo = require('../PostMessage/MessageChannel');
 const SharedWorkerInfo   = require('./SharedWorker');
 const DOMException       = require('../../DOM/Common/DOMException');
 const MessageEventInfo   = require('../../DOM/Events/MessageEvent');
-const __location           = require('../PostMessage/Location');
+const EventInfo          = require('../../DOM/Events/Event');
+const ErrorEventInfo     = require('../../DOM/Events/ErrEvent');
+const MPSemantics        = require('../Common/MPSemantics');
+const __location         = require('../PostMessage/Location');
 
 /*
 * @id WorkerGlobalScope
@@ -18,6 +21,26 @@ function WorkerGlobalScope(options, global, WorkerInfo){
         */
         get: function(){
             return MessageChannelInfo.MessageChannel;
+        }
+    });
+
+    Object.defineProperty(global, 'MPSemantics', {
+        /*
+        * @id WorkerGlobalScopeMPSemantics
+        */
+        get: function(){
+            return MPSemantics;
+        }
+    });
+
+    
+
+    Object.defineProperty(global, 'ErrorEvent', {
+        /*
+        * @id WorkerGlobalScopeErrorEvent
+        */
+        get: function(){
+            return ErrorEventInfo.ErrorEvent;
         }
     });
 
@@ -60,6 +83,18 @@ function WorkerGlobalScope(options, global, WorkerInfo){
         }
     });
 
+    Object.defineProperty(global, 'Event', {
+        /*
+        * @id WorkerGlobalScopeEvent
+        */
+        get: function(){
+            return this.__Event ? this.__Event : EventInfo.Event;
+        },
+        set: function(v){
+            this.__Event = v;
+        }
+    });
+
     Object.defineProperty(global, 'name', {
         value: global.__name,
         writable: true,
@@ -94,14 +129,14 @@ function WorkerGlobalScope(options, global, WorkerInfo){
             global[prop] = v;
         }
         var desc = Object.getOwnPropertyDescriptor(global, prop);
-        if(desc.get && !desc.set){
-            Object.defineProperty(xsc, prop, {
-                get: getter
-            });
-        } else if(desc.get && desc.set){
+        if(desc.get && desc.set){
             Object.defineProperty(xsc, prop, {
                 get: getter,
                 set: setter
+            });
+        } else {
+            Object.defineProperty(xsc, prop, {
+                get: getter
             });
         }
     }
@@ -132,7 +167,10 @@ function WorkerGlobalScope(options, global, WorkerInfo){
                 href: options.href,
                 pathname: options.pathname,
                 hash: options.hash,
-                search: options.search
+                search: options.search,
+                port: __location.port,
+                hostname: __location.hostname,
+                toString: function(){ return options.href }
             };
         }
     });
@@ -140,7 +178,7 @@ function WorkerGlobalScope(options, global, WorkerInfo){
         get: function(){
             console.log('Close called, mpsem? '+global.MPSemantics);
             return function(){
-                __ES__schedule(global.MPSemantics.getMPSemanticsInstance().terminate);
+                __ES__schedule(global.MPSemantics.getMPSemanticsInstance().close);
             }
         }
     });
@@ -187,8 +225,6 @@ function WorkerGlobalScope(options, global, WorkerInfo){
             return EventTarget.EventTarget;
         }
     });
-    Object.defineProperty(this, 'ErrorEvent', {});
-    Object.defineProperty(this, 'Event', {});
     Object.defineProperty(this, 'CustomEvent', {});
     Object.defineProperty(this, 'DOMException', {
         get: function(){
@@ -234,8 +270,12 @@ function WorkerGlobalScope(options, global, WorkerInfo){
     replicatePropInScope(this, 'XMLHttpRequest');
     replicatePropInScope(this, 'WebSocket');
     replicatePropInScope(this, 'EventSource');
-    replicatePropInScope(this, 'MessagePort');
+    //replicatePropInScope(this, 'MessagePort');
+    this.MessagePort = global.MessagePort;
+    console.log('replicated MessagePort? '+this.MessagePort);
     replicatePropInScope(this, 'MessageEvent');
+    replicatePropInScope(this, 'Event');
+    replicatePropInScope(this, 'ErrorEvent');
     //replicatePropInScope(this, 'name');
 
 

@@ -1,6 +1,6 @@
 //Title: structured clone of message
 
-import { async_test, assert_equals, assert_object_equals, assert_array_equals, assert_unreached } from '../../../../js/DOM/Events/Testharness';
+import { assert_true, assert_false, async_test, assert_equals, assert_object_equals, assert_array_equals, assert_unreached } from '../../../../js/DOM/Events/Testharness';
 const WorkerInfo = require('../../../../js/MessagePassing/WebWorkers/Worker');
 const Worker = WorkerInfo.Worker;
 

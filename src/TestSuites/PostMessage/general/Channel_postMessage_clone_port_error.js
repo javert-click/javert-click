@@ -13,9 +13,9 @@ test(function()
 
     assert_throws_dom("DATA_CLONE_ERR", function()
     {
-        console.log('Expects the following to throw DATA_CLONE_ERR');
+        //console.log('Expects the following to throw DATA_CLONE_ERR');
         channel.port1.postMessage("ports", [channel.port1]);
-        console.log('UNREACHED CODE');
+        //console.log('UNREACHED CODE');
     });
-    console.log('Test DONE!');
+    //console.log('Test DONE!');
 }, description);

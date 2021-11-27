@@ -11,9 +11,6 @@ document.body = elem;
 async_test(function(t) {
     var channel1 = new MessageChannel();
     let iframe = document.createElement('iframe');
-    iframe.src = "ChildWindowPostMessage.js";
-    document.body.appendChild(iframe);
-    var TARGET = document.querySelector("iframe").contentWindow;
     iframe.onload = t.step_func(function() {
       // Enable the port.
       channel1.port1.onmessage = t.step_func(function (evt) {
@@ -36,6 +33,10 @@ async_test(function(t) {
           t.done();
         });
     });
+    iframe.src = "ChildWindowPostMessage.js";
+    console.log('IFrame created');
+    document.body.appendChild(iframe);
+    var TARGET = document.querySelector("iframe").contentWindow;
   }, `Tasks enqueued on the port-message-queue of an enabled port,
     are transferred along with the port, when the transfer happens in the same task
     during which postMessage is called`);

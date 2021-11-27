@@ -1,7 +1,7 @@
 //Title: postMessage(): MessageEvent properties
 
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
-import { assert_throws_js, assert_equals } from '../../../js/DOM/Events/Testharness';
+import { assert_throws_js, assert_equals, async_test } from '../../../js/DOM/Events/Testharness';
 
 async_test(function(t) {
   var channel = new MessageChannel();

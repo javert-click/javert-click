@@ -27,7 +27,42 @@ proc setPlatform(){
 };
 
 proc getPlatform(){
+    ret := "MacIntel";
+    return
+};
+
+proc getIsPlatform(){
     ret := true;
+    return
+};
+
+proc getAppName(){
+    ret := "Netscape";
+    return
+};
+
+proc getAppVersion(){
+    ret := "AppleWebKit";
+    return
+};
+
+proc getUserAgent(){
+    ret := "AppleWebKit";
+    return
+};
+
+proc getOnLine(){
+    ret := false;
+    return
+};
+
+proc getAppCodeName(){
+    ret := "Mozilla";
+    return
+};
+
+proc getProduct(){
+    ret := "Gecko";
     return
 };
 
@@ -41,18 +76,41 @@ proc Navigator_construct(){
     platform := "Object_construct" ();
     res := "defineOwnProperty" (platform, "set", {{ "d", $lsetplatform, true, true, true}}, false);
     res := "defineOwnProperty" (platform, "get", {{ "d", $lgetplatform, true, true, true}}, false);
+    is_platform := "Object_construct" ();
+    res := "defineOwnProperty" (is_platform, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (is_platform, "get", {{ "d", $lgetisplatform, true, true, true}}, false);
     hardwareConcurrency := "Object_construct" ();
     res := "defineOwnProperty" (hardwareConcurrency, "set", {{ "d", $lsetplatform, true, true, true}}, false);
     res := "defineOwnProperty" (hardwareConcurrency, "get", {{ "d", $lgethardwareconcurrency, true, true, true}}, false);
-    result := "Object_defineProperty" (undefined, undefined, ret, "__platform", platform);
+    appName := "Object_construct" ();
+    res := "defineOwnProperty" (appName, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (appName, "get", {{ "d", $lgetappname, true, true, true}}, false);
+    appVersion := "Object_construct" ();
+    res := "defineOwnProperty" (appVersion, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (appVersion, "get", {{ "d", $lgetappversion, true, true, true}}, false);
+    userAgent := "Object_construct" ();
+    res := "defineOwnProperty" (userAgent, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (userAgent, "get", {{ "d", $lgetuseragent, true, true, true}}, false);
+    onLine := "Object_construct" ();
+    res := "defineOwnProperty" (onLine, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (onLine, "get", {{ "d", $lgetonline, true, true, true}}, false);
+    appCodeName := "Object_construct" ();
+    res := "defineOwnProperty" (appCodeName, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (appCodeName, "get", {{ "d", $lgetappcodename, true, true, true}}, false);
+    product := "Object_construct" ();
+    res := "defineOwnProperty" (product, "set", {{ "d", $lsetplatform, true, true, true}}, false);
+    res := "defineOwnProperty" (product, "get", {{ "d", $lgetproduct, true, true, true}}, false);
+
+    result := "Object_defineProperty" (undefined, undefined, ret, "platform", platform);
+    result := "Object_defineProperty" (undefined, undefined, ret, "__platform", is_platform);
     result := "Object_defineProperty" (undefined, undefined, ret, "hardwareConcurrency", hardwareConcurrency);
-    res := "defineOwnProperty" (ret, "appName", {{ "d", "Netscape", true, true, true}}, false);
-    res := "defineOwnProperty" (ret, "appVersion", {{ "d", "AppleWebKit", true, true, true}}, false);
-    res := "defineOwnProperty" (ret, "userAgent", {{ "d", "AppleWebKit", true, true, true}}, false);
-    res := "defineOwnProperty" (ret, "onLine", {{ "d", false, true, true, true}}, false);
-    res := "defineOwnProperty" (ret, "appCodeName", {{ "d", "Mozilla", true, true, true}}, false);
-    res := "defineOwnProperty" (ret, "product", {{ "d", "Gecko", true, true, true}}, false);
-    res := "defineOwnProperty" (ret, "platform", {{ "d", "MacIntel", true, true, true}}, false);
+    result := "Object_defineProperty" (undefined, undefined, ret, "appName", appName);
+    result := "Object_defineProperty" (undefined, undefined, ret, "appVersion", appVersion);
+    result := "Object_defineProperty" (undefined, undefined, ret, "userAgent", userAgent);
+    result := "Object_defineProperty" (undefined, undefined, ret, "onLine", onLine);
+    result := "Object_defineProperty" (undefined, undefined, ret, "appCodeName", appCodeName);
+    result := "Object_defineProperty" (undefined, undefined, ret, "product", product);
+    
     return
 };
 

@@ -288,7 +288,7 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   goto succ; 
                   (* 19. (NOT SUPPORTED) Otherwise, if value is a platform object that is a serializable object: *)
                   (* 20. (NOT SUPPORTED) Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException. *)
-    is_obj:       goto [(clazz = "Object") or (clazz = "Function")] checkplat updatemem;
+    is_obj:       goto [(tv = Obj) or (clazz = "Function")] checkplat updatemem;
     checkplat:    is_platform := "get" (value, "__platform") with elab;
                   goto [is_platform = true] dataclon nplatobj;      
                   (* 21. Otherwise, if IsCallable(value) is true, then throw a "DataCloneError" DOMException. *)

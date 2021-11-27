@@ -3,7 +3,7 @@ const WorkerInfo = require('../../../../../js/MessagePassing/WebWorkers/Worker')
 const Worker = WorkerInfo.Worker;
 
 async_test(function() {
-  var worker = new Worker('006-worker.js');
+  var worker = new Worker('006-nav-worker.js');
   worker.onmessage = this.step_func(function(e) {
     assert_equals(e.data, navigator.onLine);
     this.done();

@@ -1,6 +1,6 @@
 // prevent recursion
 
-import { got } from './null';
+import { got } from './null-is';
 
 if ('beenThere' in self) {
     throw 'null stringified to the empty string';

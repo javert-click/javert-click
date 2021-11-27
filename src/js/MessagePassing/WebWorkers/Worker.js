@@ -12,10 +12,15 @@ var MPSem = MPSemantics.getMPSemanticsInstance();
 */
 function Worker(scriptURL, options){
     EventTarget.EventTarget.call(this);
-    var pathname = scriptURL.substring(scriptURL.indexOf('/'), scriptURL.length);
-    if(Worker.prototype.creating === true) throw new RangeError("Workers cannot be created recursively");
+    console.log('I am inside worker. SharedWorker.creating? '+SharedWorker.SharedWorker.prototype.creating+' worker creating? '+Worker.prototype.creating);
+    if(Worker.prototype.creating === true || SharedWorker.SharedWorker.prototype.creating === true) throw new RangeError("Workers cannot be created recursively");
     Worker.prototype.creating = true;
-    if(options && (options.type === '' ||  options.type === 'unknown')) throw new TypeError("Invalid type for worker");
+    var workerURL = String(scriptURL);
+    var pathname = workerURL.substring(workerURL.indexOf('/'), workerURL.length);
+    if(options && (options.type === '' ||  options.type === 'unknown')){
+        Worker.prototype.creating = false;
+        throw new TypeError("Invalid type for worker");
+    } 
     // 1. The user agent may throw a "SecurityError" DOMException if the request violates a policy decision.
     // 2. Let outside settings be the current settings object.
     var outsideSettings = null;
@@ -29,7 +34,7 @@ function Worker(scriptURL, options){
     // 5. let worker URL be the resulting URL record.
     //var workerURL = url.urlRecord;
     if(!options) options = {};
-    var workerURL = String(scriptURL);
+    
     var lastescape = workerURL.lastIndexOf('/');
     if(lastescape !== -1){
         workerURL = workerURL.substring(lastescape+1, workerURL.length);
@@ -62,6 +67,7 @@ function Worker(scriptURL, options){
     var outsidePort = new MessagePort.PublicMessagePort();
     // 8. Associate the outside port with worker
     worker.__port = outsidePort;
+    console.log('Setting worker.creating to false');
     Worker.prototype.creating = false;
     // 9. Run this step in parallel: Run a worker given worker, worker URL, outside settings, outside port, and options.
     runWorker(worker, workerURL, outsideSettings, outsidePort, options);

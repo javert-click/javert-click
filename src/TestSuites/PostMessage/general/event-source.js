@@ -1,7 +1,7 @@
 //Title: Same-origin: event.source returns the WindowProxy of the source window
 
 import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
-import { async_test, assert_equals, assert_array_equals  } from '../../../js/DOM/Events/Testharness';
+import { async_test, assert_true, assert_array_equals  } from '../../../js/DOM/Events/Testharness';
 
 const HTMLDocument = require('../../../js/DOM/Events/HTMLDocument');
 const Window = require('../../../js/DOM/Events/Window');

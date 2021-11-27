@@ -23,7 +23,7 @@ promise_test(() => {
 promise_test(() => {
   const worker = new Worker('resources/post-message-on-load-worker.js',
                             { type: 'module' });
-  return new Promise(resolve => worker.onmessage = resolve)
+                            return new Promise(resolve => worker.onmessage = resolve)
       .then(msg_event => assert_equals(msg_event.data, 'LOADED'));
 }, 'Test worker construction with the "module" worker type.');
 

@@ -72,7 +72,7 @@ module M
   type result_t = (cid_t * EventSemantics.result_t) list * mq_t * pc_map_t * pp_map_t
 
   (* Maximum number of messages that each thread can send. If the number exceeds this one, the thread is 'blocked' *)
-  let msgs_limit_per_conf = 5
+  let msgs_limit_per_conf = 20
   
   (***** AUXILIARY FUNCTIONS *****)
 
@@ -291,15 +291,26 @@ module M
     | None -> pp
 
   (* Removes all info related to configuration with identifier cid, including the ports belonging to it *)
-  let terminate (plist: port_t list) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : mq_t * pc_map_t * pp_map_t =
+  let terminate (del_pending_msgs: bool) (plist: port_t list) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : mq_t * pc_map_t * pp_map_t =
+    let paired_ports = List.concat (List.map (Hashtbl.find pp) plist) in
     (* 1. Removing ports from pc map *)
     List.iter (fun port -> Hashtbl.remove pc port) plist;
     (* 2. Removing ports from pp map*)
     let pp' = List.fold_left (fun pp' port -> unpair_port port pp') pp plist in
     (* 3. Removing messages sent to ports in the given port list *)
     (* TODOMP: fix this! *)
-    let mq' = List.filter (fun (_, _,p) -> not (List.mem p plist)) mq in
+    let mq' = 
+    if (del_pending_msgs) then 
+      List.filter (
+        fun (_, _,p) -> 
+          not (List.mem p paired_ports) && not (List.mem p plist)) mq 
+    else 
+      List.filter (
+        fun (_, _,p) -> 
+           not (List.mem p plist)) mq
+        in
     mq', pc, pp'
+
 
   (* Creates new port, adds to current configuration and sets return variable to new port id *)
   let new_port (xvar: string) (conf: event_conf_t) (pc: pc_map_t) : event_conf_t * pc_map_t * optional_action_t option = 
@@ -388,14 +399,14 @@ module M
         (*Printf.printf "\nMP-Semantics: Processing create label, setup_fid: %s" (setup_fid);*)
         let conf'', new_conf, oaction = new_execution id xvar url setup_fid args  cids econf in
         [conf'', mq, pc, pp, oaction, None] 
-      | Terminate (xvar, cid') -> 
+      | Terminate (xvar, delete_pending_msgs, cid') -> 
         (*Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');*)
         let cid' = match cid' with
         | Some cid' -> compute_string_from_val cid'
         | None -> cid in
         (*Printf.printf "\nComputed cid: %d\n" cid'; *)
         let plist = Hashtbl.fold (fun port' cid' acc -> if (cid = cid') then acc @ [port'] else acc) pc [] in
-        let mq', pc', pp' = terminate plist mq pc pp in
+        let mq', pc', pp' = terminate delete_pending_msgs plist mq pc pp in
         [econf, mq', pc', pp', Some (RemConf (cid')), None]
       | NewPort (xvar) -> 
         let conf'', pc', label = new_port xvar econf pc in

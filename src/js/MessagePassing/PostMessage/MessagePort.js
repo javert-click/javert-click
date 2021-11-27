@@ -18,9 +18,10 @@ const Element           = require('../../DOM/Events/Element');
 const Text              = require('../../DOM/Events/Text');
 const WindowInfo        = require('../../DOM/Events/Window');
 const Event             = require('../../DOM/Events/Event');
+const ErrorEvent        = require('../../DOM/Events/ErrEvent');
 const Serialization     = require('./MessageSerialization');
 
-EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo, Event);
+EventTarget.initEventTarget(Node, ShadowRoot, DocumentFragment, MouseEvent, Element, Text, WindowInfo, Event, ErrorEvent);
 
 /*
 * MessagePort constructor should not be accessible
@@ -197,6 +198,8 @@ function processMessageSteps(global, message, targetPortId, isWindow, originWind
 function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transferIds, includeUserActivation, retry){
     // 1. Let finalTargetPort be the MessagePort in whose port message queue the task now finds itself.
     var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
+    //console.log('Got final target port, id: '+finalTargetPort.__id);
+    //console.log('isPortEnabled? '+finalTargetPort.__Enabled);
     // 2. (NOT SUPPORTED) Let targetRealm be finalTargetPort's relevant Realm.
     // As we model the message queue via MP Semantics, we add this step here to make sure the target port is enabled
     //console.log('Found target port: '+finalTargetPort.__Enabled);
@@ -209,6 +212,7 @@ function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transfer
     var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(message, transferIds, scopeMP.MessagePort);
     // 4. Let messageClone be deserializeRecord.[[Deserialized]].
     var messageClone = deserializeRecord.Deserialized;
+    console.log('message deserialized: '+messageClone);
     // 5. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
     var newPorts = Object.freeze(deserializeRecord.TransferredValues);
     newPorts.forEach(np => {
@@ -227,10 +231,20 @@ function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transfer
     }
     if(typeof messageClone === 'object' && messageClone !== null && messageClone['ERROR_MSG']){
       console.log('GOT Error when processing message!!!');
-      var e = new scopeMP.Event.Event('error');
-      finalTargetPort.dispatchEvent(e);
+      //var e = new scopeMP.Event.Event('error');
+      console.log('event.type? '+messageClone['ERROR_MSG'].type)
+      console.log('Final target port: '+finalTargetPort.__id);
+      console.log('listeners? '+finalTargetPort.listeners);
+      var ev = messageClone['ERROR_MSG'];
+      ev = ErrEvent_construct(ev);
+      finalTargetPort.dispatchEvent(ev);
+      console.log('error event dispatched!');
     } else {
-      finalTargetPort.dispatchEvent(event, undefined, true);
+      console.log('listeners? '+finalTargetPort.listeners);
+      //var target = finalTargetPort.listeners ? finalTargetPort : finalTargetPort.__scope;
+      console.log('dispatching event on port with id '+finalTargetPort.__id);
+      if(finalTargetPort.listeners) finalTargetPort.dispatchEvent(event, undefined, true);
+      else if(finalTargetPort.__scope) finalTargetPort.__scope.dispatchEvent(event, undefined, false);
     }
 }
 

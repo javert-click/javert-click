@@ -37,13 +37,6 @@ var Event = function(type, eventInit){
     this.inPassiveListener = false;
     this._isTrusted = false;
     this.legacyPreActBeh = false;
-
-    Object.defineProperty(this, "isTrusted", {
-        get: Event.prototype.getIsTrusted,
-        set: function(isTrusted){
-            this._isTrusted = isTrusted;
-        }
-    });
     this.dispatch = false;
     this._defaultPrevented = false;
     this.touchTargets = [];
@@ -58,6 +51,15 @@ Event.prototype.BUBBLING_PHASE = 3;
 Object.defineProperty(Window.Window.prototype, 'Event', {
     get: function(){
         return Event;
+    }
+});
+
+Object.defineProperty(Event.prototype, 'isTrusted', {
+    get: function(){
+        return this._isTrusted;
+    },
+    set: function(trusted){
+        this._isTrusted = trusted;
     }
 });
 

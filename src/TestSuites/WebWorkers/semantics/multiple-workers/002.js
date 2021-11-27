@@ -3,9 +3,9 @@ const WorkerInfo = require('../../../../js/MessagePassing/WebWorkers/Worker');
 const Worker = WorkerInfo.Worker;
 
 async_test(function(t) {
-    var w1 = new Worker('002-worker.js');
-    var w2 = new Worker('002-worker.js');
-    var w3 = new Worker('002-worker.js');
+    var w1 = new Worker('002-multiple-worker.js');
+    var w2 = new Worker('002-multiple-worker.js');
+    var w3 = new Worker('002-multiple-worker.js');
     var got = [false, false, false];
     var check_done = t.step_func(function() {
                          if (got.every(function(x) {return x})) {

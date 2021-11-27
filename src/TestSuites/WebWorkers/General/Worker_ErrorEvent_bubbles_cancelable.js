@@ -8,7 +8,7 @@ import { async_test, setup, assert_false, assert_true } from '../../../js/DOM/Ev
 setup({ allow_uncaught_exception: true });
 
 async_test(function(t) {
-  var worker = new Worker('ErrorEvent.js');
+  var worker = new Worker('./support/ErrorEvent.js');
   worker.onerror = t.step_func_done(function(e) {
     console.log('MAIN: got message. e.bubbles: '+e.bubbles+', e.cancelable: '+e.cancelable);
     assert_false(e.bubbles, "onerror on worker doesn't bubble");

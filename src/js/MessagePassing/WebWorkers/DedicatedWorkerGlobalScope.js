@@ -20,6 +20,7 @@ function DedicatedWorkerGlobalScope (global, options, WorkerInfo) {
             console.log('self object readonly');
         }
     });
+
     Object.defineProperty(scope, 'self', {
         /*
         * @id DedicatedWorkerScopeSelf
@@ -39,7 +40,8 @@ function DedicatedWorkerGlobalScope (global, options, WorkerInfo) {
               scope.__port.__onmessagehandler = f;
               scope.__port.addEventListener('message', f);
               //TODOMP: check what should happen here
-              scope.addEventListener('message', f);
+            }else{
+                scope.__port.__onmessagehandler = null;
             }
         },
         get: function(){
@@ -51,6 +53,7 @@ function DedicatedWorkerGlobalScope (global, options, WorkerInfo) {
         * @id DedicatedWorkerScopeOnMessage
         */
         set: function(f){
+            scope.addEventListener('message', f);
             global.onmessage = f;
         },
         get: function(){
@@ -62,7 +65,14 @@ function DedicatedWorkerGlobalScope (global, options, WorkerInfo) {
         * @id DedicatedWorkerGlobalScopeOnError
         */
         set: function(f){
-            scope.__port.addEventListener('error', f);
+          if(scope.__onerrorhandler){
+            scope.removeEventListener('error', scope.__onerrorhandler);
+          }
+          scope.__onerrorhandler = f;
+          if(f) scope.addEventListener('error', f);
+        },
+        get: function(){
+          return scope.__onerrorhandler;
         }
     });
     Object.defineProperty(global, 'onoffline', {
@@ -141,6 +151,23 @@ function DedicatedWorkerGlobalScope (global, options, WorkerInfo) {
             return DedicatedWorkerGlobalScope;
         }
     });
+
+    function replicatePropInScope(xsc, prop){
+        Object.defineProperty(xsc, prop, {
+            get: function(){
+                return global[prop];
+            },
+            set: function(v){
+                global[prop] = v;
+            }
+        });
+    }
+
+    replicatePropInScope(scope, 'onerror');
+    replicatePropInScope(scope, 'onoffline');
+    replicatePropInScope(scope, 'ononline');
+    replicatePropInScope(scope, 'postMessage');
+
 
     return scope;
 }

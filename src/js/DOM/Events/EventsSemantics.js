@@ -4,15 +4,13 @@
 
 //const EventTarget = require('./EventTarget');
 
-var __EventTarget;
 
 /*
 * @id EventsSemantics
 */
-var EventsSemantics = function(EventTarget){
+var EventsSemantics = function(){
   this.eh = [];
   this.hq = [];
-  __EventTarget = EventTarget;
   this.xsc = null;
 }; 
 

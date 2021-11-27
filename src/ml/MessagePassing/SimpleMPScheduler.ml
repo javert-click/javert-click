@@ -35,8 +35,8 @@ module M
         | (c :: cq') -> 
           L.log L.Normal (lazy (Printf.sprintf "Scheduler: checking if conf is final" ));
           if (final [c]) then 
-          (separate_cq cq' mq final count_msgs_for_conf ([c] @ pre))
-          else Some (*(List.rev*) (pre, c, cq')
+          (L.log L.Normal (lazy (Printf.sprintf "conf is final" )); separate_cq cq' mq final count_msgs_for_conf ([c] @ pre))
+          else (L.log L.Normal (lazy (Printf.sprintf "conf is not final" )); Some (*(List.rev*) (pre, c, cq'))
 
       (* Schedules next event configuration to run. It always choose the first non-final configuration, if any *)
       let schedule_conf 

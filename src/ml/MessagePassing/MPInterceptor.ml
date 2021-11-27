@@ -2,7 +2,7 @@ type('v) t =
   | Send of 'v list * 'v list * 'v * 'v * 'v                            (* msg, port list, port_orig, port_dest, event *)
   | NotifyAll of 'v list * 'v                                            (* msg, event *)
   | Create of string option * string * string * string * 'v list                        (* xvar, url, fid_t, args *)
-  | Terminate of string * 'v option                                            (* xvar, cid *)
+  | Terminate of string * bool * 'v option                                            (* xvar, cid *)
   | NewPort of string                                                   (* xvar *)
   | PairPorts of 'v * 'v                                                (* port1, port2 *)
   | UnpairPort of 'v                                                    (* port *)
@@ -23,7 +23,7 @@ let rec str (label: ('v) t) (v_to_str: 'v -> string) : string =
   | Send (msg, plist, porig, pdest, event) -> Printf.sprintf "Send<%s, %s, %s, %s, %s>" (v_list_to_str msg) (v_list_to_str plist) (v_to_str porig) (v_to_str pdest) (v_to_str event)
   | NotifyAll (msg, event) -> Printf.sprintf "NotifyAll<%s, %s>" (v_list_to_str msg) (v_to_str event)
   | Create (id, xvar, url, fid, args) -> Printf.sprintf "%s = Create<%s, %s, %s>" xvar url fid (v_list_to_str args) 
-  | Terminate (xvar, cid) -> 
+  | Terminate (xvar, delete_pending_msgs, cid) -> 
      let cid =
        match cid with
        | Some cid -> v_to_str cid
@@ -77,9 +77,15 @@ let intercept
     | mc, [_; _; id; url; setup_fid; args] when mc = MPConstants.create_with_id -> 
       Some (setup_create_args (Some id) url setup_fid args xvar list_of_val v_to_lit)
     
-    | mc, [_; _; arg] when mc = MPConstants.terminate -> Some (Terminate (xvar, Some arg))
+    | mc, [_; _; delete_pending_msgs; arg] when mc = MPConstants.terminate -> 
+      (match v_to_lit delete_pending_msgs with
+      | Some (Bool b) -> Some (Terminate (xvar, b, Some arg))
+      | _ -> raise (Failure "Invalid arg to MP_wrapper_terminate"))
 
-    | mc, [_; _] when mc = MPConstants.terminate -> Some (Terminate (xvar, None))
+    | mc, [_; _; delete_pending_msgs] when mc = MPConstants.terminate -> 
+      (match v_to_lit delete_pending_msgs with
+      | Some (Bool b) -> Some (Terminate (xvar, b, None))
+      | _ -> raise (Failure "Invalid arg to MP_wrapper_terminate"))
 
     | mc, [_;_] when mc = MPConstants.new_port -> Some (NewPort (xvar))
     
