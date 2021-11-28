@@ -63,11 +63,13 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
         }else{
           //send back to main thread
           e.filename = location.href;
+          //e.type = "error";
           console.log('error.message: '+e.message);
           console.log('e.toString(): '+e.toString());
           var error_msg = {'ERROR_MSG':e};
           console.log('Going to send error message to main thread');
-          postMessage(error_msg);
+          if(global.postMessage) postMessage(error_msg);
+          else if(global.port && global.port.postMessage) global.port.postMessage(error_msg);
           console.log('Error msg sent back to main thread');
         }
     }

@@ -31,13 +31,14 @@ function SharedWorker(scriptURL, options){
     var urlRecord = String(scriptURL);
     options.url = urlRecord;
     var lastescape = urlRecord.lastIndexOf('/');
-    if(lastescape !== -1){
-        urlRecord = urlRecord.substring(lastescape+1, urlRecord.length);
-    }
+    console.log('URL Record: '+urlRecord);
     if(urlRecord.length >= 6 && urlRecord.substring(0, 7) === 'http://'){
         //in this case we try to parse URL
         console.log('Going to parse URL '+urlRecord);
         urlRecord = URL.parse(urlRecord);
+    }
+    if(lastescape !== -1){
+        urlRecord = urlRecord.substring(lastescape+1, urlRecord.length);
     }
     var hash = "";
     var hashindex = urlRecord.lastIndexOf("#");
@@ -89,6 +90,16 @@ Object.defineProperty(SharedWorker.prototype, 'onmessage', {
         if(this.__port.__onmessagehandler) this.__port.removeEventListener('message', this.__port.__onmessagehandler);
         this.__port.__onmessagehandler = f;
         this.__port.addEventListener('message', f);
+    }
+});
+
+Object.defineProperty(SharedWorker.prototype, 'onerror', {
+    /*
+    * @id SharedWorkerOnError
+    */
+    set: function(f){
+        this.__port.__Enabled = true;
+        this.__port.addEventListener('error', f);
     }
 });
 

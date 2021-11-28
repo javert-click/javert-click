@@ -230,13 +230,17 @@ function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transfer
         event.userActivation = null;
     }
     if(typeof messageClone === 'object' && messageClone !== null && messageClone['ERROR_MSG']){
-      console.log('GOT Error when processing message!!!');
+      //console.log('GOT Error when processing message!!!');
       //var e = new scopeMP.Event.Event('error');
-      console.log('event.type? '+messageClone['ERROR_MSG'].type)
-      console.log('Final target port: '+finalTargetPort.__id);
-      console.log('listeners? '+finalTargetPort.listeners);
-      var ev = messageClone['ERROR_MSG'];
-      ev = ErrEvent_construct(ev);
+      //console.log('event.type? '+messageClone['ERROR_MSG'].type)
+      //console.log('Final target port: '+finalTargetPort.__id);
+      //console.log('listeners? '+finalTargetPort.listeners);
+      //var ev = messageClone['ERROR_MSG'];
+      var ev = new ErrorEvent.ErrorEvent();
+      ev.message = messageClone['ERROR_MSG'].message;
+      ev.initialized = true;
+      ev.type = "error";
+      ev.filename = messageClone['ERROR_MSG'].filename;
       finalTargetPort.dispatchEvent(ev);
       console.log('error event dispatched!');
     } else {

@@ -3,7 +3,7 @@ const SharedWorkerInfo = require('../../../../js/MessagePassing/WebWorkers/Share
 const SharedWorker = SharedWorkerInfo.SharedWorker;
 
 async_test(t => {
-  const worker = new SharedWorker(null, null);
+  const worker = new SharedWorker("null-shared.js", null);
   worker.port.onmessage = t.step_func_done(e => {
     assert_equals(e.data[0], 'null', 'first arg (script name)');
     assert_equals(e.data[1], '', 'second arg (worker name)');

@@ -6,6 +6,7 @@ const Event = require('./Event');
 function ErrorEvent(type){
     var type = type !== undefined ? type : "error";
     Event.Event.call(this, type);
+    ErrEvent_construct(this);
     this.message        = "";
     this.linenno        = -1;
     this.colno          = -1;

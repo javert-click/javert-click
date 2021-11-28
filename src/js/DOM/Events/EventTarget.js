@@ -111,6 +111,7 @@ Object.defineProperty(EventTarget.prototype, 'onload', {
 EventTarget.prototype.dispatchEvent = function (event, flags, isTrusted){
     //1. If event’s dispatch flag is set, or if its initialized flag is not set, then throw an "InvalidStateError" DOMException.
     if(event.dispatch || !event.initialized){
+        console.log('Going to throw dom exception');
         throw new DOMException.DOMException(DOMException.INVALID_STATE_ERR)
     }
     //2. Initialize event’s isTrusted attribute to false.
@@ -118,7 +119,9 @@ EventTarget.prototype.dispatchEvent = function (event, flags, isTrusted){
     //3. Return the result of dispatching event to the context object.
     var event_str = jsilEvent(event.type);
     event.target = this;
+    console.log('going to do syncDispatch');
     eventsSemantics.syncDispatch("General", event_str, event, this, flags);
+    console.log('finished syncDispatch');
     return !event.canceled;
 };
 
@@ -477,6 +480,7 @@ function execCallBack(callback, opName, event, currentTarget){
                     var event = new scopeEvents.ErrorEvent.ErrorEvent();
                     event.error = e;
                     event.message = e.message;
+                    event.type = "error";
                     var error_msg = {'ERROR_MSG':event};
                     if(self.postMessage){
                         console.log('sending back to main thread');

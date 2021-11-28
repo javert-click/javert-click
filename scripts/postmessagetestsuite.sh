@@ -8,7 +8,6 @@ echo "Going to run $ntests tests"
 declare workers=$(find $testsdir -type f -name "*.js" -path "*/workers/*")
 declare worker_syntax_error="./js/MessagePassing/WebWorkers/backup_worker_syntax_error.js"
 
-
 echo "Compiling workers"
 for filename in $workers; do
     declare workername=$(basename $filename)
