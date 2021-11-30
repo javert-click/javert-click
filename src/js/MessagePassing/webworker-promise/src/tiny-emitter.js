@@ -54,7 +54,7 @@ TinyEmitter.prototype.on = function(eventName, handler) {
 */ 
 TinyEmitter.prototype.off = function(eventName, handler) {
   if(handler)
-    this.__listeners[eventName] = this.__listeners[eventName].filter(h => h !== handler);
+    this.__listeners[eventName] = this.__listeners[eventName].filter(h => {return h !== handler});
   else
     this.__listeners[eventName] = [];
 

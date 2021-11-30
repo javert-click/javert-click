@@ -1,16 +1,22 @@
-const registerWebworker = require('../../../../js/MessagePassing/webworker-promise/src/register');
-const PromiseInfo = require('../../../../js/Promises/Promise');
-const Promise = PromiseInfo.Promise;
-
 console.log('Worker: running script')
+
 // worker.js
-registerWebworker.RegisterPromise(async (msg) => {
+const host = RegisterPromise(async (msg) => {
     console.log('Worker: received msg '+msg);
-    op = msg;
+    //op = msg;
     //handle postMessage
     return 'pong';
 })
-.operation('identity', async (message, emit) => {
+
+//debugger;
+
+var op = symb_string(op);
+var op_constr = op.length >= 0 && op.length <= 20;
+JavertAssume(op_constr);
+
+//debugger;
+
+host.operation(op, async (message, emit) => {
     console.log('Worker: handling operation, message: '+message);
     return message;
 });
