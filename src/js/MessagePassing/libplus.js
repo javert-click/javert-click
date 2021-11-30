@@ -4208,13 +4208,16 @@ WebworkerPromise.prototype.jobsLength = function() {
 * @id WebworkerPromiseExec
 */
 WebworkerPromise.prototype.exec = function(operationName, data, transferable, onEvent) {
-  data = (data !== undefined) ? data : null;
+  console.log('WebworkerPromiseExec');
+    data = (data !== undefined) ? data : null;
   transferable = transferable || [];
-  var webworkerpromise = this;
+  var vthis = this;
   return new Promise((res, rej) => {
-    const messageId = webworkerpromise._messageId++;
-    webworkerpromise._messages.set(messageId, [res, rej, onEvent]);
-    webworkerpromise._worker.postMessage([messageId, data, operationName], transferable || []);
+    const messageId = vthis._messageId++;
+    vthis._messages.set(messageId, [res, rej, onEvent]);
+    console.log('going to send message')
+    vthis._worker.postMessage([messageId, data, operationName], transferable || []);
+    console.log('message sent')
   });
 }
 
