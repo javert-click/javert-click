@@ -9,7 +9,7 @@ function onPromise(worker, eventName) {
       })
     });
 }
-
+var event = symb_string(event);
 const worker = new WebworkerPromise(new Worker('emitterworkeron.js'));
 
 const resultPromise = onPromise(worker, 'op');

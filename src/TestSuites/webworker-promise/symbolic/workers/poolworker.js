@@ -5,7 +5,7 @@ RegisterPromise(
 */
 (message, emit) => {
   //message - ping
-  console.log('WORKER: executing worker handler');
-  return 'pong';
+  console.log('WORKER: received message '+message);
+  return message;
 });
 console.log('WORKER: Finished executing script');

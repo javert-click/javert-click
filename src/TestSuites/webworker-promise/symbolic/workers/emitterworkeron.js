@@ -12,12 +12,12 @@ const host = RegisterPromise(async (data, emit) => {
   //return op;
 });
 
-var op = symb_string(op);
-var bound = op.length >= 0 && op.length <= 20;
+var e = symb_string(event);
+//var bound = op.length >= 0 && op.length <= 20;
 //console.log('going to do assume');
-JavertAssume(bound);
+//JavertAssume(bound);
 
-host.on(op, function (input) {
+host.on(e, function (input) {
   host.emit('op', input);
 })
 

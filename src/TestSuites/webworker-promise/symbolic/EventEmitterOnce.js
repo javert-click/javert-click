@@ -1,6 +1,5 @@
 //console.log('MAIN: creating worker');
 
-var event = symb_string(event);
 var input = "data";
 
 function onPromise(worker, eventName) {
@@ -11,9 +10,8 @@ function onPromise(worker, eventName) {
     });
 }
 
+var event = symb_string(event);
 const worker = new WebworkerPromise(new Worker('emitterworkeronce.js'));
-
-const count = 0;
 
 worker.emit(event, input);
 const resultPromise = onPromise(worker, 'op:result');

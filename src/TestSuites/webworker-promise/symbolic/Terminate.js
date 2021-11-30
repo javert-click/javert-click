@@ -2,10 +2,12 @@ console.log('MAIN: creating worker');
 
 const worker = new WebworkerPromise(new Worker('terminateworker.js'));
 
-var msg = symb(msg);
+//var msg = symb(msg);
+var msg = symb_string(msg);
+//var msg_constr = msg.length >= 0 && msg.length <= 5;
 //var msg = null;
-var isobj = typeof msg === 'object';
-JavertAssume (isobj);
+//var isobj = typeof msg === 'object';
+//JavertAssume (msg_constr);
 
 worker.terminate();
 

@@ -13,7 +13,9 @@ function handler(input){
     host.emit('op:result', input);
 }
 
-host.once('op', handler);
+var e = symb_string(event);
+
+host.once(e, handler);
 
 //.on(op, function(input) {
 //  console.log('Worker: input: '+input);
