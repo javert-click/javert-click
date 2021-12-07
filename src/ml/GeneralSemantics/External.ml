@@ -208,7 +208,7 @@ module M
                State.set_cell state loc' (Val.from_literal (Literal.String prop)) (Some (Val.from_literal v))
             ) state' fvl
         ) state heap in
-        Printf.printf "Setting heap_min to %d" ((List.length heap) + 1);
+        (*Printf.printf "Setting heap_min to %d" ((List.length heap) + 1);*)
         let heap_curr_size = List.length heap in
         if (!CCommon.heap_min < heap_curr_size) then (CCommon.heap_min := heap_curr_size + 1);
         update_store state x (Val.from_literal (Loc (JS2JSIL_Constants.locGlobName)));

@@ -116,7 +116,7 @@ MPSemantics.prototype.terminate = function(confId){
 }
 
 /*
-* @id MPSemanticsTerminate
+* @id MPSemanticsClose
 */
 MPSemantics.prototype.close = function(confId){
     console.log('Going to call MPWrapperTerminate, confId: '+confId);

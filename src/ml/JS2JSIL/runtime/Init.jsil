@@ -880,7 +880,8 @@ proc setupInitialHeap () {
 (* Printing *)
 proc i__consoleLog(_scope, _this, msg) {
 
-        ret := "i__toString"(msg) with elab;
+        ret := empty;
+		ret := "i__toString"(msg) with elab;
 		(* console.log temporarily disabled *)
         (*printout(ret);*)
         return;
