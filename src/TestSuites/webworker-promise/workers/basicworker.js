@@ -4,7 +4,6 @@ RegisterPromise(
 * @id workerhandler
 */
 (message, emit) => {
-  //message - ping
   console.log('WORKER: got msg: '+message);
   return message;
 });

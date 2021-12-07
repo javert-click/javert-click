@@ -5,10 +5,6 @@ var msg = symb_string(msg);
 const worker = new WebworkerPromise(new Worker('errorworker.js'));
 console.log('Main: worker created');
 
-
-//var bound = msg.length >= 0 && msg.length <= 20;
-//JavertAssume(bound);
-
 var p = worker.postMessage(msg);
 p.then(function(msg){
   console.log('Main: Executing then clause')

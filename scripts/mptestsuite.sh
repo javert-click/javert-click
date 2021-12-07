@@ -4,7 +4,6 @@ declare testsdir=$1
 declare tests=$(find $testsdir -type f -name "*.js" -not -path "*/workers/*" -not -path "*/support/*")
 declare ntests=$(find $tests -name '*.js' | wc -l)
 ntests="${ntests#"${ntests%%[![:space:]]*}"}"
-echo "Going to run $ntests tests"
 declare workers=$(find $testsdir -type f -name "*.js" -path "*/workers/*")
 declare worker_syntax_error="./js/MessagePassing/WebWorkers/backup_worker_syntax_error.js"
 
@@ -32,6 +31,7 @@ declare log_test_file="log_test.log"
 
 declare passed=0
 declare failed=0
+declare n=1
 
 echo "compiling setupConf file"
 npx webpack --config ../webpack.config.js --env entry=$setupconffilejs --env out=$setupconffilejs
@@ -39,6 +39,7 @@ npx webpack --config ../webpack.config.js --env entry=$setupconffilejs --env out
 #mv "webpack_ConfSetup.jsil" "ConfSetup.jsil"
 cp $setupconffilejsil .
 
+echo "Going to run $ntests tests"
 #Running tests
 for testfile in $tests; do
   npx webpack --config ../webpack.config.js --env entry=$testfile --env out=$testfile
@@ -50,9 +51,9 @@ for testfile in $tests; do
 
   ./js2jsil.native -file $name -mp
   #cp -R "$dir/$base.jsil" .
-  echo -e "-----Running $testfile-----"
+  echo -e "\n-----Running test $n/$ntests: $testfile-----"
   #./jsil.native -file "$base.jsil" -pbn -mp -js2jsil
-  ./jsil.native -file $name -silent -mp -js2jsil -stats
+  ./jsil.native -file $name -silent -mp -js2jsil
 
   declare nasserts=`grep -c "TestHarnessAssert.*: 0" $log_test_file`
   declare nasserts_passed=`grep -c "CMD: return" $log_test_file`
@@ -60,6 +61,7 @@ for testfile in $tests; do
   echo "NUMBER OF ASSERTS CHECKED: $nasserts"
   echo "--Passing: $nasserts_passed"
   echo "--Failing: $nasserts_failed"
+  n=$(expr $n + 1)
   if [[ $nasserts_failed = 0 ]] 
   then
     echo "TEST PASSED"

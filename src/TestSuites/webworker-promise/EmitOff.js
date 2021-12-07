@@ -1,5 +1,3 @@
-//console.log('MAIN: creating worker');
-
 var input = "data";
 
 function onPromise(worker, eventName) {
@@ -11,9 +9,6 @@ function onPromise(worker, eventName) {
 }
 var event = symb_string(event);
 const worker = new WebworkerPromise(new Worker('emitterworkeroff.js'));
-
-//var op_constr = event.length >= 0 && event.length <= 20;
-//JavertAssume(op_constr);
 
 const resultPromise = onPromise(worker, 'op:result');
 console.log('Main: going to emit event to worker');
