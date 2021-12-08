@@ -1,21 +1,58 @@
-echo "Running 10 tests"
+. dominfo.sh
+. workersinfo.sh
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/Mirror.js ./TestSuites/webworker-promise/workers/basicworker.js
+declare testsdir="./TestSuites/webworker-promise"
+declare tests=$(find $testsdir -type f -name "*.js" -not -path "*/workers/*" -not -path "*/support/*")
+declare ntests=$(find $tests -name '*.js' | wc -l)
+ntests="${ntests#"${ntests%%[![:space:]]*}"}"
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/Terminate.js ./TestSuites/webworker-promise/workers/terminateworker.js
+declare workers=$(find $testsdir -type f -name "*.js" -path "*/workers/*")
+declare promisesdir="js/Promises"
+declare libfile="js/MessagePassing/libplus.js"
+declare heapfile="heapplus.json"
+declare setupconffile="js/MessagePassing/webworker-promise/ConfSetup.js"
+declare workerfile=$2
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/Error.js ./TestSuites/webworker-promise/workers/errorworker.js
+#echo "Compiling lib file"
+#Running libfile and generating json file with heap
+cp $libfile .
+./js2jsil.native -file ./libplus.js -mp
+#echo "Generating heap for lib file"
+./jsil.native -file ./libplus.jsil -silent -mp -printheap $heapfile
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/EmitOn.js ./TestSuites/webworker-promise/workers/emitterworkeron.js
+#echo "Compiling setup conf file"
+#Compiling setup conf file 
+cp $setupconffile .
+./js2jsil.native -file "ConfSetup.js" -noimports -loadheapfromjson $heapfile
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/EmitOff.js ./TestSuites/webworker-promise/workers/emitterworkeroff.js
+#echo "Compiling worker file"
+#Compiling worker file
+for worker in $workers; do
+  cp $worker .
+  declare nameworker=$(basename $worker)
+  declare baseworker=${nameworker%%.*}
+  ./js2jsil.native -file "$baseworker.js" -cosette -noimports -noinitialheap
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/PoolSend.js ./TestSuites/webworker-promise/workers/poolworker.js
+  #echo "Joining files"
+  #Joining files
+  cat "$baseworker.jsil" > "temp.jsil"
+  cat "libplus.jsil" "ConfSetup.jsil" "temp.jsil" > "$baseworker.jsil"
+done
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/PoolLimit.js ./TestSuites/webworker-promise/workers/poolworker.js
+echo "Going to run $ntests tests"
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/EmitOnce.js ./TestSuites/webworker-promise/workers/emitterworkeronce.js
+declare n=1
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/PoolSendErr.js ./TestSuites/webworker-promise/workers/errorworker.js
+for testfile in $tests; do
+  declare name=$(basename $testfile)
+  declare base=${name%%.*}
+  #echo "Compiling $base.js"
+  cp $testfile .
+  ./js2jsil.native -file "$base.js" -cosette -noimports -loadheapfromjson $heapfile
+  echo -e "\nRunning test $n/$ntests: $testfile"
+  cat "$base.jsil" > "temp.jsil"
+  cat "libplus.jsil" "temp.jsil" > "$base.jsil"
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/Operation.js ./TestSuites/webworker-promise/workers/operationsworker.js
+  time ./cosette.native -file "$base.jsil" -js -silent -mp -stats
+  n=$(expr $n + 1)
+done
