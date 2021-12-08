@@ -2,7 +2,7 @@
 
 JaVerT.Click is a symbolic execution tool for JavaScript that, for the first time, supports reasoning about JavaScript programs that manipulate any/all of the DOM Core Level 1, DOM UI Events, JavaScript Promises, and the JavaScript async/await APIs.
 
-### Starting the Artifact via Docker
+## Starting the Artifact via Docker
 The artifact is a .zip file available [here](INSERT LINK HERE).
 1. Download the .zip file.
 2. Open the terminal and navigate to the extracted folder.
@@ -12,7 +12,7 @@ The artifact is a .zip file available [here](INSERT LINK HERE).
 6. Compile the tool by running `make` inside the `javert-post` folder.
 6. Setup the environment folder by running `./scripts/setup_environment.sh` from the `javert-post` folder.
 
-### The Structure of JaVerT.Post
+## The Structure of JaVerT.Post
 The `~\javert-post` folder is the base folder that contains all of the required infrastructure.
 
 The main folder of interest is the `src` folder, which has the following structure: 
@@ -20,7 +20,7 @@ The main folder of interest is the `src` folder, which has the following structu
 - `js`: JavaScript reference implementations
    - `MessagePassing/WebMessaging`: WebMessaging API (Section 4)
    - `MessagePassing/WebWorkers`: WebWorkers API (Section 5)
-- `ml`: OCaml implementation of JaVerT.Click
+- `ml`: OCaml implementation of JaVerT.Post
   - `MessagePassing`: The Message-Passing Semantics (Section 3)
   - Remaining folders: JaVerT.Click; the relevant folder for JaVerT.Post is:
     - `Events`: The parametric Event Semantics that interacts with the Message-Passing Semantics 
@@ -29,9 +29,9 @@ The main folder of interest is the `src` folder, which has the following structu
   - `webworker-promise`: The `webworker-promise` library. Contains our symbolic test suite (Section 6.2)
   - `WebWorkers`: WebWorkers applicable tests (Section 6.1)
 
-### Running the Test Suites
+## Running the Test Suites
 
-#### Testing the APIs
+### Testing the APIs
 
 We present the testing results for the four APIs below:
 
