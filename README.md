@@ -74,14 +74,14 @@ The reported results (Table 2, section 6.2) are obtained on a machine with an In
 ./webworkerpromisetestsuite.sh
 ```
 
-This command will run the symbolic test suite of `webworker-promise`. The execution should take **52** minutes approximately. Our current results, given below, are different from the ones reported in terms of the number of commands of the following symbolic tests: `EmitOn`, `EmitOff`, `PoolLimit` and `Operation`. This is due to minor refactorings performed in the tests during the last few days.
+This command will run the symbolic test suite of `webworker-promise`. The execution should take **55** minutes approximately. Our current results, given below, are different from the ones reported in terms of the number of commands of the following symbolic tests: `EmitOn`, `EmitOff`, `PoolLimit` and `Operation`. This is due to minor refactorings performed in the tests during the last few days.
 
 This is the current breakdown:
 
-| **Test Name**          | `Mirror`   | `Terminate`    | `Error`     | `EmitOn`     | `EmitOff`      |  `EmitOnce`  | `PoolSend`  |  `PoolError`   |  `PoolLimit`  |   `Operation`  |
-|------------------------|-----------|------------|------------|------------|------------|----------------|----------------|----------------|----------------|----------------|
-| Time                    | 1m32s     | 0m45s    | 1m39s     |  5m33s    | 5m35s     |  10m13s   |  3m8s    |  2m3s   |  12m36s   |   14m44s   |
-| #JSIL Commands        | 316,500  | 151,396 |  319,608 |  1,181,553 | 1,088,310 |   1,898,784 |   377,745  |   502,257 |     |  1,722,600 |   2,011,286   |
+| **Test Name**          | `Mirror`    | `Terminate`     | `Error`     | `EmitOn`     | `EmitOff`      |  `EmitOnce`  | `PoolSend`  |  `PoolError`   |  `PoolLimit`  |   `Operation`  |
+|----------------------------|--------------|--------------------|--------------|-----------------|------------------|------------------|----------------- |-------------------|------------------|----------------|
+| Time                         | 1m32s     | 0m45s            | 1m39s     |  5m33s        | 5m35s         |  10m13s       |  3m8s          |  2m3s             |  12m36s      |   14m44s   |
+| #JSIL Commands    | 316,500   | 151,396          |  319,608  |  1,181,553   | 1,088,310    |   1,898,784   |   377,745    |   502,257        |  1,722,600   |   2,011,518  |
 
 This table will be updated in the version of the paper accordingly.
 

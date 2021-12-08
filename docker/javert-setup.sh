@@ -20,7 +20,7 @@ opam pin dune 1.11.3 --yes
 echo 'export LD_LIBRARY_PATH=/root/.opam/default/lib/z3/' >> ~/.bashrc
 echo 'export PATH=$PATH:/root/.opam/default/bin' >> ~/.bashrc
 echo 'eval $(opam env)' >> ~/.bashrc
-cd /javert-click
+cd /javert-post
 ls
 apt-get install -y npm 
 npm install
