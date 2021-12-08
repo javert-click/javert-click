@@ -44,7 +44,7 @@ We present the testing results for the four APIs below:
 | **Applicable Tests**         | 91           | 158        | 
 | **Passing Tests**            | 91           | 158         | 
 
-In order to reproduce these results, run the following commands: 
+In order to reproduce these results, run the following commands (from the `environment` folder): 
 
 ```
 ./webmessagingtestsuite.sh
