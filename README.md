@@ -41,7 +41,6 @@ We present the testing results for the four APIs below:
 | **Filtered Tests**           | 30             | 111            | 
 | **Applicable Tests**         | 91           | 158        | 
 | **Passing Tests**            | 91           | 158         | 
-|------------------------------|---------------|---------------|
 
 In order to reproduce these results, run the following commands: 
 
