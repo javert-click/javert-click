@@ -1,0 +1,1 @@
+./mptestsuite.sh ./TestSuites/WebWorkers ./result_workers.txt

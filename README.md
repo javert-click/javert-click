@@ -66,15 +66,13 @@ For instance, the following command will execute the `Channel_postMessage_clone_
 We analyse [`webworker-promise`](https://github.com/kwolfy/webworker-promise), a promise-wrapper over the WebMessaging and WebWorkers APIs. 
 Our analysis has revealed three previously unknown bugs in `webworker-promise` related to a null dereference, an overlooked prototype inheritance and JS dynamic typing.
 
-We provide a symbolic test suite for `webworker-promise` that contains 10 tests. 
-
 The reported results (Table 2, section 6.2) are obtained on a machine with an Intel Core i7-4980HQ CPU 2.80 GHz, DDR3 RAM 16GB, and a 256GB solid-state hard-drive running OSX. The running times of the tests are likely to be slower in the artifact, due to the virtual machine environment. To reproduce the results, please run the following command:
 
 ```
 ./webworkerpromisetestsuite.sh
 ```
 
-This command will run the symbolic test suite of `webworker-promise`. The execution should take **55** minutes approximately. Our current results, given below, are different from the ones reported in terms of the number of commands of the following symbolic tests: `EmitOn`, `EmitOff`, `PoolLimit` and `Operation`. This is due to minor refactorings performed in the tests during the last few days.
+This command will run the symbolic test suite of `webworker-promise`. The execution should take **55** minutes approximately. Our current results, given below, are different from the ones reported in terms of the number of commands of the following symbolic tests: `EmitOn`, `EmitOff`, `PoolLimit` and `Operation`. This is due to minor refactorings performed in the tests during the last few days. This table will be updated in the version of the paper accordingly.
 
 This is the current breakdown:
 
@@ -83,18 +81,16 @@ This is the current breakdown:
 | Time                         | 1m32s     | 0m45s            | 1m39s     |  5m33s        | 5m35s         |  10m13s       |  3m8s          |  2m3s             |  12m36s      |   14m44s   |
 | #JSIL Commands    | 316,500   | 151,396          |  319,608  |  1,181,553   | 1,088,310    |   1,898,784   |   377,745    |   502,257        |  1,722,600   |   2,011,518  |
 
-This table will be updated in the version of the paper accordingly.
-
 Note that in the symbolic tests `Mirror`, `EmitOn`, `EmitOff`, `EmitOnce` and `PoolLimit`, JaVerT.Post finds failing models, which represent the three bug scenarios described in the paper; the remaining symbolic tests are expected to pass. In the following, we give the failing model expected for each test.
 
-#### Mirror.js (Bug #1, Section 6.2.2)
+#### Mirror.js: Null Dereference Bug (Bug#1 of Section 6.2.2)
 ```
 Assert failed with argument False.
 Failing Model: 
          [(#msg: null)]
 ```
 
-#### EmitOn.js, EmitOff.js, EmitOnce.js (Bug #2, Section 6.2.2)
+#### EmitOn.js, EmitOff.js, EmitOnce.js: Prototype Inheritance Bug (Bug #2 of Section 6.2.2)
 ```
 Assert failed with argument False.
 Failing Model:
@@ -125,7 +121,7 @@ Failing Model:
 	[(#event: "constructor")]
 ```
 
-#### PoolLimit.js (Bug #3, Section 6.2.2)
+#### PoolLimit.js: Dynamic Typing Bug (Bug #3 of Section 6.2.2)
 ````
 Assert failed with argument ((2. <= #maxthreads) == true).
 Failing Model:

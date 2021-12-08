@@ -1,0 +1,1 @@
+./mptestsuite.sh ./TestSuites/WebMessaging ./result_wm.txt
