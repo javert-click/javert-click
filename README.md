@@ -7,7 +7,7 @@ The artifact is a .zip file available [here](INSERT LINK HERE).
 1. Download the .zip file.
 2. Open the terminal and navigate to the `javert-post` folder (the one extracted from the .zip file).
 3. Run `docker build --tag javert-post .` to build the docker image.
-4. Activate the container in interactive mode by running `docker run -i javert-post`.
+4. Activate the container in interactive mode by running `docker run -it javert-post`.
 5. Navigate to the `javert-post` folder inside the container by running `cd javert-post`.
 6. Compile the tool by running `make` inside the `javert-post` folder.
 7. Setup the environment folder by running `./scripts/setup_environment.sh` from the `javert-post` folder.
