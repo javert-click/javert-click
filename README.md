@@ -10,7 +10,8 @@ The artifact is a .zip file available [here](INSERT LINK HERE).
 4. Activate the container in interactive mode by running `docker run -i javert-post`.
 5. Navigate to the `javert-post` folder inside the container by running `cd javert-post`.
 6. Compile the tool by running `make` inside the `javert-post` folder.
-6. Setup the environment folder by running `./scripts/setup_environment.sh` from the `javert-post` folder.
+7. Setup the environment folder by running `./scripts/setup_environment.sh` from the `javert-post` folder.
+8. Navigate to the environment folder in order to start executing tests by running `cd environment`.
 
 ## The Structure of JaVerT.Post
 The `~\javert-post` folder is the base folder that contains all of the required infrastructure.
