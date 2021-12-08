@@ -18,6 +18,7 @@ The `~\javert-post` folder is the base folder that contains all of the required 
 The main folder of interest is the `src` folder, which has the following structure: 
 
 - `js`: JavaScript reference implementations
+   - DOM, Promises: Provided by JaVerT.Click. The DOM reference implementation is used by WebMessaging and WebWorkers
    - `MessagePassing/WebMessaging`: WebMessaging API (Section 4)
    - `MessagePassing/WebWorkers`: WebWorkers API (Section 5)
 - `ml`: OCaml implementation of JaVerT.Post
@@ -49,8 +50,8 @@ In order to reproduce these results, run the following commands:
 ./webworkerstestsuite.sh
 ```
 
-These commands will run all the applicable tests for the WebMessaging and WebWorkers APIs, printing information about its progress; we estimate this process to take approximately 240 minutes for WebMessaging and 600 minutes for WebWorkers.
-The results will be available in the files `result_wm.txt` and result_workers.txt` (respectively corresponding to the WebMessaging and WebWorkers test suites) in the environment folder.
+These commands will run all the applicable tests for the WebMessaging and WebWorkers APIs, printing information about its progress; we estimate this process to take approximately **240** minutes for WebMessaging and **600** minutes for WebWorkers.
+The test results will be printed to the console, but we provide the full result in the files `result_wm.txt` and `result_workers.txt` (respectively corresponding to the WebMessaging and WebWorkers test suites) in the environment folder.
 
 We also provide the `mp.sh` script for running a single test for each of these APIs. 
 The usage is analogous, with the difference that they take a single file as input instead of a folder. 
@@ -66,7 +67,7 @@ For instance, the following command will execute the `Channel_postMessage_clone_
 We analyse [`webworker-promise`](https://github.com/kwolfy/webworker-promise), a promise-wrapper over the WebMessaging and WebWorkers APIs. 
 Our analysis has revealed three previously unknown bugs in `webworker-promise` related to a null dereference, an overlooked prototype inheritance and JS dynamic typing.
 
-The reported results (Table 2, section 6.2) are obtained on a machine with an Intel Core i7-4980HQ CPU 2.80 GHz, DDR3 RAM 16GB, and a 256GB solid-state hard-drive running OSX. The running times of the tests are likely to be slower in the artifact, due to the virtual machine environment. To reproduce the results, please run the following command:
+The reported results (Table 2, section 6.2) are obtained on a machine with an Intel Core i7-4980HQ CPU 2.80 GHz, DDR3 RAM 16GB, and a 256GB solid-state hard-drive running OSX. Note that we show the results for seven tests in Table 2 (we do not include `EmitOnce`, `PoolError` and `Operation`). We provide the results for the whole test suite in appendix. To reproduce the results, please run the following command:
 
 ```
 ./webworkerpromisetestsuite.sh
