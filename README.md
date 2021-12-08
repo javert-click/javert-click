@@ -1,6 +1,6 @@
 # JaVerT.Post: Symbolic Analysis of Message-Passing Web Applications
 
-JaVerT.Post is the first symbolic execution tool for Message-Passing Web Programs calling the WebMessaging and WebWorkers APIs.
+JaVerT.Post is the first symbolic execution tool for Message-Passing Web Programs calling the [WebMessaging](https://html.spec.whatwg.org/multipage/web-messaging.html) and [WebWorkers](https://html.spec.whatwg.org/multipage/workers.html) APIs.
 
 ## Starting the Artifact via [Docker](https://docs.docker.com/)
 The artifact is a .zip file available [here](INSERT LINK HERE).
