@@ -142,7 +142,11 @@ To run an individual test, execute
 ./webworkerpromise.sh [mainfile]  [workerfile]
 ``` 
 
-from the `environment` folder. For instance, the command `/webworkerpromise.sh ./TestSuites/webworker-promise/Mirror.js ./TestSuites/webworker-promise/workers/basicworker.js` runs the `Mirror.js` test.
+from the `environment` folder. For instance, the command 
+```
+/webworkerpromise.sh ./TestSuites/webworker-promise/Mirror.js ./TestSuites/webworker-promise/workers/basicworker.js
+``` 
+runs the `Mirror.js` test.
 
 
 
