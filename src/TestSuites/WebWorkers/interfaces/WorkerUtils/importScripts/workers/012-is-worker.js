@@ -1,5 +1,5 @@
 // prevent recursion
-import { got } from './1-is';
+import { got } from '../support/1';
 
 if ('beenThere' in self) {
     throw '1 stringified to the empty string';
