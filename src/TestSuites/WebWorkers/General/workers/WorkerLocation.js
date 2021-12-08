@@ -1,4 +1,4 @@
-//const location = require('../../../../js/MessagePassing/PostMessage/Location');
+//const location = require('../../../../js/MessagePassing/WebMessaging/Location');
 
 var obj = new Object();
 obj.location = location.toString();

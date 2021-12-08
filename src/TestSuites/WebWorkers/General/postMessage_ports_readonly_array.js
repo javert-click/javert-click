@@ -1,6 +1,6 @@
 //Title: postMessage(): MessageEvent properties
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { assert_throws_js, assert_equals, async_test } from '../../../js/DOM/Events/Testharness';
 
 async_test(function(t) {

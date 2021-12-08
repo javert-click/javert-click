@@ -1,8 +1,8 @@
 //Title: resolving url with stuff in host-specific</title>
 
 import { assert_equals, async_test } from '../../../js/DOM/Events/Testharness';
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
-const location = require('../../../js/MessagePassing/PostMessage/Location');
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
+const location = require('../../../js/MessagePassing/WebMessaging/Location');
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();
 

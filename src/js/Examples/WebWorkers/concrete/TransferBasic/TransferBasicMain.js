@@ -1,5 +1,5 @@
 const Worker = require('../../../../MessagePassing/WebWorkers/Worker'); 
-import { MessageChannel } from '../../../../MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../../MessagePassing/WebMessaging/MessageChannel';
 
 console.log('MAIN: Going to create worker')
 var worker = new Worker.Worker('TransferBasicWorker.js');

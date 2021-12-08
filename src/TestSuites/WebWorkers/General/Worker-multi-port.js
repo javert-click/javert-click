@@ -1,6 +1,6 @@
 //Title: Test sending multiple ports through Worker.postMessage
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { Worker } from '../../../js/MessagePassing/WebWorkers/Worker';
 import { test, async_test, assert_true, assert_throws_js, assert_throws_dom } from '../../../js/DOM/Events/Testharness';
 

@@ -4,7 +4,7 @@ const ESemantics        = require('../../DOM/Events/EventsSemantics');
 const Serialization     = require('./MessageSerialization');
 const DOMException      = require('../../DOM/Common/DOMException');
 const MessageEvent      = require('../../DOM/Events/MessageEvent');
-const location          = require('../PostMessage/Location'); 
+const location          = require('../WebMessaging/Location'); 
 
 const Node              = require('../../DOM/Events/Node');
 const ShadowRoot        = require('../../DOM/Events/ShadowRoot');

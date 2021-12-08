@@ -1,5 +1,5 @@
-import { MessageChannel } from '../../../../js/MessagePassing/PostMessage/MessageChannel';
-import { MessagePort } from '../../../../js/MessagePassing/PostMessage/MessagePort';
+import { MessageChannel } from '../../../../js/MessagePassing/WebMessaging/MessageChannel';
+import { MessagePort } from '../../../../js/MessagePassing/WebMessaging/MessagePort';
 import { test, assert_true, assert_throws, done } from '../../../../js/DOM/Events/Testharness';
 
 test(function() {

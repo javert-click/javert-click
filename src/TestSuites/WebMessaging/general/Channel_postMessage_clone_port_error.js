@@ -1,7 +1,7 @@
 
 //Title: postMessage() DataCloneError: cloning source port
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { test, assert_throws_dom } from '../../../js/DOM/Events/Testharness';
 
 var description = "Test Description: Throw a DataCloneError if transfer array in postMessage contains source port.";

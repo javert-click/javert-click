@@ -1,4 +1,4 @@
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { test, async_test, assert_true, assert_equals, assert_throws_dom } from '../../../js/DOM/Events/Testharness';
 const Window = require('../../../js/DOM/Events/Window');
 var self = Window.getInstance();

@@ -1,3 +1,5 @@
+echo "Running 10 tests"
+
 ./webworkerpromise.sh ./TestSuites/webworker-promise/Mirror.js ./TestSuites/webworker-promise/workers/basicworker.js
 
 ./webworkerpromise.sh ./TestSuites/webworker-promise/Terminate.js ./TestSuites/webworker-promise/workers/terminateworker.js
@@ -16,4 +18,4 @@
 
 ./webworkerpromise.sh ./TestSuites/webworker-promise/PoolSendErr.js ./TestSuites/webworker-promise/workers/errorworker.js
 
-./webworkerpromise.sh ./TestSuites/webworker-promise/Operations.js ./TestSuites/webworker-promise/workers/operationsworker.js
+./webworkerpromise.sh ./TestSuites/webworker-promise/Operation.js ./TestSuites/webworker-promise/workers/operationsworker.js

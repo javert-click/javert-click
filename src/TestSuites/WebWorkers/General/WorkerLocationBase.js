@@ -3,7 +3,7 @@ const WorkerInfo = require('../../../js/MessagePassing/WebWorkers/Worker');
 const Worker = WorkerInfo.Worker;
 const Window = require('../../../js/DOM/Events/Window');
 const window = Window.getInstance();
-const location = require('../../../js/MessagePassing/PostMessage/Location');
+const location = require('../../../js/MessagePassing/WebMessaging/Location');
 
 
 async_test(function(t) {

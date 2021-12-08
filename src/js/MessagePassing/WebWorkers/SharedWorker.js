@@ -1,8 +1,8 @@
 const EventTarget  = require('../../DOM/Events/EventTarget');
-const MessagePort  = require('../PostMessage/MessagePort');
+const MessagePort  = require('../WebMessaging/MessagePort');
 const MPSemantics  = require('../Common/MPSemantics');
 const DOMException = require('../../DOM/Common/DOMException');
-const URL          = require('../PostMessage/URL');
+const URL          = require('../WebMessaging/URL');
 
 var MPSem = MPSemantics.getMPSemanticsInstance();
 

@@ -2,7 +2,7 @@ import { assert_true } from '../../../../DOM/Events/Testharness';
 
 const Worker         = require('../../../../MessagePassing/WebWorkers/Worker');
 const Promise        = require('../../../../Promises/Promise');
-const MessageChannel = require('../../../../MessagePassing/PostMessage/MessageChannel');
+const MessageChannel = require('../../../../MessagePassing/WebMessaging/MessageChannel');
 
 Worker         = Worker.Worker;
 Promise        = Promise.Promise;

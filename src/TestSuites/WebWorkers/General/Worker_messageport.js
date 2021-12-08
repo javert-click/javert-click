@@ -1,6 +1,6 @@
 //Title: Test that pages and workers can send MessagePorts to one another.
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { Worker } from '../../../js/MessagePassing/WebWorkers/Worker';
 import { async_test, assert_equals } from '../../../js/DOM/Events/Testharness';
 

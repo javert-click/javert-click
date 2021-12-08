@@ -2,7 +2,7 @@ import { Worker } from '../../../js/MessagePassing/WebWorkers/Worker';
 import { SharedWorker } from '../../../js/MessagePassing/WebWorkers/SharedWorker';
 import { promise_test, assert_equals, assert_not_equals } from '../../../js/DOM/Events/Testharness';
 import { Promise } from '../../../js/Promises/Promise';
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 
 // Tests that a {Dedicated,Shared}Worker keeps running even if its script
 // evaluation results in an abrupt completion. This corresponds to the "run a

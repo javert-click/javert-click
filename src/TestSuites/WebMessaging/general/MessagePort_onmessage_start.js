@@ -1,6 +1,6 @@
 //Title: MessageChannel: port.onmessage enables message queue
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test } from '../../../js/DOM/Events/Testharness';
 //TODOMP: we fail this test due to scheduler choices?
 async_test(function(t) {

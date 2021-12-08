@@ -1,6 +1,6 @@
 //Title: MessageEvent: onmessage infinite loop
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test, assert_less_than } from '../../../js/DOM/Events/Testharness';
 
 // The test passes if the onmessage / postMessage loop does not prevent the

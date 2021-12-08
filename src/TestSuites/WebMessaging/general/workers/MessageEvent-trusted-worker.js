@@ -1,4 +1,4 @@
-const BroadcastChannelInfo = require('../../../../js/MessagePassing/PostMessage/BroadcastChannel');
+const BroadcastChannelInfo = require('../../../../js/MessagePassing/WebMessaging/BroadcastChannel');
 const BroadcastChannel = BroadcastChannelInfo.BroadcastChannel;
 
 const channel = new BroadcastChannel("channel name");

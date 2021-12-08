@@ -1,6 +1,6 @@
 const EventTarget       = require('../../DOM/Events/EventTarget');
 const MPSemantics       = require('../Common/MPSemantics');
-const MessagePort       = require('../PostMessage/MessagePort');
+const MessagePort       = require('../WebMessaging/MessagePort');
 const SharedWorker      = require('./SharedWorker');
 const WorkerGlobalScope = require('./WorkerGlobalScope');
 const DOMException      = require('../../DOM/Common/DOMException');

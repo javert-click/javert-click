@@ -1,7 +1,7 @@
 // Title: message channel as ports
 
 import { assert_throws, async_test, test, assert_equals } from '../../../js/DOM/Events/Testharness';
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();
 

@@ -1,6 +1,6 @@
 // Title: onmessage implied start()
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { assert_unreached, async_test } from '../../../js/DOM/Events/Testharness';
 
 async_test(function(t) {

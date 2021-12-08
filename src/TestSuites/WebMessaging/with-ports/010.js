@@ -1,6 +1,6 @@
 //Title: message clone
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { assert_equals, async_test, assert_true, assert_false, assert_array_equals, assert_object_equals, assert_unreached } from '../../../js/DOM/Events/Testharness';
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();

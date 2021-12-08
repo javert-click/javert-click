@@ -26,7 +26,7 @@ onmessage = function(evt) {
         }
         postMessage("spamDone");
     } else if (evt.data == "getport") {
-        const MessageChannel = require('../../../../js/MessagePassing/PostMessage/MessageChannel');
+        const MessageChannel = require('../../../../js/MessagePassing/WebMessaging/MessageChannel');
         var channel = new MessageChannel.MessageChannel();
         postMessage("port", [channel.port1]);
         channel.port2.onmessage = pingBack;

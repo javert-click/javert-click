@@ -1,11 +1,11 @@
 //Title: origin of the script that invoked the method, scheme/host/port
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test, assert_equals, assert_array_equals  } from '../../../js/DOM/Events/Testharness';
 
 const HTMLDocument = require('../../../js/DOM/Events/HTMLDocument');
 const Window = require('../../../js/DOM/Events/Window');
-const location = require('../../../js/MessagePassing/PostMessage/Location');
+const location = require('../../../js/MessagePassing/WebMessaging/Location');
 const StringUtils = require('../../../js/Utils/StringUtils');
 
 var window = Window.getInstance();

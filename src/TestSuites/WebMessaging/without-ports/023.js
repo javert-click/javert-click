@@ -1,6 +1,6 @@
 // Title: Object cloning: own properties only, don't follow prototype
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test, assert_not_equals } from '../../../js/DOM/Events/Testharness';
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();

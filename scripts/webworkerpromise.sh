@@ -18,7 +18,7 @@ declare workerfile=$2
 cp $libfile .
 ./js2jsil.native -file ./libplus.js -mp
 #echo "Generating heap for lib file"
-./jsil.native -file ./libplus.jsil -pbn -mp -printheap $heapfile
+./jsil.native -file ./libplus.jsil -silent -mp -printheap $heapfile
 
 #echo "Compiling setup conf file"
 #Compiling setup conf file 

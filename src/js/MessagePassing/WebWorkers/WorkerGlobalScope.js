@@ -1,12 +1,12 @@
 const EventTarget        = require('../../DOM/Events/EventTarget');
-const MessageChannelInfo = require('../PostMessage/MessageChannel');
+const MessageChannelInfo = require('../WebMessaging/MessageChannel');
 const SharedWorkerInfo   = require('./SharedWorker');
 const DOMException       = require('../../DOM/Common/DOMException');
 const MessageEventInfo   = require('../../DOM/Events/MessageEvent');
 const EventInfo          = require('../../DOM/Events/Event');
 const ErrorEventInfo     = require('../../DOM/Events/ErrEvent');
 const MPSemantics        = require('../Common/MPSemantics');
-const __location         = require('../PostMessage/Location');
+const __location         = require('../WebMessaging/Location');
 
 /*
 * @id WorkerGlobalScope

@@ -1,7 +1,7 @@
 // Title: null transfer</title>
 
 import { assert_throws, test } from '../../../js/DOM/Events/Testharness';
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();
 

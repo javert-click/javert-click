@@ -1,6 +1,6 @@
 //Title: postMessage() with a host object raises DataCloneError
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { test, assert_throws_dom } from '../../../js/DOM/Events/Testharness';
 
 var description = "Throw a DataCloneError when a host object (e.g. a DOM node) is used with postMessage.";

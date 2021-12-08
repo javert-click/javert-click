@@ -3,7 +3,7 @@
 import { async_test, assert_equals } from '../../../../../js/DOM/Events/Testharness';
 const WorkerInfo = require('../../../../../js/MessagePassing/WebWorkers/Worker');
 const Worker = WorkerInfo.Worker;
-const location = require('../../../../../js/MessagePassing/PostMessage/Location');
+const location = require('../../../../../js/MessagePassing/WebMessaging/Location');
 
 async_test(function() {
   var worker = new Worker('members-worker.js');

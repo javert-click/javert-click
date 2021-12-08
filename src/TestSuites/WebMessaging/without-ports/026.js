@@ -1,6 +1,6 @@
 // Title: Cloning objects with getter properties
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test, assert_throws_exactly } from '../../../js/DOM/Events/Testharness';
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();

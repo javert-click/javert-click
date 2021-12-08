@@ -1,6 +1,6 @@
 //Title: zero arguments</title>
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { test, assert_throws_js } from '../../../js/DOM/Events/Testharness';
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();

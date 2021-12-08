@@ -2,7 +2,7 @@
 //Title: unknown parameter
 
 import { assert_equals, async_test } from '../../../js/DOM/Events/Testharness';
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 const Window = require('../../../js/DOM/Events/Window');
 var window = Window.getInstance();
 

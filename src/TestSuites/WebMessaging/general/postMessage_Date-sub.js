@@ -1,6 +1,6 @@
 //Title: postMessage with Date object 
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test, assert_equals, assert_not_equals } from '../../../js/DOM/Events/Testharness';
 
 const HTMLDocument = require('../../../js/DOM/Events/HTMLDocument');

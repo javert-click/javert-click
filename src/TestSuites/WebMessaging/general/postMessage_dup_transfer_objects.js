@@ -1,6 +1,6 @@
 //Title: postMessage with duplicate transfer objects raises DataCloneError exception
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { test, assert_throws_dom, assert_own_property  } from '../../../js/DOM/Events/Testharness';
 
 const HTMLDocument = require('../../../js/DOM/Events/HTMLDocument');

@@ -1,5 +1,5 @@
 //Title: postMessage(): read-only ports array
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test, assert_equals, assert_throws } from '../../../js/DOM/Events/Testharness';
 
 var TargetPort = null;

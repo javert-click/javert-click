@@ -5,7 +5,7 @@
 // to dispatch the remaining messages. Test succeeds if it does not hang or crash 
 // (if worker thread is running in the separate process, that process could hang or crash).
 import { Worker } from '../../../js/MessagePassing/WebWorkers/Worker';
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test } from '../../../js/DOM/Events/Testharness';
 
 async_test(function(t) {

@@ -1,5 +1,5 @@
 import { test, assert_throws_js, assert_equals, assert_throws_dom, assert_unreached, assert_not_equals  } from '../../../js/DOM/Events/Testharness';
-const BroadcastChannelInfo = require('../../../js/MessagePassing/PostMessage/BroadcastChannel');
+const BroadcastChannelInfo = require('../../../js/MessagePassing/WebMessaging/BroadcastChannel');
 const BroadcastChannel = BroadcastChannelInfo.BroadcastChannel;
 
 test(() => assert_throws_js(TypeError, () => new BroadcastChannel()),

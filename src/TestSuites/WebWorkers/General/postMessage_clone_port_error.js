@@ -1,6 +1,6 @@
 //Title: postMessage(): cloning source port
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { test, assert_throws_dom } from '../../../js/DOM/Events/Testharness';
 
 test(function() {

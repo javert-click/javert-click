@@ -1,4 +1,4 @@
-const MessageChannel = require('../../../../../js/MessagePassing/PostMessage/MessageChannel');
+const MessageChannel = require('../../../../../js/MessagePassing/WebMessaging/MessageChannel');
 MessageChannel = MessageChannel.MessageChannel;
 
 var channel = new MessageChannel();

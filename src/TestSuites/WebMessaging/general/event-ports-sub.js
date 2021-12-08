@@ -1,7 +1,7 @@
 //Title: event.ports returns the MessagePort array sent with the message
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
-import { MessagePort } from '../../../js/MessagePassing/PostMessage/MessagePort';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
+import { MessagePort } from '../../../js/MessagePassing/WebMessaging/MessagePort';
 import { async_test, test, assert_equals, assert_true, assert_own_property } from '../../../js/DOM/Events/Testharness';
 
 const HTMLDocument = require('../../../js/DOM/Events/HTMLDocument');

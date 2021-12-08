@@ -1,4 +1,4 @@
-const location = require('../../../../../../js/MessagePassing/PostMessage/Location');
+const location = require('../../../../../../js/MessagePassing/WebMessaging/Location');
 
 var exceptions = [];
 try { location.href = 1; } catch(e) { exceptions.push('href'); }

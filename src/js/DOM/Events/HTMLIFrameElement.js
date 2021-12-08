@@ -1,5 +1,5 @@
 const MPSemantics       = require('../../MessagePassing/Common/MPSemantics');
-const MessagePort       = require('../../MessagePassing/PostMessage/MessagePort');
+const MessagePort       = require('../../MessagePassing/WebMessaging/MessagePort');
 const HTMLElement       = require('./HTMLElement');
 const Window            = require('./Window');
 const Event             = require('./Event');

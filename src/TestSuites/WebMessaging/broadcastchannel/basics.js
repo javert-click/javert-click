@@ -1,9 +1,9 @@
 import { async_test, assert_equals, assert_array_equals, assert_unreached, assert_not_equals, assert_true  } from '../../../js/DOM/Events/Testharness';
-const BroadcastChannelInfo = require('../../../js/MessagePassing/PostMessage/BroadcastChannel');
+const BroadcastChannelInfo = require('../../../js/MessagePassing/WebMessaging/BroadcastChannel');
 const BroadcastChannel = BroadcastChannelInfo.BroadcastChannel;
 const MessageEventInfo = require('../../../js/DOM/Events/MessageEvent');
 const MessageEvent = MessageEventInfo.MessageEvent;
-const location = require('../../../js/MessagePassing/PostMessage/Location');
+const location = require('../../../js/MessagePassing/WebMessaging/Location');
 
 
 async_test(t => {

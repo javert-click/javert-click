@@ -1,6 +1,6 @@
 //Title: MessageEvent interface and properties
 
-import { MessageChannel } from '../../../js/MessagePassing/PostMessage/MessageChannel';
+import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { MessageEvent } from '../../../js/DOM/Events/MessageEvent';
 import { async_test, assert_equals, assert_true, assert_false  } from '../../../js/DOM/Events/Testharness';
 
