@@ -51,7 +51,7 @@ In order to reproduce these results, run the following commands (from the `envir
 ./webworkerstestsuite.sh
 ```
 
-These commands will run all the applicable tests for the WebMessaging and WebWorkers APIs, printing information about its progress; we estimate this process to take approximately **240** minutes for WebMessaging and **600** minutes for WebWorkers.
+These commands will run all the applicable tests for the WebMessaging and WebWorkers APIs, printing information about its progress; we estimate this process to take approximately **240** minutes for WebMessaging and **500** minutes for WebWorkers.
 The test results will be printed to the console, but we provide the full result in the files `result_wm.txt` and `result_workers.txt` (respectively corresponding to the WebMessaging and WebWorkers test suites) in the environment folder.
 
 We also provide the `mp.sh` script for running a single test for each of these APIs. 
