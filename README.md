@@ -68,7 +68,7 @@ For instance, the following command will execute the `Channel_postMessage_clone_
 We analyse [`webworker-promise`](https://github.com/kwolfy/webworker-promise), a promise-wrapper over the WebMessaging and WebWorkers APIs. 
 Our analysis has revealed three previously unknown bugs in `webworker-promise` related to a null dereference, an overlooked prototype inheritance and JS dynamic typing.
 
-The reported results (Table 2, section 6.2) are obtained on a machine with an Intel Core i7-4980HQ CPU 2.80 GHz, DDR3 RAM 16GB, and a 256GB solid-state hard-drive running OSX. Note that we show the results for seven tests in Table 2 (we do not include `EmitOnce`, `PoolError` and `Operation`). We provide the results for the whole test suite in appendix. To reproduce the results, please run the following command:
+The reported results (Table 2, section 6.2) are obtained on a machine with an Intel Core i7 CPU 2.5 GHz, DDR3 RAM 16GB, and a 256GB solid-state hard-drive running OSX. Note that we show the results for seven tests in Table 2 (we do not include `EmitOnce`, `PoolError` and `Operation`). We provide the results for the whole test suite in appendix. To reproduce the results, please run the following command:
 
 ```
 ./webworkerpromisetestsuite.sh
