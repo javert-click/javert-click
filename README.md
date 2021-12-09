@@ -4,14 +4,17 @@ JaVerT.Post is the first symbolic execution tool for Message-Passing Web Program
 
 ## Starting the Artifact via [Docker](https://docs.docker.com/)
 The artifact is a .zip file available [here](INSERT LINK HERE).
+
+Please make sure to have [Docker](https://docs.docker.com/) installed. We recommend using the following configuration: 2 CPUs, Memory 10GB , Swap 1GB and Disk image size 59.6 GB.
+
 1. Download the .zip file.
-2. Open the terminal and navigate to the `javert-post` folder (the one extracted from the .zip file).
-3. Run `docker build --tag javert-post .` to build the docker image.
-4. Activate the container in interactive mode by running `docker run -it javert-post`.
-5. Navigate to the `javert-post` folder inside the container by running `cd javert-post`.
-6. Build JaVerT.Post by running `make` inside the `javert-post` folder.
-7. Setup the environment folder by running `./scripts/setup_environment.sh` from the `javert-post` folder.
-8. Navigate to the environment folder in order to start executing tests by running `cd environment`.
+2. `cd javert-post` [javert-post being the extracted folder from the .zip file]
+3. `docker build --tag javert-post .` [builds the docker image]
+4. `docker run -it javert-post` [activates the container in interactive mode]
+5. `cd javert-post` [navigates to the `javert-post` folder inside the container]
+6. `make` [builds JaVerT.Post]
+7. `./scripts/setup_environment.sh` [creates the environment folder]
+8. `cd environment`
 
 ## The Structure of JaVerT.Post
 The `~\javert-post` folder is the base folder that contains all of the required infrastructure.
