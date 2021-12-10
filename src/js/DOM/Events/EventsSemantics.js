@@ -8,7 +8,7 @@
 /*
 * @id EventsSemantics
 */
-var EventsSemantics = function(){
+function EventsSemantics(){
   this.eh = [];
   this.hq = [];
   this.xsc = null;

@@ -3,7 +3,7 @@ const SharedWorkerGlobalScope    = require('./WebWorkers/SharedWorkerGlobalScope
 const IFrameGlobalScope          = require('../MessagePassing/WebWorkers/IFrameGlobalScope');
 const MessagePort                = require('./WebMessaging/MessagePort');
 //const MPSemantics                = require('./Common/MPSemantics');
-const EventSemantics             = require('../DOM/Events/EventsSemantics');
+//const EventSemantics             = require('../DOM/Events/EventsSemantics');
 //const MessageEvent               = require('../DOM/Events/MessageEvent');
 const Window                     = require('../DOM/Events/Window');
 const WorkerInfo                 = require('./WebWorkers/Worker');
@@ -15,7 +15,7 @@ JSILSetGlobalObjProp("IFrameGlobalScope", IFrameGlobalScope);
 JSILSetGlobalObjProp("MessagePort", MessagePort);
 //JSILSetGlobalObjProp("MessageEvent", MessageEvent.MessageEvent);
 //JSILSetGlobalObjProp("MPSemantics", MPSemantics);
-JSILSetGlobalObjProp("EventSemantics", EventSemantics);
+//JSILSetGlobalObjProp("EventSemantics", EventSemantics);
 JSILSetGlobalObjProp("Window", Window);
 JSILSetGlobalObjProp("WorkerInfo", WorkerInfo);
 JSILSetGlobalObjProp("wrapperExecJSILProc", wrapperExecJSILProc);

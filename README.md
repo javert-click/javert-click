@@ -55,7 +55,7 @@ In order to reproduce these results, run the following commands (from the `envir
 ```
 
 These commands will run all the applicable tests for the WebMessaging and WebWorkers APIs, printing information about its progress; we estimate this process to take approximately **240** minutes for WebMessaging and **500** minutes for WebWorkers.
-The test results will be printed to the console, but we provide the full result in the files `result_wm.txt` and `result_workers.txt` (respectively corresponding to the WebMessaging and WebWorkers test suites) in the environment folder.
+The test results will be printed to the console, but we provide more detailed results in the files `result_wm.txt` and `result_workers.txt` (respectively corresponding to the WebMessaging and WebWorkers test suites) in the environment folder.
 
 We also provide the `mp.sh` script for running a single test for each of these APIs. 
 The usage is analogous, with the difference that they take a single file as input instead of a folder. 
@@ -86,7 +86,7 @@ This is the current breakdown:
 | Time                         | 1m32s     | 0m45s            | 1m39s     |  5m33s        | 5m35s         |  10m13s       |  3m8s          |  2m3s             |  12m36s      |   14m44s   |
 | #JSIL Commands    | 316,500   | 151,396          |  319,608  |  1,181,553   | 1,088,310    |   1,898,784   |   377,745    |   502,257        |  1,722,600   |   2,011,518  |
 
-Note that in the symbolic tests `Mirror`, `EmitOn`, `EmitOff`, `EmitOnce` and `PoolLimit`, JaVerT.Post finds failing models, which represent the three bug scenarios described in the paper; the remaining symbolic tests are expected to pass. In the following, we give the failing model expected for each test.
+Note that in the symbolic tests `Mirror`, `EmitOn`, `EmitOff`, `EmitOnce` and `PoolLimit`, JaVerT.Post finds failing models, which represent the three bug scenarios described in the paper; the remaining symbolic tests are expected to pass. In the following, we give the failing model(s) expected for each test.
 
 #### Mirror.js: Null Dereference Bug (Bug#1 of Section 6.2.2)
 ```
@@ -137,7 +137,7 @@ Failing Model:
 	[(#maxthreads: 0.5)]
 ````
 
-This means that, for instance, if the `#msg` symbolic variable defined in `Mirror.js` is given the value `null`, the test assertion fails. The same idea is valid for the other tests failing.
+This means that, for instance, if the `#msg` symbolic variable defined in `Mirror.js` is given the value `null`, the test assertion fails. The same idea applies to the other failing tests.
 
 To run an individual test, execute 
 

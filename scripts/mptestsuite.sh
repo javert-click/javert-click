@@ -11,7 +11,8 @@ declare worker_syntax_error="./js/MessagePassing/WebWorkers/backup_worker_syntax
 rm -f $outputfile
 touch $outputfile
 
-echo "Compiling workers" >> $outputfile
+echo "Compiling workers..."
+echo "Compiling workers..." >> $outputfile
 for filename in $workers; do
     declare workername=$(basename $filename)
     echo "Compiling worker $filename" >> $outputfile
@@ -64,6 +65,7 @@ for testfile in $tests; do
   declare nasserts=`grep -c "TestHarnessAssert.*: 0" $log_test_file`
   declare nasserts_passed=`grep -c "CMD: return" $log_test_file`
   declare nasserts_failed=`grep -c "CMD: throw" $log_test_file`
+  echo "NUMBER OF ASSERTS CHECKED: $nasserts"
   echo "NUMBER OF ASSERTS CHECKED: $nasserts" >> $outputfile
   echo "--Passing: $nasserts_passed" >> $outputfile
   echo "--Failing: $nasserts_failed" >> $outputfile
