@@ -6,8 +6,10 @@ const ESemantics = EventsSemanticsInfo.EventsSemantics;
 * @id MPSemantics
 */
 function MPSemantics(){
-    this.ESem = new ESemantics();
-    this.ESem.addHandler("Message", "ProcessMessage", "processMessageSteps");
+    if(ESemantics){
+      this.ESem = new ESemantics();
+      this.ESem.addHandler("Message", "ProcessMessage", "processMessageSteps");
+    }
 }
 
 var MPSem;

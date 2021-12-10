@@ -4,6 +4,7 @@ const IFrameGlobalScope          = require('../MessagePassing/WebWorkers/IFrameG
 const MessagePort                = require('./WebMessaging/MessagePort');
 const Window                     = require('../DOM/Events/Window');
 const WorkerInfo                 = require('./WebWorkers/Worker');
+const EventsSemanticsInfo        = require('../DOM/Events/EventsSemantics');
 
 
 JSILSetGlobalObjProp("DedicatedWorkerGlobalScope", DedicatedWorkerGlobalScope.DedicatedWorkerGlobalScope);
@@ -13,6 +14,7 @@ JSILSetGlobalObjProp("MessagePort", MessagePort);
 JSILSetGlobalObjProp("Window", Window);
 JSILSetGlobalObjProp("WorkerInfo", WorkerInfo);
 JSILSetGlobalObjProp("wrapperExecJSILProc", wrapperExecJSILProc);
+JSILSetGlobalObjProp("EventsSemantics", EventsSemanticsInfo.EventsSemantics);
 
 
 
@@ -36,6 +38,10 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
     // 17. Associate inside port with worker global scope.
     globalObj.__port = insidePort;
     var MPSem = global.MPSemantics.getMPSemanticsInstance();
+    if(!MPSem.ESem){
+        MPSem.ESem = new EventsSemantics();
+        MPSem.ESem.addHandler("Message", "ProcessMessage", "processMessageSteps");
+    }
     // 18. Entangle outside port and inside port.
     MPSem.unpairPort(outsidePortId);
     MPSem.unpairPort(insidePort.__id);
@@ -93,6 +99,10 @@ function __rerunConf(workerURL, outsidePortId, isShared, options, main_fid){
     // 17. Associate inside port with worker global scope.
     globalObj.__port = insidePort;
     var MPSem = global.MPSemantics.getMPSemanticsInstance();
+    if(!MPSem.ESem){
+        MPSem.ESem = new EventsSemantics();
+        MPSem.ESem.addHandler("Message", "ProcessMessage", "processMessageSteps");
+    }
     // 18. Entangle outside port and inside port.
     MPSem.unpairPort(outsidePortId);
     MPSem.unpairPort(insidePort.__id);
@@ -135,6 +145,10 @@ function __setupIFrameContext(outsidePortId, mainId, proxyIFrameId, main_fid){
     parent.__port = insidePort;
     context.__port = insidePort;
     var MPSem = global.MPSemantics.getMPSemanticsInstance();
+    if(!MPSem.ESem){
+        MPSem.ESem = new EventsSemantics();
+        MPSem.ESem.addHandler("Message", "ProcessMessage", "processMessageSteps");
+    }
     // 18. Entangle outside port and inside port.
     MPSem.unpairPort(outsidePortId);
     MPSem.unpairPort(insidePort.__id);
