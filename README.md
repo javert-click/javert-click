@@ -103,7 +103,7 @@ This is the current breakdown:
 | **Test Name**          | `Mirror`    | `Terminate`     | `Error`     | `EmitOn`     | `EmitOff`      |  `EmitOnce`  | `PoolSend`  |  `PoolError`   |  `PoolLimit`  |   `Operation`  |
 |----------------------------|--------------|--------------------|--------------|-----------------|------------------|------------------|----------------- |-------------------|------------------|----------------|
 | Time                         | 1m32s     | 0m45s            | 1m39s     |  5m33s        | 5m35s         |  10m13s       |  3m8s          |  2m3s             |  12m36s      |   14m44s   |
-| #JSIL Cmds    | 316,500   | 151,396          |  319,608  |  1,181,553   | 1,088,310    |   1,898,784   |   377,745    |   502,257        |  1,722,600   |   2,011,518  |
+| #JSIL Cmds    | 316,500   | 151,396          |  319,608  |  1,181,553   | 1,088,310    |   1,898,784   |   502,257    |    377,745     |  1,606,341   |   2,011,518  |
 
 Note that in the symbolic tests `Mirror`, `EmitOn`, `EmitOff`, `EmitOnce` and `PoolLimit`, JaVerT.Post finds failing models, which represent the three bug scenarios described in the paper; the remaining symbolic tests are expected to pass. In the following, we give the failing model(s) expected for each test.
 
