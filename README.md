@@ -82,7 +82,7 @@ We provide detailed information about the test filtering process in appendix. In
 ./webworkerstestsuite.sh
 ```
 
-JaVerT.Post prints progress messages; we estimate this process to take approximately **240** minutes for WebMessaging (`webmessagingtestsuite.sh`) and **500** minutes for WebWorkers (`webworkerstestsuite.sh`).
+JaVerT.Post prints progress messages; we estimate the execution to take approximately **240 minutes** for WebMessaging (`webmessagingtestsuite.sh`) and **500 minutes** for WebWorkers (`webworkerstestsuite.sh`).
 The test results will be printed to the console, but we print more detailed results to the files `result_wm.txt` and `result_workers.txt` (respectively corresponding to the WebMessaging and WebWorkers test suites) located in the environment folder.
 
 ### Testing the `webworker-promise` Library
@@ -96,14 +96,14 @@ The reported results (Table 2, section 6.2) are obtained on a machine with an In
 ./webworkerpromisetestsuite.sh
 ```
 
-JaVerT.Post prints progress messages; the execution should take approximately **55** minutes. Our current results, given below, are different from the ones reported only in terms of the number of commands executed at the intermadiate language level considering the following symbolic tests: `EmitOn`, `EmitOff`, `PoolLimit` and `Operation`. This is due to minor refactorings performed in those tests. This table will be updated in the version of the paper accordingly.
+JaVerT.Post prints progress messages; the execution should take approximately **55 minutes**. Our current results, given below, are different from the ones reported in terms of the number of commands for the following symbolic tests: `EmitOn`, `EmitOff`, `PoolLimit` and `Operation`. The number of commands is measured at the JSIL (intermediate language for JavaScript) level. This difference is due to minor refactorings performed in those tests. This table will be updated in the version of the paper accordingly.
 
 This is the current breakdown:
 
 | **Test Name**          | `Mirror`    | `Terminate`     | `Error`     | `EmitOn`     | `EmitOff`      |  `EmitOnce`  | `PoolSend`  |  `PoolError`   |  `PoolLimit`  |   `Operation`  |
 |----------------------------|--------------|--------------------|--------------|-----------------|------------------|------------------|----------------- |-------------------|------------------|----------------|
 | Time                         | 1m32s     | 0m45s            | 1m39s     |  5m33s        | 5m35s         |  10m13s       |  3m8s          |  2m3s             |  12m36s      |   14m44s   |
-| #IL Commands    | 316,500   | 151,396          |  319,608  |  1,181,553   | 1,088,310    |   1,898,784   |   377,745    |   502,257        |  1,722,600   |   2,011,518  |
+| #JSIL Cmds    | 316,500   | 151,396          |  319,608  |  1,181,553   | 1,088,310    |   1,898,784   |   377,745    |   502,257        |  1,722,600   |   2,011,518  |
 
 Note that in the symbolic tests `Mirror`, `EmitOn`, `EmitOff`, `EmitOnce` and `PoolLimit`, JaVerT.Post finds failing models, which represent the three bug scenarios described in the paper; the remaining symbolic tests are expected to pass. In the following, we give the failing model(s) expected for each test.
 
@@ -161,7 +161,7 @@ This means that, for instance, if the `#msg` symbolic variable defined in `Mirro
 To run an individual test, execute 
 
 ```
-./webworkerpromise.sh [mainfile]  [workerfile]
+./webworkerpromise.sh [mainfile] [workerfile]
 ``` 
 
 from the `environment` folder. For instance, the command 
