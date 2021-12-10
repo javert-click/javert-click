@@ -5,7 +5,6 @@ const handleCall = e => {
     if (!(e.data[i] in self))
       log.push(e.data[i]);
   }
-  //TODOMP! Line below is wrong. Message should not have 'These were missing'
   prt.postMessage(log.join(', '));
   //prt.postMessage('These were missing: '+log.join(', '));
 };

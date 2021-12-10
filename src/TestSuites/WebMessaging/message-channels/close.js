@@ -67,7 +67,6 @@ async_test(t => {
     c.port2.postMessage('DONE');
   }, 'Close in onmessage should not cancel inflight messages.');
 
-//TODOMP: This test works but window.postMessage is not properly implemented yet!
 test(() => {
     const c = new MessageChannel();
     c.port1.close();

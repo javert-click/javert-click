@@ -10,4 +10,3 @@ test(function() {
   console.log('Finished test');
   this.done();
  });
- //TODOMP: What is the purpose of this test?

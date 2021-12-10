@@ -16,17 +16,13 @@ if (window.opener)
     }
 }
 
-//TODOMP: window.onmessage!
 onmessage = function(e)
 {
-   // console.log('IFrame: running window.onmessage, msg: '+e.data);
-   // console.log('IFrame: e.ports '+e.ports.toString());
     try
     {
         if (typeof(e.data) == "object" && typeof(e.data.test) == "string")
         {
             console.log('IFrame: going to send message to main, e.source.__port: '+e.source.__port);
-            //TODOMP:
             //eval(e.data.test);
             if (e.data.test === "e.ports[0].postMessage('TRANSFERRED')")
             e.ports[0].postMessage('TRANSFERRED');

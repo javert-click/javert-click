@@ -19,7 +19,6 @@ TinyEmitter.prototype.emit = function(eventName, xargs) {
 
   for(var i = 0; i < this.__listeners[eventName].length; i++) {
     const handler = this.__listeners[eventName][i];
-    //TODOMP: be careful here. Spread operator was in use
     handler.apply(null, xargs);
   }
 

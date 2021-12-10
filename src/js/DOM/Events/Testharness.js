@@ -22,7 +22,6 @@ const StringUtils = require('../../Utils/StringUtils');
 const SharedWorkerInfo = require('../../MessagePassing/WebWorkers/SharedWorker');
 const SharedWorker = SharedWorkerInfo.SharedWorker;
 
-//TODOMP: check if this solution can work!
 var global_scope = executeJSILProc("JSILGetGlobal");
 var self = global_scope;
 
@@ -3715,7 +3714,6 @@ function supports_post_message(w)
 
 var tests = new Tests();
 
-//TODOMP: check how to initialise global_scope var
 if (global_scope.addEventListener) {
     var error_handler = function(e) {
         if (tests.tests.length === 0 && !tests.allow_uncaught_exception) {

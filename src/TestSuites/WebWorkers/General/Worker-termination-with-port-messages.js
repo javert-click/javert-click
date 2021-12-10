@@ -22,7 +22,7 @@ async_test(function(t) {
     channel.port2.start();
 
     worker.postMessage("", [channel.port1]);
-    //TODOMP: upper bound was originally 1000. Changed to 10 to avoid performance issues.
+    //Upper bound was originally 1000. Changed to 10 to avoid performance issues.
     for (var i = 0; i < 10; i++)
         channel.port2.postMessage("message to worker");
 });

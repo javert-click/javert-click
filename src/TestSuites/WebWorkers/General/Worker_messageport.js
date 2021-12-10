@@ -57,10 +57,6 @@ async_test(function(t) {
     worker.postMessage("getport");
 }, 'Test getting messages from a worker on a port.');
 
-/*
-* TODOMP: I don't understand why the spam messages must arrive before the 'spamdone' message!
-*/
-
 async_test(function(t) {
     var worker = new Worker("Worker-messageport.js");
     var channel = new MessageChannel();

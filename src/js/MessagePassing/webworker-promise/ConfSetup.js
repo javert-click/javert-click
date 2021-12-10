@@ -26,7 +26,6 @@ function __setupConf(workerURL, outsidePortId, isShared, options, main_fid){
     // 16. Let inside port be a new MessagePort object in inside settings's Realm.
     //console.log('WORKER: Going to create inside port');
     var insidePort = new global.PublicMessagePort();
-    //TODOMP: check if this call to start() should be here!
     insidePort.start();
     //console.log('WORKER: created inside port with id '+insidePort.__id);
     // 17. Associate inside port with worker global scope.

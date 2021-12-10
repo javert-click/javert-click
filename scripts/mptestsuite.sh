@@ -26,9 +26,7 @@ for filename in $workers; do
       ./js2jsil.native -file $workername -noinitialheap -mp
     else
       cp $filename .
-  #    echo "Going to call js2jsil for worker $filename"
       ./js2jsil.native -file $workername -noinitialheap -mp > result.log
-      #echo "Worker compiled
     fi
 done
 
@@ -40,8 +38,7 @@ declare n=1
 
 echo "compiling setupConf file" >> $outputfile
 npx webpack --config ../webpack.config.js --env entry=$setupconffilejs --env out=$setupconffilejs
-./js2jsil.native -file $setupconffilejs #-noinitialheap
-#mv "webpack_ConfSetup.jsil" "ConfSetup.jsil"
+./js2jsil.native -file $setupconffilejs
 cp $setupconffilejsil .
 
 echo "Going to run $ntests tests"
@@ -56,16 +53,15 @@ for testfile in $tests; do
   declare dir=$(dirname $testfile)
 
   ./js2jsil.native -file $name -mp
-  #cp -R "$dir/$base.jsil" .
+
   echo -e "\n-----Running test $n/$ntests: $testfile-----"
   echo -e "\n-----Running test $n/$ntests: $testfile-----" >> $outputfile
-  #./jsil.native -file "$base.jsil" -pbn -mp -js2jsil
+  
   ./jsil.native -file $name -silent -mp -js2jsil
 
   declare nasserts=`grep -c "TestHarnessAssert.*: 0" $log_test_file`
   declare nasserts_passed=`grep -c "CMD: return" $log_test_file`
   declare nasserts_failed=`grep -c "CMD: throw" $log_test_file`
-  echo "NUMBER OF ASSERTS CHECKED: $nasserts"
   echo "NUMBER OF ASSERTS CHECKED: $nasserts" >> $outputfile
   echo "--Passing: $nasserts_passed" >> $outputfile
   echo "--Failing: $nasserts_failed" >> $outputfile

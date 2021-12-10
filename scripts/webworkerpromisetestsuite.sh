@@ -13,19 +13,15 @@ declare heapfile="heapplus.json"
 declare setupconffile="js/MessagePassing/webworker-promise/ConfSetup.js"
 declare workerfile=$2
 
-#echo "Compiling lib file"
 #Running libfile and generating json file with heap
 cp $libfile .
 ./js2jsil.native -file ./libplus.js -mp
-#echo "Generating heap for lib file"
 ./jsil.native -file ./libplus.jsil -silent -mp -printheap $heapfile
 
-#echo "Compiling setup conf file"
 #Compiling setup conf file 
 cp $setupconffile .
 ./js2jsil.native -file "ConfSetup.js" -noimports -loadheapfromjson $heapfile
 
-#echo "Compiling worker file"
 #Compiling worker file
 for worker in $workers; do
   cp $worker .
@@ -33,7 +29,6 @@ for worker in $workers; do
   declare baseworker=${nameworker%%.*}
   ./js2jsil.native -file "$baseworker.js" -cosette -noimports -noinitialheap
 
-  #echo "Joining files"
   #Joining files
   cat "$baseworker.jsil" > "temp.jsil"
   cat "libplus.jsil" "ConfSetup.jsil" "temp.jsil" > "$baseworker.jsil"
@@ -46,7 +41,6 @@ declare n=1
 for testfile in $tests; do
   declare name=$(basename $testfile)
   declare base=${name%%.*}
-  #echo "Compiling $base.js"
   cp $testfile .
   ./js2jsil.native -file "$base.js" -cosette -noimports -loadheapfromjson $heapfile
   echo -e "\nRunning test $n/$ntests: $testfile"

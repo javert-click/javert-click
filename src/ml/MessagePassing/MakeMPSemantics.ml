@@ -134,7 +134,6 @@ module M
   let assume (cq: cq_t) (f: Formula.t) : cq_t =
   L.log L.Normal (lazy (Printf.sprintf "\nGoing to do Assume. CQ length: %d \n" (List.length cq)));
     let cq' = List.fold_left (fun acc (cid, conf, blocked) -> 
-      (*L.log L.Normal (lazy (Printf.sprintf "\nASSUME: conf: %s" (EventSemantics.state_str conf)));*)
       match EventSemantics.assume conf f with
       | Some conf' -> acc @ [cid, conf', blocked] 
       | None -> acc) [] cq in
@@ -146,8 +145,6 @@ module M
        (* we need to fire the event to all confs *)
        List.fold_left (fun acc (cid, econf, blocked) -> 
         let econfs' = EventSemantics.fire_event event msg econf true in
-        (* TODOMP: Check later best solution for this. 
-        Changing position of confs in cq should not be necessary! *)
         List.concat 
           (List.map 
             (fun econf' -> 
@@ -206,17 +203,6 @@ module M
         ) [] cq' in
         [cq''], lead_conf
     | None -> [cq'], lead_conf) in
-    (*let new_cq_list = 
-    match f with
-    | None -> L.log L.Normal (lazy (Printf.sprintf "Formula is none, cq length: %d" (List.length cq_list))); cq_list
-    | Some f -> 
-      L.log L.Normal (lazy (Printf.sprintf "Before assume(%s): cq list length: %d" (Formula.str f) (List.length cq_list)));
-      let new_cq = List.map (fun cq -> assume cq f) cq_list in 
-      L.log L.Normal (lazy (Printf.sprintf "After assume(%s): cq list length: %d" (Formula.str f) (List.length new_cq)));
-      new_cq in*)
-    (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
-    (*List.iter (fun (cid, econf) -> L.log L.Normal (lazy (Printf.sprintf "\nCID: %d, CONF: \n%s\n" cid (EventSemantics.state_str econf)))) new_cq;*)
-    (*L.log L.Normal (lazy (Printf.sprintf "\n*******************\n"));*)
     List.map (fun new_cq -> new_cq, mq', pc', pp', lead_conf') cq_list
 
 
@@ -245,14 +231,7 @@ module M
   (* Updates mp conf based on new message msg sent to the specified port *)
   let send (econf: event_conf_t) (msg: vt list) (plist: port_t list) (port_1: port_t) (port_2: port_t) (event: vt) (mq: mq_t) (pc: pc_map_t) (pp: pp_map_t) : event_conf_t * mq_t =
     let cid, conf, blocked = econf in
-    (*Printf.printf "\nSend, Found msg: %s\n" (String.concat "," (List.map Val.str msg));*)
-    (*Printf.printf "\nDest port: %s\n" (Literal.str port_2);*)
-    (*let port_2 = Hashtbl.find pp port_1 in*)
-    (* We need to guarantee that the sender belongs to the current configuration *)
-    (*let port_belongs_to_curr_conf = Hashtbl.fold (fun port' cid' acc -> if (cid = cid' && port_1 = port') then true else acc) pc false in *)
     if (count_msgs_for_conf econf mq >= msgs_limit_per_conf) then (cid, conf, true), mq
-    (*else if (port_belongs_to_curr_conf) then econf, enqueue cid msg plist port_2 event mq 
-    else econf, mq*)
     else econf, enqueue cid msg plist port_2 event mq
 
   (* Creates new configuration and also sets return variable to new configuration identifier *)
@@ -298,7 +277,6 @@ module M
     (* 2. Removing ports from pp map*)
     let pp' = List.fold_left (fun pp' port -> unpair_port port pp') pp plist in
     (* 3. Removing messages sent to ports in the given port list *)
-    (* TODOMP: fix this! *)
     let mq' = 
     if (del_pending_msgs) then 
       List.filter (
@@ -348,7 +326,6 @@ module M
   (* Returns the ports paired with the given port *)
   let get_paired (xvar: string) (port: port_t) (conf: event_conf_t) (pp: pp_map_t) : event_conf_t =
     let cid, conf, blocked = conf in 
-    (*Printf.printf "\nGetPaired: searching for paired port of %s" (Val.str port);*)
     match Hashtbl.find_opt pp port with
     | None ->
       (* return null if no paired port is found *)
@@ -366,11 +343,8 @@ module M
   (* Processes the message obtained from scheduler by calling ES (fire rule) *)
   let process_message (msg: message_t) (port: port_t) (cq: cq_t) (pc: pc_map_t) : cq_t list * pc_map_t =
    let (vs, plist, event_data) = msg  in
-   (*Printf.printf "\nProcessing message %s sent to port %s\n" (String.concat ", " (List.map Val.str vs))  (Literal.str port);*)
-    (* TODOMP: FIX THIS *)
    let cid = Hashtbl.find pc port in
    L.log L.Normal (lazy (Printf.sprintf "Trying to find conf %s" cid));
-    (*Printf.printf "\nFound %d conf for port %s" cid (Literal.str port);*)
     let pc' = redirect plist cid pc in
     (match get_conf cid cq with
     | None -> raise (Failure ("Invalid Configuration Identifier."))
@@ -384,27 +358,18 @@ module M
       let cid, conf, blocked = econf in
       match label with
       | Send (msg, plist, port_orig, port_dest, event) -> 
-        (*L.log L.Normal (lazy (Printf.sprintf "Found send. Port orig:%s, Port dest:%s" (Val.str port_orig) (Val.str port_dest)));*)
-        (*Printf.printf "\nProcessing send label\n";*)
         let plist = List.map (fun p -> compute_num_from_val p) plist in
         let econf', mq' = send econf msg plist (compute_num_from_val port_orig) (compute_num_from_val port_dest) event mq pc pp in
         [econf', mq', pc, pp, None, None]
       | NotifyAll (msg, event) ->
-        (*Printf.printf "\nFound send_sync. Event:%s\n" (Val.str event);*)
         [econf, mq, pc, pp, Some (Notify (msg, event, cid)), None]
-        (*let dest_ports = Hashtbl.fold (fun p _ acc -> acc @ [p]) pc [] in
-        let mq' = mq @ [Sync (msg, event, cid), dest_ports] in
-        [(cid, conf), mq', pc, pp, None, None]*)
       | Create (id, xvar, url, setup_fid, args) -> 
-        (*Printf.printf "\nMP-Semantics: Processing create label, setup_fid: %s" (setup_fid);*)
         let conf'', new_conf, oaction = new_execution id xvar url setup_fid args  cids econf in
         [conf'', mq, pc, pp, oaction, None] 
       | Terminate (xvar, delete_pending_msgs, cid') -> 
-        (*Printf.printf "\nFound terminate for cid %s\n" (Val.str cid');*)
         let cid' = match cid' with
         | Some cid' -> compute_string_from_val cid'
         | None -> cid in
-        (*Printf.printf "\nComputed cid: %d\n" cid'; *)
         let plist = Hashtbl.fold (fun port' cid' acc -> if (cid = cid') then acc @ [port'] else acc) pc [] in
         let mq', pc', pp' = terminate delete_pending_msgs plist mq pc pp in
         [econf, mq', pc', pp', Some (RemConf (cid')), None]
@@ -494,12 +459,6 @@ module M
     ) cq && List.for_all (
       fun (_, conf, _) -> EventSemantics.is_awaiting conf || EventSemantics.final conf
     ) cq in
-    (*if(List.length mq = 0 && List.length cq > 0 && all_confs_awaiting) then (
-      Printf.printf "\nERROR: There is at least a pending promise that will never be resolved\n";
-      let cid, econf, blocked = List.hd cq in
-      let econfs' = EventSemantics.assert_formula Formula.False econf in
-      [], List.map (fun econf' -> (cid, econf', blocked) :: (List.tl cq), mq, pc, pp, lead_conf) econfs'
-    ) else ( *)
       match lead_conf with
       | Some cid -> 
         L.log L.Normal (lazy (Printf.sprintf "\nRunning lead conf %s\n" cid));
@@ -511,7 +470,7 @@ module M
           | [], Some fconf -> [], update fconf
           | new_reduced_confs, _ ->
             List.concat (List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs), [])
-        | _, None, _ -> [], []) (*raise (Failure "Configuration not found")*) 
+        | _, None, _ -> [], []) 
       | None ->
         (* Scheduler decides if a configuration or a message is scheduled *)
         (match Scheduler.schedule cq mq final ready_to_process_msg has_transfer count_msgs_for_conf with
@@ -522,8 +481,6 @@ module M
           L.log L.Normal (lazy (Printf.sprintf "MP scheduler chose conf"));
           let update = update_full_conf_from_reduced_conf cq_pre cq_post mq pc pp lead_conf in
           let cids = List.map (fun (cid, _, _) -> cid) cq in
-          (*L.log L.Normal (lazy (Printf.sprintf "cq_pre: %s" (String.concat ", " (List.map (fun (cid, _) -> string_of_int cid) cq_pre))));
-          L.log L.Normal (lazy (Printf.sprintf "cq_post: %s" (String.concat ", " (List.map (fun (cid, _) -> string_of_int cid) cq_post))));*)
           (match run_conf cids c mq pc pp with
           | [], Some fconf -> [], update fconf
           | new_reduced_confs, _ -> List.concat (List.map (fun new_reduced_conf -> update new_reduced_conf) new_reduced_confs), [])
@@ -533,12 +490,10 @@ module M
           let (_, msg, port) = mq in
           let cqs, pc' = process_message msg port cq pc in
           List.map (fun cq -> cq, mq', pc', pp, lead_conf) cqs, [])
-    (*))*)
     
       
 
   let rec make_steps (mpconfs: mp_conf_t list) : mp_conf_t list = 
-    (*Printf.printf "Make steps: counter: %d" counter;*)
     match mpconfs with
     | [] -> []
     | conf :: mpconfs -> 
@@ -546,7 +501,6 @@ module M
       | [], confs -> 
          confs @ make_steps mpconfs
       | new_confs, _ -> 
-         (*Printf.printf "\nGot %d more mp confs\n" (List.length new_confs);*)
          make_steps (new_confs @ mpconfs))
 
   let evaluate_prog (prog: UP.prog) : result_t list =
@@ -554,7 +508,6 @@ module M
     let first_cid = generate_new_conf_id [] in
     let initial_mpconf = [first_cid, initial_econf, false], [], Hashtbl.create CCommon.medium_tbl_size, Hashtbl.create CCommon.medium_tbl_size, None in
     let final_confs = make_steps [initial_mpconf] in
-    (*Printf.printf "\nMP-Semantics: Finished execution with %d MP-configurations.\n" (List.length final_confs);*)
     List.map (fun (cq, mq, pc, pp, _) -> 
       let erets = List.map (fun (cid, econf, blocked) -> (cid, EventSemantics.econf_to_result econf)) cq in
       (erets, mq, pc, pp)) final_confs

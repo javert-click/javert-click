@@ -18,15 +18,7 @@ cp $url_parser_file .
 
 npx webpack --config ../webpack.config.js --env entry=$testfile --env out=$testfile
 cp $testfile .
-# PostMessage and WebWorkers reference implementations
-#echo "compiling DOM, postMessage and WebWorkers files"
-#for filename in {$assertdir,$commondir,$eventsdir,$postmessagedir,$workersdir,$mpcommon,$utilsdir,$promisesdir}/*.js; do
-#    echo "Compiling $filename"
-#    ./js2jsil.native -file $filename
-#done
 
-# We assume the workers are previously compiled to JSIL
-#echo "compiling workers"
 if [ -d $workersexamples ] && [[ $2 = "-workers" ]]
 then
   for filename in $workersexamples/*.js; do
@@ -41,31 +33,20 @@ then
       ./js2jsil.native -file $workername -noinitialheap -mp
     else
       cp $filename .
-  #    echo "Going to call js2jsil for worker $filename"
       ./js2jsil.native -file $workername -noinitialheap -mp > result.log
-      #echo "Worker compiled"
     fi
   done
-else
-  echo "No worker found in this directory"
 fi
 
 #echo "compiling setupConf file"
 npx webpack --config ../webpack.config.js --env entry=$setupconffilejs --env out=$setupconffilejs
-./js2jsil.native -file $setupconffilejs #-noinitialheap
-#mv "webpack_ConfSetup.jsil" "ConfSetup.jsil"
+./js2jsil.native -file $setupconffilejs
 cp $setupconffilejsil .
 
-#Copying files from dom implementation to environment
-#for filename in {$assertdir,$commondir,$eventsdir,$postmessagedir,$workersdir,$workersexamples,$mpcommon,$utilsdir,$promisesdir}/*.jsil; do
-#	cp $filename .
-#done
-#echo "Compiling resulting file to JSIL"
+
 ./js2jsil.native -file $name -mp
-#cp -R "$dir/$base.jsil" .
 echo -e "-----Running $testfile-----"
-#./jsil.native -file "$base.jsil" -pbn -mp -js2jsil
-./jsil.native -file $name -pbn -mp -js2jsil -stats
+./jsil.native -file $name -silent -mp -js2jsil
 
 declare nasserts=`grep -c "TestHarnessAssert.*: 0" $log_test_file`
 declare nasserts_passed=`grep -c "CMD: return" $log_test_file`

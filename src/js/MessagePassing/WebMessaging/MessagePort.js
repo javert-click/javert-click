@@ -93,8 +93,6 @@ MessagePort.prototype.postMessage = function(message, options){
     MPSem.endAtomic();
 }  
 
-//TODOMP: think of a better solution for this. 
-
 var Window = WindowInfo.Window;
 
 /*
@@ -223,7 +221,6 @@ function messagePortProcessMessageSteps(scopeMP, message, targetPortId, transfer
     var event = new scopeMP.MessageEvent.MessageEvent();
     event.data = messageClone; 
     event.ports = newPorts;
-    // Extra step to handle 2 concrete tests from official test suite. TODOMP: check if this is specified in standard
     if(includeUserActivation === true){
         event.userActivation = { isActive: false, hasBeenActive: false };
     } else {
@@ -298,20 +295,16 @@ function windowPostMessageSteps(originWindow, targetWindow, message, options, ta
 */
 function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transferIds, originWindowId, targetWindow, targetOrigin, sameWindow){
     return function(){
-        //transferIds = scopeMP.JS2JSILList.JSILListToArray(transferIds);
       // 8.1 If the targetOrigin argument is not a single literal U+002A ASTERISK character (*) and targetWindow's associated Document's origin is not same origin with targetOrigin, then return.
       if((targetOrigin !== "*") && (targetOrigin !== scopeMP.location.origin)) return; 
       // 8.2 Let origin be the serialization of incumbentSettings's origin.
       var origin = scopeMP.location.origin;
       // 8.3 Let source be the WindowProxy object corresponding to incumbentSettings's global object (a Window object).
       var source = scopeMP.WindowInfo.Window.prototype.windows.find(w => { return w.__id === originWindowId })
-      //if (!source) source = new scopeMP.WindowInfo.Window(originWindowId);
-      // TODOMP: insert window created
       // 8.4 Let deserializeRecord be StructuredDeserializeWithTransfer(serializeWithTransferResult, targetRealm).
       var deserializeRecord = scopeMP.Serialization.StructuredDeserializeWithTransfer(serializeWithTransferResult, transferIds, scopeMP.MessagePort);
       // 8.5 Let messageClone be deserializeRecord.[[Deserialized]].
       var messageClone = deserializeRecord.Deserialized;
-      //console.log('windowProcessMessageSteps, Obtained message '+messageClone);
       // 8.6 Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]], if any, maintaining their relative order.
       var newPorts = deserializeRecord.TransferredValues;
       // 8.7 Fire an event named message at targetWindow, using MessageEvent, 
@@ -327,9 +320,6 @@ function windowProcessMessageSteps(scopeMP, serializeWithTransferResult, transfe
         targetWindow.dispatchEvent(event, undefined, true);  
       } else {
           console.log('windowProcessMessageSteps, TARGET WINDOW NOT FOUND')
-      //  var finalTargetPort = scopeMP.ArrayUtils.find(scopeMP.MessagePort.prototype.ports, function(p){return p.__id === targetPortId});
-      //  console.log('Dispatching event to window of id '+finalTargetPort.targetWindow.__id+', Listeners: '+finalTargetPort.targetWindow.listeners);
-      //  if(finalTargetPort) finalTargetPort.targetWindow.dispatchEvent(event, undefined, true);
       }
   }
 }

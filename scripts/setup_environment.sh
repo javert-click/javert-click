@@ -5,7 +5,6 @@ cp -r src/TestSuites environment
 cp src/js/MessagePassing/URLParsing/URLParser.js environment
 
 cp scripts/*.sh environment
-cp scripts/*.py environment
 cp *.native environment
 
 cp src/ml/JSLogic/runtime/* environment

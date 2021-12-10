@@ -39,7 +39,6 @@ function DedicatedWorkerGlobalScope (global, options, WorkerInfo) {
               if(scope.__port.__onmessagehandler) scope.__port.removeEventListener('message', scope.__port.__onmessagehandler);
               scope.__port.__onmessagehandler = f;
               scope.__port.addEventListener('message', f);
-              //TODOMP: check what should happen here
             }else{
                 scope.__port.__onmessagehandler = null;
             }

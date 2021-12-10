@@ -8,7 +8,6 @@ async_test(function(t) {
     var targetPort = channel.port2;
     targetPort.start();
     targetPort.addEventListener("message", t.step_func_done(function (evt) {
-      // TODOMP: check how to set class attr for message event
       console.log('MessageEvent class: '+({}.toString.call(evt)));
       assert_class_string(evt, "MessageEvent");
       console.log('Evt.type: '+evt.type);

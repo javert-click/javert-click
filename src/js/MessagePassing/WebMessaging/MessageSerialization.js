@@ -1,7 +1,5 @@
 const DOMException = require('../../DOM/Common/DOMException');
 
-// TODOMP: I believe these 2 functions below are not necessary. The has been shipped flag seems to be used only for scheduling the messages.
-// We are handling this at the level of the MP-Semantics
 /*
 * @id MessagePortTransferSteps
 */

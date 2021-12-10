@@ -304,7 +304,6 @@ proc StructuredSerializeInternalWithMemory(xsc, vthis, value, forStorage, memory
                   serialized := {{ typel, idl }};
                   goto succ;   
                   (* 22. Otherwise, if value has any internal slot other than [[Prototype]] or [[Extensible]], then throw a "DataCloneError" DOMException. *)
-                  (* TODOMP *)
                   (* 23. (NOT SUPPORTED) Otherwise, if value is an exotic object ... *)
                   (* 24. Otherwise: *)
                   

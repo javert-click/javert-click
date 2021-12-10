@@ -2,7 +2,6 @@
 
 import { MessageChannel } from '../../../js/MessagePassing/WebMessaging/MessageChannel';
 import { async_test } from '../../../js/DOM/Events/Testharness';
-//TODOMP: we fail this test due to scheduler choices?
 async_test(function(t) {
   var channel = new MessageChannel();
   channel.port2.onmessage = t.step_func_done();

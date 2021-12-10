@@ -137,7 +137,6 @@ function RegisterPromise(fn) {
     sendPostMessage([MESSAGE_EVENT, messageId, eventName, payload]);
   }};
 
-  //TODOMP: addEventListener was being used here, but according to standard seems correct to use onmessage!
   /*
   * @id WorkerRegisterOnMessage
   */
