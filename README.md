@@ -5,7 +5,7 @@ JaVerT.Post is the first symbolic execution tool for Message-Passing Web Program
 ## Starting the Artifact via [Docker](https://docs.docker.com/)
 The artifact is a .zip file available [here](https://www.dropbox.com/s/xh14f4pcanlf97p/javert-post.zip?dl=0).
 
-Please make sure to have [Docker](https://docs.docker.com/) installed. We recommend using the following configuration: 2 CPUs, Memory 10GB , Swap 1GB and Disk image size 59.6 GB.
+Please make sure to have [Docker](https://docs.docker.com/) installed and running. We recommend using the following configuration: 2 CPUs, Memory 10GB , Swap 1GB and Disk image size 59.6 GB.
 
 1. Download the .zip file.
 2. `cd javert-post` [javert-post being the extracted folder from the .zip file]
@@ -41,10 +41,10 @@ We provide the `mp.sh` script for running JavaScript programs calling the WebMes
 ### Usage
 
 ```
-./mp.sh [file] [--workers]
+./mp.sh [file] [-workers]
 ```
 
-Please make sure to invoke JaVerT.Post from the `environment` folder. The `file` parameter must be the JavaScript file to be analysed and the `--workers` flag informs whether or not the program creates worker threads.\
+Please make sure to invoke JaVerT.Post from the `environment` folder. The `file` parameter must be the JavaScript file to be analysed and the `-workers` flag informs whether or not the program creates worker threads.\
 **Example**: the following command will execute the `Channel_postMessage_clone_port_error.js` test of the WebMessaging test suite
 
 ```
