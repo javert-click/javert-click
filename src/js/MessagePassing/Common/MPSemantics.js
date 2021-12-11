@@ -6,8 +6,10 @@ const ESemantics = EventsSemanticsInfo.EventsSemantics;
 * @id MPSemantics
 */
 function MPSemantics(){
-    if(ESemantics){
-      this.ESem = new ESemantics();
+    var global = executeJSILProc("JSILGetGlobal");
+    var ESem = global.EventsSemantics || ESemantics;
+    if(ESem){
+      this.ESem = new ESem();
       this.ESem.addHandler("Message", "ProcessMessage", "processMessageSteps");
     }
 }
